@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Clock, Github, Mail } from 'lucide-react';
+import { Check, Clock, Github, Mail, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,33 +17,53 @@ export default function Home() {
   const products = [
     {
       name: 'AnswerBrief AI',
-      description: 'Meeting intelligence, summaries, follow-ups, and executive-ready updates.',
+      description: 'Transform meetings into actionable summaries, follow-ups, and executive briefs.',
+      longDescription: 'Capture meeting intelligence automatically. Get smart summaries, follow-up tasks, and executive-ready updates—so you spend less time transcribing and more time working.',
       status: 'In progress',
-      link: '#products',
+      link: '#answerbrief',
+      color: '#3b82f6',
+      colorLight: '#93c5fd',
+      icon: '🎙️',
     },
     {
       name: 'Nieves AI Platform',
-      description: 'The operating system for managing products, workflows, AI agents, and deployments.',
+      description: 'The operating system for building and managing AI products and workflows.',
+      longDescription: 'Unified platform for AI product development, workflow automation, agent orchestration, and production deployment. Build faster, iterate smarter.',
       status: 'Foundation',
       link: '#platform',
-    },
-    {
-      name: 'Interview Coach',
-      description: 'AI-powered interview preparation, practice, and personalized feedback.',
-      status: 'Planned',
-      link: '#roadmap',
+      color: '#a855f7',
+      colorLight: '#d8b4fe',
+      icon: '⚙️',
     },
     {
       name: 'Workflow Studio',
-      description: 'Automation systems that connect docs, email, Slack, Jira, and reporting.',
+      description: 'Connect your tools and automate repetitive work across docs, email, Slack, and more.',
+      longDescription: 'Visual workflow builder that connects your entire toolkit. Automate repetitive tasks, sync data across platforms, and eliminate manual work.',
       status: 'Planned',
       link: '#workflow',
+      color: '#06b6d4',
+      colorLight: '#a5f3fc',
+      icon: '🔄',
+    },
+    {
+      name: 'Interview Coach',
+      description: 'AI-powered interview preparation with personalized practice and feedback.',
+      longDescription: 'Practice interviews with AI feedback. Get personalized coaching, industry-specific tips, and confidence-building exercises before the real thing.',
+      status: 'Planned',
+      link: '#interview',
+      color: '#10b981',
+      colorLight: '#86efac',
+      icon: '💼',
     },
     {
       name: 'TaxAppealBuddy',
-      description: 'Property tax appeal support using comps, packets, and hearing preparation.',
+      description: 'Property tax appeal support with comps, packets, and hearing preparation.',
+      longDescription: 'Streamline property tax appeals. Build comp packages, prepare hearing materials, and connect with professionals—all in one place.',
       status: 'Prototype',
-      link: '#roadmap',
+      link: '#taxappeal',
+      color: '#f59e0b',
+      colorLight: '#fbbf24',
+      icon: '📋',
     },
   ];
 
@@ -133,7 +153,7 @@ export default function Home() {
           </div>
 
           <div className="nl-hero-visual">
-            <a href="#products" onClick={(e) => { e.preventDefault(); handleNavClick('#products'); }} className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }} aria-label="AnswerBrief AI product card">
+            <a href="#answerbrief" onClick={(e) => { e.preventDefault(); handleNavClick('#answerbrief'); }} className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }} aria-label="AnswerBrief AI product card">
               <div className="nl-card-title" style={{ color: '#93c5fd' }}>AnswerBrief AI</div>
               <div className="nl-card-desc">Meeting intelligence & summaries</div>
               <div className="nl-card-badge" style={{ background: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.5)', color: '#93c5fd' }}>
@@ -147,7 +167,7 @@ export default function Home() {
                 Foundation
               </div>
             </a>
-            <a href="#roadmap" onClick={(e) => { e.preventDefault(); handleNavClick('#roadmap'); }} className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }} aria-label="Interview Coach product card">
+            <a href="#interview" onClick={(e) => { e.preventDefault(); handleNavClick('#interview'); }} className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }} aria-label="Interview Coach product card">
               <div className="nl-card-title" style={{ color: '#a5f3fc' }}>Interview Coach</div>
               <div className="nl-card-desc">AI-powered interview prep</div>
               <div className="nl-card-badge" style={{ background: 'rgba(6, 182, 212, 0.3)', borderColor: 'rgba(6, 182, 212, 0.5)', color: '#a5f3fc' }}>
@@ -165,37 +185,52 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRODUCTS SECTION */}
+      {/* PRODUCTS SECTION - ENHANCED */}
       <section id="products" className="nl-products">
         <div className="nl-section-content">
           <div className="nl-section-header">
-            <h2 className="nl-section-title">Our Products</h2>
+            <h2 className="nl-section-title">AI products in motion</h2>
             <p className="nl-section-subtitle">
-              A suite of AI-powered tools designed to solve real problems
+              Practical tools and automation systems built around real customer problems.
             </p>
           </div>
 
-          <div className="nl-product-grid">
+          <div className="nl-product-grid-enhanced">
             {products.map((product, idx) => (
-              <a
-                key={idx}
-                href={product.link}
-                onClick={(e) => { e.preventDefault(); handleNavClick(product.link); }}
-                className="nl-product-card"
-                aria-label={`Learn more about ${product.name}`}
-              >
-                <div className="nl-product-icon">💡</div>
-                <h3 className="nl-product-name">{product.name}</h3>
-                <p className="nl-product-desc">{product.description}</p>
-                <div className="nl-product-footer">
-                  <span className="nl-status-badge">{product.status}</span>
-                  <div className="nl-product-dot"></div>
+              <div key={idx} className="nl-product-card-enhanced" style={{ borderColor: `${product.color}40` }}>
+                <div className="nl-product-card-header">
+                  <div className="nl-product-card-icon" style={{ background: `${product.color}15` }}>
+                    {product.icon}
+                  </div>
+                  <div className="nl-product-card-status" style={{ color: product.colorLight, background: `${product.color}20`, borderColor: `${product.color}40` }}>
+                    {product.status}
+                  </div>
                 </div>
-              </a>
+
+                <h3 className="nl-product-card-title">{product.name}</h3>
+                <p className="nl-product-card-summary">{product.description}</p>
+                <p className="nl-product-card-full">{product.longDescription}</p>
+
+                <a
+                  href={product.link}
+                  onClick={(e) => { e.preventDefault(); handleNavClick(product.link); }}
+                  className="nl-product-card-link"
+                  style={{ color: product.colorLight }}
+                  aria-label={`Learn more about ${product.name}`}
+                >
+                  <span>Learn more</span>
+                  <ArrowRight size={16} />
+                </a>
+              </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* PRODUCT ANCHOR SECTIONS */}
+      <section id="answerbrief" style={{ display: 'none' }}></section>
+      <section id="interview" style={{ display: 'none' }}></section>
+      <section id="taxappeal" style={{ display: 'none' }}></section>
 
       {/* WORKFLOW SECTION */}
       <section id="workflow" className="nl-workflow">
@@ -338,9 +373,9 @@ export default function Home() {
             <div>
               <h4 className="nl-footer-section-title">Products</h4>
               <div className="nl-footer-links">
-                <a href="#products" onClick={() => handleNavClick('#products')} className="nl-footer-link">AnswerBrief AI</a>
+                <a href="#answerbrief" onClick={() => handleNavClick('#answerbrief')} className="nl-footer-link">AnswerBrief AI</a>
                 <a href="#platform" onClick={() => handleNavClick('#platform')} className="nl-footer-link">AI Platform</a>
-                <a href="#roadmap" onClick={() => handleNavClick('#roadmap')} className="nl-footer-link">Interview Coach</a>
+                <a href="#interview" onClick={() => handleNavClick('#interview')} className="nl-footer-link">Interview Coach</a>
                 <a href="#workflow" onClick={() => handleNavClick('#workflow')} className="nl-footer-link">Workflow Studio</a>
               </div>
             </div>
