@@ -1,75 +1,97 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-  background-color: #ffffff;
-  color: #1a1a1a;
-  line-height: 1.6;
-  overflow-x: hidden;
-}
-
-/* Subtle grid background */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image:
-    linear-gradient(rgba(209, 213, 219, 0.2) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(209, 213, 219, 0.2) 1px, transparent 1px);
-  background-size: 80px 80px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-button {
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  line-height: 1.1;
-  color: #000000;
-}
-
-p {
-  color: #525252;
-}
-
-.container {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-@media (min-width: 768px) {
-  .container {
-    padding: 0 40px;
+@layer base {
+  body {
+    @apply bg-white text-primary-dark;
   }
 }
 
-main {
-  position: relative;
-  z-index: 1;
+@layer components {
+  .container-max {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .heading-display {
+    @apply text-5xl sm:text-6xl lg:text-display font-bold leading-tight tracking-tight;
+  }
+
+  .heading-h1 {
+    @apply text-4xl sm:text-5xl lg:text-h1 font-bold leading-tight tracking-tight;
+  }
+
+  .heading-h2 {
+    @apply text-3xl sm:text-4xl lg:text-h2 font-bold leading-tight;
+  }
+
+  .heading-h3 {
+    @apply text-2xl sm:text-h3 font-semibold leading-snug;
+  }
+
+  .text-body-lg {
+    @apply text-lg sm:text-body-lg leading-relaxed;
+  }
+
+  .button-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-primary text-white font-medium rounded-md transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:bg-blue-800;
+  }
+
+  .button-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 border-2 border-primary text-primary font-medium rounded-md transition-colors duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+  .button-ghost {
+    @apply inline-flex items-center justify-center px-6 py-3 text-primary font-medium rounded-md transition-colors duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+  .card {
+    @apply bg-white border border-neutral-medium rounded-lg p-6 shadow-sm transition-all duration-200 hover:shadow-md;
+  }
+
+  .gradient-hero {
+    @apply bg-gradient-to-r from-primary to-accent;
+  }
+
+  .smooth-transition {
+    @apply transition-all duration-200;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0066ff;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0052cc;
 }
