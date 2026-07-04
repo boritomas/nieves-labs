@@ -421,6 +421,7 @@ export default function Home() {
               <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-bottom-link">Privacy</a>
               <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-bottom-link">Terms</a>
               <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-bottom-link">Cookies</a>
+              <a href="/command-center" className="nl-footer-bottom-link">Internal Command Center</a>
             </div>
           </div>
         </div>

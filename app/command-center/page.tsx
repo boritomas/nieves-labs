@@ -106,6 +106,15 @@ export default function CommandCenter() {
     { label: 'Open GitHub', href: 'https://github.com/boritomas/nieves-labs', icon: Github, external: true },
     { label: 'View Homepage', href: '/', icon: Home },
   ];
+  
+  const documentationHub = [
+    { title: 'Product Catalog', href: '#doc-product-catalog', summary: 'Public messaging rules and product positioning guidance.' },
+    { title: 'Product Registry', href: '#doc-product-registry', summary: 'Canonical status, ownership, and milestone tracking for each product.' },
+    { title: 'Roadmap', href: '#doc-roadmap', summary: 'Internal planning direction for now, next, and later priorities.' },
+    { title: 'Changelog', href: '#doc-changelog', summary: 'Release-level record of meaningful platform and product changes.' },
+    { title: 'Brand Guidelines', href: '#doc-brand-guidelines', summary: 'Design and voice guardrails for consistent Nieves Labs presentation.' },
+    { title: 'Engineering Workflow', href: '#doc-engineering-workflow', summary: 'Build, review, and delivery process documentation for internal teams.' },
+  ];
 
   if (!mounted) {
     return null;
@@ -132,6 +141,10 @@ export default function CommandCenter() {
       {/* MAIN CONTENT */}
       <main className="cc-main">
         <div className="cc-container">
+          <div style={{ marginBottom: '24px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(30, 41, 59, 0.55)', border: '1px solid rgba(148, 163, 184, 0.25)', color: '#cbd5e1', fontSize: '14px' }}>
+            Internal operating dashboard for Nieves Labs. Not public marketing content.
+          </div>
+
           {/* QUICK ACTIONS */}
           <section className="cc-section">
             <h2 className="cc-section-title">Quick Actions</h2>
@@ -151,6 +164,29 @@ export default function CommandCenter() {
                   </a>
                 );
               })}
+            </div>
+          </section>
+
+          {/* DOCUMENTATION HUB */}
+          <section className="cc-section">
+            <h2 className="cc-section-title">Documentation Hub</h2>
+            <div className="cc-products-grid">
+              {documentationHub.map((doc, idx) => (
+                <a key={idx} href={doc.href} className="cc-product-card" style={{ textDecoration: 'none' }} aria-label={doc.title}>
+                  <div className="cc-product-header">
+                    <h3 className="cc-product-name">{doc.title}</h3>
+                    <div
+                      className="cc-status-badge"
+                      style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', color: '#fcd34d' }}
+                    >
+                      Internal source of truth
+                    </div>
+                  </div>
+                  <div className="cc-product-details">
+                    <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>{doc.summary}</p>
+                  </div>
+                </a>
+              ))}
             </div>
           </section>
 
@@ -324,6 +360,13 @@ export default function CommandCenter() {
               ))}
             </div>
           </section>
+
+          <section id="doc-product-catalog" style={{ display: 'none' }}></section>
+          <section id="doc-product-registry" style={{ display: 'none' }}></section>
+          <section id="doc-roadmap" style={{ display: 'none' }}></section>
+          <section id="doc-changelog" style={{ display: 'none' }}></section>
+          <section id="doc-brand-guidelines" style={{ display: 'none' }}></section>
+          <section id="doc-engineering-workflow" style={{ display: 'none' }}></section>
         </div>
       </main>
 
