@@ -6,6 +6,8 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -25,11 +27,11 @@ body::before {
   width: 100%;
   height: 100%;
   background-image:
-    linear-gradient(rgba(229, 231, 235, 0.4) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(229, 231, 235, 0.4) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(229, 231, 235, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(229, 231, 235, 0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 
 a {
@@ -43,6 +45,7 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  transition: all 0.3s ease;
 }
 
 /* Typography */
@@ -61,7 +64,7 @@ p {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
 }
 
 @media (max-width: 768px) {
@@ -82,6 +85,32 @@ p {
   }
 }
 
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .fade-in-up {
   animation: fadeInUp 0.6s ease-out;
+}
+
+.slide-in-down {
+  animation: slideInDown 0.5s ease-out;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrollable content positioning */
+main {
+  position: relative;
+  z-index: 1;
 }
