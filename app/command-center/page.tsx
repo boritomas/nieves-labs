@@ -108,12 +108,12 @@ export default function CommandCenter() {
   ];
   
   const documentationHub = [
-    { title: 'Product Catalog', href: '#doc-product-catalog', summary: 'Public messaging rules and product positioning guidance.' },
-    { title: 'Product Registry', href: '#doc-product-registry', summary: 'Canonical status, ownership, and milestone tracking for each product.' },
-    { title: 'Roadmap', href: '#doc-roadmap', summary: 'Internal planning direction for now, next, and later priorities.' },
-    { title: 'Changelog', href: '#doc-changelog', summary: 'Release-level record of meaningful platform and product changes.' },
-    { title: 'Brand Guidelines', href: '#doc-brand-guidelines', summary: 'Design and voice guardrails for consistent Nieves Labs presentation.' },
-    { title: 'Engineering Workflow', href: '#doc-engineering-workflow', summary: 'Build, review, and delivery process documentation for internal teams.' },
+    { title: 'Product Catalog', anchorId: 'doc-product-catalog', summary: 'Public messaging rules and product positioning guidance.' },
+    { title: 'Product Registry', anchorId: 'doc-product-registry', summary: 'Canonical status, ownership, and milestone tracking for each product.' },
+    { title: 'Roadmap', anchorId: 'doc-roadmap', summary: 'Internal planning direction for now, next, and later priorities.' },
+    { title: 'Changelog', anchorId: 'doc-changelog', summary: 'Release-level record of meaningful platform and product changes.' },
+    { title: 'Brand Guidelines', anchorId: 'doc-brand-guidelines', summary: 'Design and voice guardrails for consistent Nieves Labs presentation.' },
+    { title: 'Engineering Workflow', anchorId: 'doc-engineering-workflow', summary: 'Build, review, and delivery process documentation for internal teams.' },
   ];
 
   if (!mounted) {
@@ -141,7 +141,7 @@ export default function CommandCenter() {
       {/* MAIN CONTENT */}
       <main className="cc-main">
         <div className="cc-container">
-          <div style={{ marginBottom: '24px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(30, 41, 59, 0.55)', border: '1px solid rgba(148, 163, 184, 0.25)', color: '#cbd5e1', fontSize: '14px' }}>
+          <div className="cc-internal-notice">
             Internal operating dashboard for Nieves Labs. Not public marketing content.
           </div>
 
@@ -172,7 +172,7 @@ export default function CommandCenter() {
             <h2 className="cc-section-title">Documentation Hub</h2>
             <div className="cc-products-grid">
               {documentationHub.map((doc, idx) => (
-                <a key={idx} href={doc.href} className="cc-product-card" style={{ textDecoration: 'none' }} aria-label={doc.title}>
+                <a key={idx} id={doc.anchorId} href={`#${doc.anchorId}`} className="cc-product-card cc-doc-card" aria-label={doc.title}>
                   <div className="cc-product-header">
                     <h3 className="cc-product-name">{doc.title}</h3>
                     <div
@@ -183,7 +183,7 @@ export default function CommandCenter() {
                     </div>
                   </div>
                   <div className="cc-product-details">
-                    <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>{doc.summary}</p>
+                    <p className="cc-doc-summary">{doc.summary}</p>
                   </div>
                 </a>
               ))}
@@ -361,12 +361,6 @@ export default function CommandCenter() {
             </div>
           </section>
 
-          <section id="doc-product-catalog" style={{ display: 'none' }}></section>
-          <section id="doc-product-registry" style={{ display: 'none' }}></section>
-          <section id="doc-roadmap" style={{ display: 'none' }}></section>
-          <section id="doc-changelog" style={{ display: 'none' }}></section>
-          <section id="doc-brand-guidelines" style={{ display: 'none' }}></section>
-          <section id="doc-engineering-workflow" style={{ display: 'none' }}></section>
         </div>
       </main>
 
