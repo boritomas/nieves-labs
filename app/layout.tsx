@@ -10,17 +10,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Nieves Labs - AI Integration for Developers',
-  description: 'Build intelligent applications with confidence. Access production-ready AI integration tools, SDKs, and community resources to bring AI into your apps.',
+  title: 'Nieves Labs - Practical AI Products',
+  description: 'AI-powered products for productivity, automation, and small-business workflows.',
   icons: {
     icon: '/favicon.ico',
-  },
-  openGraph: {
-    title: 'Nieves Labs - AI Integration for Developers',
-    description: 'Build intelligent applications with confidence.',
-    url: 'https://nieves-labs.com',
-    siteName: 'Nieves Labs',
-    type: 'website',
   },
 };
 
@@ -31,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${inter.className} bg-white text-primary-dark antialiased`}>
+      <body className={inter.className}>
         {children}
       </body>
     </html>
