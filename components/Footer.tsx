@@ -1,60 +1,76 @@
 import Link from 'next/link';
+import { Zap } from 'lucide-react';
+
+const links = {
+  Products: [
+    { label: 'AnswerBrief AI', href: '#products' },
+    { label: 'Interview Coach', href: '#products' },
+    { label: 'Workflow Studio', href: '#products' },
+    { label: 'TaxAppealBuddy', href: '#products' },
+  ],
+  Platform: [
+    { label: 'Nieves AI', href: '#platform' },
+    { label: 'Roadmap', href: '#roadmap' },
+    { label: 'GitHub', href: 'https://github.com/boritomas/nieves-labs' },
+  ],
+  Resources: [
+    { label: 'Documentation', href: '#' },
+    { label: 'Blog', href: '#' },
+    { label: 'Contact', href: '#' },
+  ],
+};
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
+    <footer className="relative bg-slate-950 border-t border-white/10 py-16 px-4 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 bg-grid opacity-30" />
+
+      <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center">
-                <span className="text-white font-bold text-xs">NL</span>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
+                <Zap className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold text-gray-900">Nieves Labs</span>
+              <span className="font-semibold text-white tracking-tight">Nieves Labs</span>
             </div>
-            <p className="text-sm text-gray-600">Practical AI Product Lab</p>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Practical AI Product Lab.<br />Building AI tools for real work.
+            </p>
           </div>
 
-          {/* Products */}
-          <div>
-            <h4 className="font-semibold text-gray-900 text-sm mb-3">Products</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="#" className="hover:text-gray-900 transition-colors">AnswerBrief</Link></li>
-              <li><Link href="#" className="hover:text-gray-900 transition-colors">Interview Coach</Link></li>
-              <li><Link href="#" className="hover:text-gray-900 transition-colors">Workflow Studio</Link></li>
-              <li><Link href="#" className="hover:text-gray-900 transition-colors">TaxAppeal</Link></li>
-            </ul>
-          </div>
-
-          {/* Platform */}
-          <div>
-            <h4 className="font-semibold text-gray-900 text-sm mb-3">Platform</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="#platform" className="hover:text-gray-900 transition-colors">Nieves AI</Link></li>
-              <li><Link href="#roadmap" className="hover:text-gray-900 transition-colors">Roadmap</Link></li>
-              <li><Link href="https://github.com/boritomas/nieves-labs" className="hover:text-gray-900 transition-colors">GitHub</Link></li>
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h4 className="font-semibold text-gray-900 text-sm mb-3">Resources</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="#" className="hover:text-gray-900 transition-colors">Documentation</Link></li>
-              <li><Link href="#" className="hover:text-gray-900 transition-colors">Blog</Link></li>
-              <li><Link href="#" className="hover:text-gray-900 transition-colors">Contact</Link></li>
-            </ul>
-          </div>
+          {/* Link columns */}
+          {Object.entries(links).map(([category, items]) => (
+            <div key={category}>
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">{category}</h4>
+              <ul className="space-y-2.5">
+                {items.map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      className="text-sm text-slate-500 hover:text-white transition-colors duration-200"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-gray-200 pt-8">
-          <p className="text-sm text-gray-600 text-center">
+        {/* Bottom bar */}
+        <div className="border-t border-white/[0.07] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-slate-600">
             © {currentYear} Nieves Labs. All rights reserved.
           </p>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs text-slate-600">Systems operational</span>
+          </div>
         </div>
       </div>
     </footer>

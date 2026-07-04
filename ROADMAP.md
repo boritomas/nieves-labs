@@ -18,7 +18,7 @@ Nieves Labs is the parent brand for practical AI products, automation systems, a
 - ✓ Accessibility compliance (WCAG AA)
 - ✓ Smooth animations and transitions
 - ✓ Production-ready deployment pipeline
-- ✓ Premium homepage v1 launched
+- ✓ Premium homepage v1 launched — full visual SaaS design with glassmorphism, animations, and floating product panel
 
 ---
 
