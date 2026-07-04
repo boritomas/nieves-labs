@@ -173,6 +173,7 @@ export default function CommandCenter() {
             <div className="cc-products-grid">
               {documentationHub.map((doc, idx) => (
                 <a key={idx} href={doc.href} className="cc-product-card cc-doc-card" aria-label={doc.title}>
+                  <span id={doc.href.replace('#', '')} className="cc-doc-anchor"></span>
                   <div className="cc-product-header">
                     <h3 className="cc-product-name">{doc.title}</h3>
                     <div className="cc-status-badge cc-status-badge-source">
@@ -185,12 +186,6 @@ export default function CommandCenter() {
                 </a>
               ))}
             </div>
-            <div id="doc-product-catalog" className="cc-doc-anchor"></div>
-            <div id="doc-product-registry" className="cc-doc-anchor"></div>
-            <div id="doc-roadmap" className="cc-doc-anchor"></div>
-            <div id="doc-changelog" className="cc-doc-anchor"></div>
-            <div id="doc-brand-guidelines" className="cc-doc-anchor"></div>
-            <div id="doc-engineering-workflow" className="cc-doc-anchor"></div>
           </section>
 
           {/* PRODUCT PORTFOLIO */}

@@ -1385,10 +1385,8 @@ body {
 }
 
 .cc-doc-anchor {
-  position: relative;
-  top: -120px;
-  height: 1px;
-  visibility: hidden;
+  display: block;
+  height: 0;
 }
 
 .cc-product-header {
