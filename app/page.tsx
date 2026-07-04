@@ -17,8 +17,8 @@ export default function Home() {
   const products = [
     {
       name: 'AnswerBrief AI',
-      description: 'Transform meetings into actionable summaries, follow-ups, and executive briefs.',
-      longDescription: 'Capture meeting intelligence automatically. Get smart summaries, follow-up tasks, and executive-ready updates—so you spend less time transcribing and more time working.',
+      description: 'Turn your resume and job posting into a role-specific interview brief.',
+      longDescription: 'Role-specific interview prep that helps candidates connect their experience to the job, prepare stronger examples, and walk into interviews with a clear story.',
       status: 'In progress',
       link: '#answerbrief',
       color: '#3b82f6',
@@ -139,7 +139,7 @@ export default function Home() {
             </h1>
 
             <p className="nl-paragraph">
-              Nieves Labs builds AI-powered products, automation systems, and practical experiments that help professionals and small businesses move faster, reduce manual work, and turn ideas into usable tools.
+              Nieves Labs builds AI-powered products, automation systems, and practical experiments that help professionals and small businesses move faster, reduce manual work, and turn ideas into reality.
             </p>
 
             <div className="nl-button-group">
@@ -153,28 +153,28 @@ export default function Home() {
           </div>
 
           <div className="nl-hero-visual">
-            <a href="#answerbrief" onClick={(e) => { e.preventDefault(); handleNavClick('#answerbrief'); }} className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }} aria-label="AnswerBrief AI product card">
+            <a href="#answerbrief" onClick={(e) => { e.preventDefault(); handleNavClick('#answerbrief'); }} className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }} aria-label="AnswerBrief AI">
               <div className="nl-card-title" style={{ color: '#93c5fd' }}>AnswerBrief AI</div>
-              <div className="nl-card-desc">Meeting intelligence & summaries</div>
+              <div className="nl-card-desc">Interview prep for serious career moves</div>
               <div className="nl-card-badge" style={{ background: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.5)', color: '#93c5fd' }}>
                 In progress
               </div>
             </a>
-            <a href="#platform" onClick={(e) => { e.preventDefault(); handleNavClick('#platform'); }} className="nl-floating-card" style={{ background: 'rgba(168, 85, 247, 0.1)' }} aria-label="Nieves AI Platform product card">
+            <a href="#platform" onClick={(e) => { e.preventDefault(); handleNavClick('#platform'); }} className="nl-floating-card" style={{ background: 'rgba(168, 85, 247, 0.1)' }} aria-label="Nieves AI Platform">
               <div className="nl-card-title" style={{ color: '#d8b4fe' }}>Nieves AI Platform</div>
               <div className="nl-card-desc">Operating system for AI products</div>
               <div className="nl-card-badge" style={{ background: 'rgba(168, 85, 247, 0.3)', borderColor: 'rgba(168, 85, 247, 0.5)', color: '#d8b4fe' }}>
                 Foundation
               </div>
             </a>
-            <a href="#interview" onClick={(e) => { e.preventDefault(); handleNavClick('#interview'); }} className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }} aria-label="Interview Coach product card">
+            <a href="#interview" onClick={(e) => { e.preventDefault(); handleNavClick('#interview'); }} className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }} aria-label="Interview Coach">
               <div className="nl-card-title" style={{ color: '#a5f3fc' }}>Interview Coach</div>
               <div className="nl-card-desc">AI-powered interview prep</div>
               <div className="nl-card-badge" style={{ background: 'rgba(6, 182, 212, 0.3)', borderColor: 'rgba(6, 182, 212, 0.5)', color: '#a5f3fc' }}>
                 Planned
               </div>
             </a>
-            <a href="#workflow" onClick={(e) => { e.preventDefault(); handleNavClick('#workflow'); }} className="nl-floating-card" style={{ background: 'rgba(34, 197, 94, 0.1)' }} aria-label="Workflow Studio product card">
+            <a href="#workflow" onClick={(e) => { e.preventDefault(); handleNavClick('#workflow'); }} className="nl-floating-card" style={{ background: 'rgba(34, 197, 94, 0.1)' }} aria-label="Workflow Studio">
               <div className="nl-card-title" style={{ color: '#86efac' }}>Workflow Studio</div>
               <div className="nl-card-desc">Automation & integrations</div>
               <div className="nl-card-badge" style={{ background: 'rgba(34, 197, 94, 0.3)', borderColor: 'rgba(34, 197, 94, 0.5)', color: '#86efac' }}>
