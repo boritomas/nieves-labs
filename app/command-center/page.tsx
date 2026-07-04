@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, GitBranch, Github, Home, BookOpen, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function CommandCenter() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  useEffect(() => {
+    const date = new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    setCurrentDate(date);
+    setMounted(true);
+  }, []);
 
   const products = [
     {
@@ -101,6 +106,10 @@ export default function CommandCenter() {
     { label: 'Open GitHub', href: 'https://github.com/boritomas/nieves-labs', icon: Github, external: true },
     { label: 'View Homepage', href: '/', icon: Home },
   ];
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="cc-page">
