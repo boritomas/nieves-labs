@@ -1378,6 +1378,19 @@ body {
   font-size: 14px;
 }
 
+.cc-status-badge-source {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+
+.cc-doc-anchor {
+  position: relative;
+  top: -120px;
+  height: 1px;
+  visibility: hidden;
+}
+
 .cc-product-header {
   display: flex;
   align-items: flex-start;

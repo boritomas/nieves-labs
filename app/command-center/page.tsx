@@ -108,12 +108,12 @@ export default function CommandCenter() {
   ];
   
   const documentationHub = [
-    { title: 'Product Catalog', anchorId: 'doc-product-catalog', summary: 'Public messaging rules and product positioning guidance.' },
-    { title: 'Product Registry', anchorId: 'doc-product-registry', summary: 'Canonical status, ownership, and milestone tracking for each product.' },
-    { title: 'Roadmap', anchorId: 'doc-roadmap', summary: 'Internal planning direction for now, next, and later priorities.' },
-    { title: 'Changelog', anchorId: 'doc-changelog', summary: 'Release-level record of meaningful platform and product changes.' },
-    { title: 'Brand Guidelines', anchorId: 'doc-brand-guidelines', summary: 'Design and voice guardrails for consistent Nieves Labs presentation.' },
-    { title: 'Engineering Workflow', anchorId: 'doc-engineering-workflow', summary: 'Build, review, and delivery process documentation for internal teams.' },
+    { title: 'Product Catalog', href: '#doc-product-catalog', summary: 'Public messaging rules and product positioning guidance.' },
+    { title: 'Product Registry', href: '#doc-product-registry', summary: 'Canonical status, ownership, and milestone tracking for each product.' },
+    { title: 'Roadmap', href: '#doc-roadmap', summary: 'Internal planning direction for now, next, and later priorities.' },
+    { title: 'Changelog', href: '#doc-changelog', summary: 'Release-level record of meaningful platform and product changes.' },
+    { title: 'Brand Guidelines', href: '#doc-brand-guidelines', summary: 'Design and voice guardrails for consistent Nieves Labs presentation.' },
+    { title: 'Engineering Workflow', href: '#doc-engineering-workflow', summary: 'Build, review, and delivery process documentation for internal teams.' },
   ];
 
   if (!mounted) {
@@ -172,13 +172,10 @@ export default function CommandCenter() {
             <h2 className="cc-section-title">Documentation Hub</h2>
             <div className="cc-products-grid">
               {documentationHub.map((doc, idx) => (
-                <a key={idx} id={doc.anchorId} href={`#${doc.anchorId}`} className="cc-product-card cc-doc-card" aria-label={doc.title}>
+                <a key={idx} href={doc.href} className="cc-product-card cc-doc-card" aria-label={doc.title}>
                   <div className="cc-product-header">
                     <h3 className="cc-product-name">{doc.title}</h3>
-                    <div
-                      className="cc-status-badge"
-                      style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', color: '#fcd34d' }}
-                    >
+                    <div className="cc-status-badge cc-status-badge-source">
                       Internal source of truth
                     </div>
                   </div>
@@ -188,6 +185,12 @@ export default function CommandCenter() {
                 </a>
               ))}
             </div>
+            <div id="doc-product-catalog" className="cc-doc-anchor"></div>
+            <div id="doc-product-registry" className="cc-doc-anchor"></div>
+            <div id="doc-roadmap" className="cc-doc-anchor"></div>
+            <div id="doc-changelog" className="cc-doc-anchor"></div>
+            <div id="doc-brand-guidelines" className="cc-doc-anchor"></div>
+            <div id="doc-engineering-workflow" className="cc-doc-anchor"></div>
           </section>
 
           {/* PRODUCT PORTFOLIO */}
