@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Calendar, GitBranch, Github, Home, BookOpen, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function CommandCenter() {
@@ -106,6 +106,15 @@ export default function CommandCenter() {
     { label: 'Open GitHub', href: 'https://github.com/boritomas/nieves-labs', icon: Github, external: true },
     { label: 'View Homepage', href: '/', icon: Home },
   ];
+  
+  const documentationHub = [
+    { title: 'Product Catalog', href: '#doc-product-catalog', summary: 'Public messaging rules and product positioning guidance.' },
+    { title: 'Product Registry', href: '#doc-product-registry', summary: 'Canonical status, ownership, and milestone tracking for each product.' },
+    { title: 'Roadmap', href: '#doc-roadmap', summary: 'Internal planning direction for now, next, and later priorities.' },
+    { title: 'Changelog', href: '#doc-changelog', summary: 'Release-level record of meaningful platform and product changes.' },
+    { title: 'Brand Guidelines', href: '#doc-brand-guidelines', summary: 'Design and voice guardrails for consistent Nieves Labs presentation.' },
+    { title: 'Engineering Workflow', href: '#doc-engineering-workflow', summary: 'Build, review, and delivery process documentation for internal teams.' },
+  ];
 
   if (!mounted) {
     return null;
@@ -132,6 +141,10 @@ export default function CommandCenter() {
       {/* MAIN CONTENT */}
       <main className="cc-main">
         <div className="cc-container">
+          <div className="cc-internal-notice">
+            Internal operating dashboard for Nieves Labs. Not public marketing content.
+          </div>
+
           {/* QUICK ACTIONS */}
           <section className="cc-section">
             <h2 className="cc-section-title">Quick Actions</h2>
@@ -151,6 +164,29 @@ export default function CommandCenter() {
                   </a>
                 );
               })}
+            </div>
+          </section>
+
+          {/* DOCUMENTATION HUB */}
+          <section className="cc-section">
+            <h2 className="cc-section-title">Documentation Hub</h2>
+            <div className="cc-products-grid">
+              {documentationHub.map((doc, idx) => (
+                <Fragment key={idx}>
+                  <span id={doc.href.replace('#', '')} className="cc-doc-anchor" aria-hidden="true"></span>
+                  <a href={doc.href} className="cc-product-card cc-doc-card" aria-label={`${doc.title} internal source-of-truth document`}>
+                    <div className="cc-product-header">
+                      <h3 className="cc-product-name">{doc.title}</h3>
+                      <div className="cc-status-badge cc-status-badge-source">
+                        Internal source of truth
+                      </div>
+                    </div>
+                    <div className="cc-product-details">
+                      <p className="cc-doc-summary">{doc.summary}</p>
+                    </div>
+                  </a>
+                </Fragment>
+              ))}
             </div>
           </section>
 
@@ -324,6 +360,7 @@ export default function CommandCenter() {
               ))}
             </div>
           </section>
+
         </div>
       </main>
 
