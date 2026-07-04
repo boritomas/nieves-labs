@@ -1,30 +1,23 @@
 export default function CTA() {
   return (
-    <section id="cta" className="py-16 sm:py-24 lg:py-32 bg-primary-dark relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent opacity-10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary opacity-5 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="container-max relative z-10 text-center animate-fade-in">
-        <h2 className="heading-h2 text-white mb-4">Ready to Get Started?</h2>
-        <p className="text-body-lg text-white/80 mb-8 max-w-2xl mx-auto">
-          Join the developer community building the future of AI-powered applications. Nieves Labs provides everything you need to ship faster.
+    <section className="py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-slate-900">
+      <div className="max-w-4xl mx-auto text-center">
+        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          Building the next generation of practical AI tools.
+        </h2>
+        
+        <p className="text-lg sm:text-xl text-slate-300 mb-8 leading-relaxed">
+          Nieves Labs is creating a connected ecosystem of AI products for productivity, automation, and small-business workflows.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <button className="button-primary bg-white text-primary hover:bg-neutral-light w-full sm:w-auto">
-            Start Free →
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button className="px-8 py-4 bg-white text-slate-900 font-semibold rounded-lg hover:bg-slate-50 transition-colors">
+            Explore Products
           </button>
-          <button className="button-ghost text-white hover:bg-white/10 w-full sm:w-auto">
-            Schedule a Demo
+          <button className="px-8 py-4 border border-slate-500 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors">
+            Follow the Roadmap
           </button>
         </div>
-
-        <p className="text-sm text-white/60 mt-8">
-          No credit card required. Get access to our free tier instantly.
-        </p>
       </div>
     </section>
   );
