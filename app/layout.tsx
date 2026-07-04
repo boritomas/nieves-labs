@@ -1,13 +1,17 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'Nieves Labs - AI Integration for Developers',
   description: 'Build intelligent applications with confidence. Access production-ready AI integration tools, SDKs, and community resources to bring AI into your apps.',
-  viewport: 'width=device-width, initial-scale=1',
   icons: {
     icon: '/favicon.ico',
   },

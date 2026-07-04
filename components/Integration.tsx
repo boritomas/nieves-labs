@@ -1,4 +1,10 @@
+'use client';
+
+import { useState } from 'react';
+
 export default function Integration() {
+  const [copied, setCopied] = useState(false);
+
   const codeExample = `import { NievesClient } from '@nieves-labs/client';
 
 const client = new NievesClient({
@@ -14,13 +20,22 @@ const response = await client.complete({
 
 console.log(response.content);`;
 
+  const handleCopy = () => {
+    if (typeof window !== 'undefined' && navigator?.clipboard) {
+      navigator.clipboard.writeText(codeExample).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
+  };
+
   return (
     <section id="integration" className="py-16 sm:py-24 lg:py-32 bg-white">
       <div className="container-max">
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="heading-h2 mb-4 text-primary-dark">Integrate in Minutes</h2>
           <p className="text-body-lg text-neutral-dark max-w-2xl mx-auto">
-            Here\'s how simple it is to get started with Nieves Labs
+            Here's how simple it is to get started with Nieves Labs
           </p>
         </div>
 
@@ -32,11 +47,10 @@ console.log(response.content);`;
               <span className="text-sm font-mono text-white/60">example.ts</span>
               <button
                 className="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded transition-colors duration-150"
-                onClick={() => {
-                  navigator.clipboard.writeText(codeExample);
-                }}
+                onClick={handleCopy}
+                aria-label="Copy code to clipboard"
               >
-                Copy
+                {copied ? 'Copied!' : 'Copy'}
               </button>
             </div>
 
