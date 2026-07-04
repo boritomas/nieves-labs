@@ -50,20 +50,22 @@ export default function Home() {
   const workflowSteps = ['Problem', 'Product Spec', 'AI Build', 'Review', 'Deploy', 'Learn'];
 
   const completed = [
-    'GitHub repository setup',
-    'Vercel deployment pipeline',
-    'Foundation documentation',
-    'Brand messaging',
-    'Premium homepage v1',
+    'Nieves Labs brand foundation',
+    'Public homepage v1',
+    'Practical AI product lab positioning',
+  ];
+
+  const inProgress = [
+    'AnswerBrief AI',
+    'Nieves AI Platform foundation',
+    'Workflow automation experiments',
   ];
 
   const upcoming = [
+    'Interview Coach',
+    'Workflow Studio',
+    'TaxAppealBuddy',
     'Product detail pages',
-    'Command Center interface',
-    'Component library',
-    'API documentation',
-    'User authentication',
-    'Analytics dashboard',
   ];
 
   return (
@@ -131,28 +133,28 @@ export default function Home() {
           </div>
 
           <div className="nl-hero-visual">
-            <a href="#products" onClick={(e) => { e.preventDefault(); handleNavClick('#products'); }} className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }} aria-label="AnswerBrief AI">
+            <a href="#products" onClick={(e) => { e.preventDefault(); handleNavClick('#products'); }} className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }} aria-label="AnswerBrief AI product card">
               <div className="nl-card-title" style={{ color: '#93c5fd' }}>AnswerBrief AI</div>
               <div className="nl-card-desc">Meeting intelligence & summaries</div>
               <div className="nl-card-badge" style={{ background: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.5)', color: '#93c5fd' }}>
                 In progress
               </div>
             </a>
-            <a href="#platform" onClick={(e) => { e.preventDefault(); handleNavClick('#platform'); }} className="nl-floating-card" style={{ background: 'rgba(168, 85, 247, 0.1)' }} aria-label="Nieves AI Platform">
+            <a href="#platform" onClick={(e) => { e.preventDefault(); handleNavClick('#platform'); }} className="nl-floating-card" style={{ background: 'rgba(168, 85, 247, 0.1)' }} aria-label="Nieves AI Platform product card">
               <div className="nl-card-title" style={{ color: '#d8b4fe' }}>Nieves AI Platform</div>
               <div className="nl-card-desc">Operating system for AI products</div>
               <div className="nl-card-badge" style={{ background: 'rgba(168, 85, 247, 0.3)', borderColor: 'rgba(168, 85, 247, 0.5)', color: '#d8b4fe' }}>
                 Foundation
               </div>
             </a>
-            <a href="#roadmap" onClick={(e) => { e.preventDefault(); handleNavClick('#roadmap'); }} className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }} aria-label="Interview Coach">
+            <a href="#roadmap" onClick={(e) => { e.preventDefault(); handleNavClick('#roadmap'); }} className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }} aria-label="Interview Coach product card">
               <div className="nl-card-title" style={{ color: '#a5f3fc' }}>Interview Coach</div>
               <div className="nl-card-desc">AI-powered interview prep</div>
               <div className="nl-card-badge" style={{ background: 'rgba(6, 182, 212, 0.3)', borderColor: 'rgba(6, 182, 212, 0.5)', color: '#a5f3fc' }}>
                 Planned
               </div>
             </a>
-            <a href="#workflow" onClick={(e) => { e.preventDefault(); handleNavClick('#workflow'); }} className="nl-floating-card" style={{ background: 'rgba(34, 197, 94, 0.1)' }} aria-label="Workflow Studio">
+            <a href="#workflow" onClick={(e) => { e.preventDefault(); handleNavClick('#workflow'); }} className="nl-floating-card" style={{ background: 'rgba(34, 197, 94, 0.1)' }} aria-label="Workflow Studio product card">
               <div className="nl-card-title" style={{ color: '#86efac' }}>Workflow Studio</div>
               <div className="nl-card-desc">Automation & integrations</div>
               <div className="nl-card-badge" style={{ background: 'rgba(34, 197, 94, 0.3)', borderColor: 'rgba(34, 197, 94, 0.5)', color: '#86efac' }}>
@@ -253,6 +255,23 @@ export default function Home() {
                 {completed.map((item, idx) => (
                   <div key={idx} className="nl-roadmap-item">
                     <span className="nl-roadmap-item-icon">✓</span>
+                    <span className="nl-roadmap-item-text">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="nl-roadmap-column">
+              <div className="nl-roadmap-header">
+                <div className="nl-roadmap-icon inprogress">
+                  <Clock size={20} color="#f59e0b" />
+                </div>
+                <h3 className="nl-roadmap-title">In Progress</h3>
+              </div>
+              <div className="nl-roadmap-items">
+                {inProgress.map((item, idx) => (
+                  <div key={idx} className="nl-roadmap-item inprogress">
+                    <div className="nl-roadmap-item-icon"></div>
                     <span className="nl-roadmap-item-text">{item}</span>
                   </div>
                 ))}
