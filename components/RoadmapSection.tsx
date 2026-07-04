@@ -1,53 +1,74 @@
+'use client';
+
+import { Check, Clock } from 'lucide-react';
+
+const completed = [
+  'GitHub repository setup',
+  'Vercel deployment pipeline',
+  'Foundation documentation',
+  'Brand messaging',
+  'Premium homepage v1',
+];
+
+const upcoming = [
+  'Product detail pages',
+  'Command Center interface',
+  'Component library',
+  'API documentation',
+  'User authentication',
+  'Analytics dashboard',
+];
+
 export default function RoadmapSection() {
   return (
-    <section id="roadmap" className="py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12">
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Our Direction</h2>
-          <p className="text-lg text-gray-600 max-w-2xl">Building Nieves Labs step by step, with transparency and focus.</p>
+    <section id="roadmap" className="py-24 bg-slate-950 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid opacity-5"></div>
+
+      <div className="relative z-10 container-max">
+        <div className="text-center mb-16 animate-fade-in">
+          <h2 className="heading-h2 mb-4">Public Roadmap</h2>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+            See what we are building and what's coming next
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Completed */}
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Completed</h3>
-            <ul className="space-y-3">
-              {[
-                'GitHub + Vercel pipeline',
-                'Foundation documentation',
-                'Roadmap and planning',
-                'Brand-focused messaging',
-                'Premium homepage v1',
-              ].map((item, idx) => (
-                <li key={idx} className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">{item}</span>
-                </li>
+          <div className="space-y-4 animate-slide-up">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-400/50 flex items-center justify-center">
+                <Check size={20} className="text-green-400" />
+              </div>
+              <h3 className="heading-h3 text-white">Completed</h3>
+            </div>
+
+            <div className="space-y-3">
+              {completed.map((item, idx) => (
+                <div key={idx} className="glassmorphism p-4 flex items-start space-x-4 group hover:border-green-400/50 transition-all">
+                  <Check size={20} className="text-green-400 mt-1 flex-shrink-0" />
+                  <span className="text-slate-300 group-hover:text-white transition-colors">{item}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
 
-          {/* Next */}
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Next</h3>
-            <ul className="space-y-3">
-              {[
-                'Product detail pages',
-                'Command Center (unified dashboard)',
-                'Shared component library',
-                'API documentation',
-                'Community platform',
-              ].map((item, idx) => (
-                <li key={idx} className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm3.707-8.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">{item}</span>
-                </li>
+          <div className="space-y-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-400/50 flex items-center justify-center">
+                <Clock size={20} className="text-blue-400" />
+              </div>
+              <h3 className="heading-h3 text-white">Coming Soon</h3>
+            </div>
+
+            <div className="space-y-3">
+              {upcoming.map((item, idx) => (
+                <div key={idx} className="glassmorphism p-4 flex items-start space-x-4 group hover:border-blue-400/50 transition-all">
+                  <div className="w-6 h-6 rounded-full border-2 border-blue-400/50 mt-1 flex-shrink-0 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-400/50 group-hover:bg-blue-400 transition-colors"></div>
+                  </div>
+                  <span className="text-slate-300 group-hover:text-white transition-colors">{item}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
