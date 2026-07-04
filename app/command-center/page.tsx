@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Calendar, GitBranch, Github, Home, BookOpen, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function CommandCenter() {
@@ -172,18 +172,20 @@ export default function CommandCenter() {
             <h2 className="cc-section-title">Documentation Hub</h2>
             <div className="cc-products-grid">
               {documentationHub.map((doc, idx) => (
-                <a key={idx} href={doc.href} className="cc-product-card cc-doc-card" aria-label={doc.title}>
+                <Fragment key={idx}>
                   <span id={doc.href.replace('#', '')} className="cc-doc-anchor"></span>
-                  <div className="cc-product-header">
-                    <h3 className="cc-product-name">{doc.title}</h3>
-                    <div className="cc-status-badge cc-status-badge-source">
-                      Internal source of truth
+                  <a href={doc.href} className="cc-product-card cc-doc-card">
+                    <div className="cc-product-header">
+                      <h3 className="cc-product-name">{doc.title}</h3>
+                      <div className="cc-status-badge cc-status-badge-source">
+                        Internal source of truth
+                      </div>
                     </div>
-                  </div>
-                  <div className="cc-product-details">
-                    <p className="cc-doc-summary">{doc.summary}</p>
-                  </div>
-                </a>
+                    <div className="cc-product-details">
+                      <p className="cc-doc-summary">{doc.summary}</p>
+                    </div>
+                  </a>
+                </Fragment>
               ))}
             </div>
           </section>
