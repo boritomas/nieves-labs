@@ -107,6 +107,93 @@ export default function CommandCenter() {
     { label: 'View Homepage', href: '/', icon: Home },
   ];
 
+  const platformRegistry = [
+    {
+      name: 'Nieves AI Platform',
+      category: 'Platform',
+      status: 'Active Development',
+      statusColor: '#f59e0b',
+      version: '0.1',
+      repository: 'boritomas/nieves-labs',
+      repositoryHref: 'https://github.com/boritomas/nieves-labs',
+      productionUrl: 'TBD',
+      productionHref: '#',
+      nextMilestone: 'Build Command Center',
+      lastUpdated: 'July 2026',
+      notes: 'Foundation platform that enables all other products',
+    },
+    {
+      name: 'AnswerBrief AI',
+      category: 'SaaS',
+      status: 'Operational',
+      statusColor: '#10b981',
+      version: '1.0',
+      repository: 'Existing',
+      repositoryHref: '#',
+      productionUrl: 'Existing',
+      productionHref: '#',
+      nextMilestone: 'Final workflow polish',
+      lastUpdated: 'July 2026',
+      notes: 'First consumer product, active user base. Role-specific interview preparation.',
+    },
+    {
+      name: 'Workflow Studio',
+      category: 'SaaS',
+      status: 'Planning',
+      statusColor: '#06b6d4',
+      version: 'Concept',
+      repository: 'TBD',
+      repositoryHref: '#',
+      productionUrl: 'TBD',
+      productionHref: '#',
+      nextMilestone: 'Design specifications',
+      lastUpdated: 'July 2026',
+      notes: 'Automation and integrations for small business owners and teams',
+    },
+    {
+      name: 'Interview Coach',
+      category: 'SaaS',
+      status: 'Planning',
+      statusColor: '#06b6d4',
+      version: 'Concept',
+      repository: 'TBD',
+      repositoryHref: '#',
+      productionUrl: 'TBD',
+      productionHref: '#',
+      nextMilestone: 'Design specifications',
+      lastUpdated: 'July 2026',
+      notes: 'AI interview simulation. Complements AnswerBrief AI.',
+    },
+    {
+      name: 'TaxAppealBuddy',
+      category: 'SaaS',
+      status: 'Prototype',
+      statusColor: '#a855f7',
+      version: '0.1',
+      repository: 'TBD',
+      repositoryHref: '#',
+      productionUrl: 'TBD',
+      productionHref: '#',
+      nextMilestone: 'User validation phase',
+      lastUpdated: 'July 2026',
+      notes: 'Niche vertical product for homeowners and tax appeal professionals',
+    },
+    {
+      name: 'Nieves Command Center',
+      category: 'Internal Platform',
+      status: 'Planning',
+      statusColor: '#4f46e5',
+      version: 'Concept',
+      repository: 'TBD',
+      repositoryHref: '#',
+      productionUrl: 'TBD',
+      productionHref: '#',
+      nextMilestone: 'Product Dashboard',
+      lastUpdated: 'July 2026',
+      notes: 'Central hub for monitoring all products and workflows',
+    },
+  ];
+
   if (!mounted) {
     return null;
   }
@@ -151,6 +238,65 @@ export default function CommandCenter() {
                   </a>
                 );
               })}
+            </div>
+          </section>
+
+          {/* PLATFORM REGISTRY */}
+          <section className="cc-section">
+            <h2 className="cc-section-title">Platform Registry</h2>
+            <div className="cc-registry-grid">
+              {platformRegistry.map((product, idx) => (
+                <div key={idx} className="cc-registry-card">
+                  <div className="cc-product-header">
+                    <h3 className="cc-product-name">{product.name}</h3>
+                    <div
+                      className="cc-status-badge"
+                      style={{
+                        backgroundColor: `${product.statusColor}20`,
+                        borderColor: product.statusColor,
+                        color: product.statusColor,
+                      }}
+                    >
+                      {product.status}
+                    </div>
+                  </div>
+                  <div className="cc-registry-meta">
+                    <span className="cc-registry-category">{product.category}</span>
+                  </div>
+                  <div className="cc-product-details">
+                    <div className="cc-detail-row">
+                      <span className="cc-detail-label">Version:</span>
+                      <span className="cc-detail-value">{product.version}</span>
+                    </div>
+                    <div className="cc-detail-row">
+                      <span className="cc-detail-label">Repository:</span>
+                      <a
+                        href={product.repositoryHref}
+                        className="cc-detail-link"
+                        target={product.repositoryHref.startsWith('http') ? '_blank' : undefined}
+                        rel={product.repositoryHref.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      >
+                        {product.repository}
+                      </a>
+                    </div>
+                    <div className="cc-detail-row">
+                      <span className="cc-detail-label">Production URL:</span>
+                      <a href={product.productionHref} className="cc-detail-link">
+                        {product.productionUrl}
+                      </a>
+                    </div>
+                    <div className="cc-detail-row">
+                      <span className="cc-detail-label">Next Milestone:</span>
+                      <span className="cc-detail-value">{product.nextMilestone}</span>
+                    </div>
+                    <div className="cc-detail-row">
+                      <span className="cc-detail-label">Last Updated:</span>
+                      <span className="cc-detail-value">{product.lastUpdated}</span>
+                    </div>
+                  </div>
+                  <p className="cc-registry-notes">{product.notes}</p>
+                </div>
+              ))}
             </div>
           </section>
 
