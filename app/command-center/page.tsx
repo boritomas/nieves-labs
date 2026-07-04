@@ -173,8 +173,8 @@ export default function CommandCenter() {
             <div className="cc-products-grid">
               {documentationHub.map((doc, idx) => (
                 <Fragment key={idx}>
-                  <span id={doc.href.replace('#', '')} className="cc-doc-anchor"></span>
-                  <a href={doc.href} className="cc-product-card cc-doc-card">
+                  <span id={doc.href.replace('#', '')} className="cc-doc-anchor" aria-hidden="true"></span>
+                  <a href={doc.href} className="cc-product-card cc-doc-card" aria-label={`${doc.title} internal source-of-truth document`}>
                     <div className="cc-product-header">
                       <h3 className="cc-product-name">{doc.title}</h3>
                       <div className="cc-status-badge cc-status-badge-source">
