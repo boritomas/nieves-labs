@@ -40,7 +40,7 @@ export default function Hero() {
           <div className="relative w-full h-full max-w-md mx-auto">
             <div className="absolute top-12 left-0 w-48 glassmorphism p-4 animate-float">
               <div className="text-xs font-semibold text-blue-300 mb-2">AnswerBrief AI</div>
-              <div className="text-xs text-slate-300">Meeting intelligence & summaries</div>
+              <div className="text-xs text-slate-300">Role-specific interview prep</div>
               <div className="mt-3 inline-block px-2 py-1 bg-blue-500/30 border border-blue-400/50 rounded text-xs text-blue-200">
                 In progress
               </div>
@@ -88,7 +88,7 @@ export default function Hero() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="glassmorphism p-4 animate-float">
               <div className="text-xs font-semibold text-blue-300 mb-2">AnswerBrief AI</div>
-              <div className="text-xs text-slate-300">Meeting intelligence</div>
+              <div className="text-xs text-slate-300">Role-specific interview prep</div>
               <div className="mt-3 inline-block px-2 py-1 bg-blue-500/30 border border-blue-400/50 rounded text-xs text-blue-200">
                 In progress
               </div>

@@ -13,11 +13,12 @@ Build a connected ecosystem of AI-powered products that help professionals and s
 - [x] **Premium homepage v1** - Visual SaaS landing page with animations, glassmorphism, floating cards, and workflow visualization
 
 ### In Progress
-- [ ] AnswerBrief AI - Meeting intelligence and summaries
-  - Meeting transcription integration
-  - AI-powered summary generation
-  - Executive briefing creation
-  - Follow-up action tracking
+- [ ] AnswerBrief AI - Role-specific interview preparation
+  - Resume analysis and parsing
+  - Job posting analysis
+  - Role-specific interview brief generation
+  - Experience-to-role mapping
+  - Example preparation guidance
 
 ### Coming Soon
 - [ ] Product detail pages and individual product landing pages

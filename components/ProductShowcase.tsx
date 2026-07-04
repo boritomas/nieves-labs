@@ -6,7 +6,7 @@ const products = [
   {
     icon: Radio,
     name: 'AnswerBrief AI',
-    description: 'Meeting intelligence, summaries, follow-ups, and executive-ready updates.',
+    description: 'Turn your resume and job posting into a role-specific interview brief.',
     status: 'In progress',
     statusColor: 'bg-blue-500/20 border-blue-400/50 text-blue-200',
     iconColor: 'text-blue-400',
