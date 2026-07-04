@@ -6,31 +6,44 @@ import { Check, Clock, Github, Mail } from 'lucide-react';
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleNavClick = (href: string) => {
+    setMobileMenuOpen(false);
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const products = [
     {
       name: 'AnswerBrief AI',
       description: 'Meeting intelligence, summaries, follow-ups, and executive-ready updates.',
       status: 'In progress',
+      link: '#products',
     },
     {
       name: 'Nieves AI Platform',
       description: 'The operating system for managing products, workflows, AI agents, and deployments.',
       status: 'Foundation',
+      link: '#platform',
     },
     {
       name: 'Interview Coach',
       description: 'AI-powered interview preparation, practice, and personalized feedback.',
       status: 'Planned',
+      link: '#roadmap',
     },
     {
       name: 'Workflow Studio',
       description: 'Automation systems that connect docs, email, Slack, Jira, and reporting.',
       status: 'Planned',
+      link: '#workflow',
     },
     {
       name: 'TaxAppealBuddy',
       description: 'Property tax appeal support using comps, packets, and hearing preparation.',
       status: 'Prototype',
+      link: '#roadmap',
     },
   ];
 
@@ -58,21 +71,23 @@ export default function Home() {
       {/* HEADER */}
       <header className="nl-header">
         <div className="nl-header-content">
-          <div className="nl-logo">
+          <a href="#hero" className="nl-logo" onClick={() => handleNavClick('#hero')} aria-label="Nieves Labs home">
             <div className="nl-logo-icon"></div>
             <span>Nieves Labs</span>
-          </div>
+          </a>
 
           <nav className={`nl-nav ${mobileMenuOpen ? 'active' : ''}`}>
-            <a href="#products">Products</a>
-            <a href="#workflow">Workflow</a>
-            <a href="#roadmap">Roadmap</a>
-            <button className="nl-nav-button">Get Started</button>
+            <a href="#products" onClick={() => handleNavClick('#products')}>Products</a>
+            <a href="#workflow" onClick={() => handleNavClick('#workflow')}>Workflow</a>
+            <a href="#roadmap" onClick={() => handleNavClick('#roadmap')}>Roadmap</a>
+            <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-nav-button" role="button">Get Started</a>
           </nav>
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="nl-menu-toggle"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
@@ -80,10 +95,10 @@ export default function Home() {
 
         {mobileMenuOpen && (
           <div className="nl-mobile-menu active">
-            <a href="#products">Products</a>
-            <a href="#workflow">Workflow</a>
-            <a href="#roadmap">Roadmap</a>
-            <button className="nl-nav-button" style={{ width: '100%' }}>Get Started</button>
+            <a href="#products" onClick={() => handleNavClick('#products')}>Products</a>
+            <a href="#workflow" onClick={() => handleNavClick('#workflow')}>Workflow</a>
+            <a href="#roadmap" onClick={() => handleNavClick('#roadmap')}>Roadmap</a>
+            <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-nav-button" style={{ width: '100%' }}>Get Started</a>
           </div>
         )}
       </header>
@@ -106,44 +121,44 @@ export default function Home() {
             </p>
 
             <div className="nl-button-group">
-              <button className="nl-button-primary">
+              <a href="#products" onClick={(e) => { e.preventDefault(); handleNavClick('#products'); }} className="nl-button-primary">
                 Explore Products →
-              </button>
-              <button className="nl-button-secondary">
+              </a>
+              <a href="#platform" onClick={(e) => { e.preventDefault(); handleNavClick('#platform'); }} className="nl-button-secondary">
                 See the Platform
-              </button>
+              </a>
             </div>
           </div>
 
           <div className="nl-hero-visual">
-            <div className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+            <a href="#products" onClick={(e) => { e.preventDefault(); handleNavClick('#products'); }} className="nl-floating-card" style={{ background: 'rgba(59, 130, 246, 0.1)' }} aria-label="AnswerBrief AI">
               <div className="nl-card-title" style={{ color: '#93c5fd' }}>AnswerBrief AI</div>
               <div className="nl-card-desc">Meeting intelligence & summaries</div>
               <div className="nl-card-badge" style={{ background: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.5)', color: '#93c5fd' }}>
                 In progress
               </div>
-            </div>
-            <div className="nl-floating-card" style={{ background: 'rgba(168, 85, 247, 0.1)' }}>
+            </a>
+            <a href="#platform" onClick={(e) => { e.preventDefault(); handleNavClick('#platform'); }} className="nl-floating-card" style={{ background: 'rgba(168, 85, 247, 0.1)' }} aria-label="Nieves AI Platform">
               <div className="nl-card-title" style={{ color: '#d8b4fe' }}>Nieves AI Platform</div>
               <div className="nl-card-desc">Operating system for AI products</div>
               <div className="nl-card-badge" style={{ background: 'rgba(168, 85, 247, 0.3)', borderColor: 'rgba(168, 85, 247, 0.5)', color: '#d8b4fe' }}>
                 Foundation
               </div>
-            </div>
-            <div className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }}>
+            </a>
+            <a href="#roadmap" onClick={(e) => { e.preventDefault(); handleNavClick('#roadmap'); }} className="nl-floating-card" style={{ background: 'rgba(6, 182, 212, 0.1)' }} aria-label="Interview Coach">
               <div className="nl-card-title" style={{ color: '#a5f3fc' }}>Interview Coach</div>
               <div className="nl-card-desc">AI-powered interview prep</div>
               <div className="nl-card-badge" style={{ background: 'rgba(6, 182, 212, 0.3)', borderColor: 'rgba(6, 182, 212, 0.5)', color: '#a5f3fc' }}>
                 Planned
               </div>
-            </div>
-            <div className="nl-floating-card" style={{ background: 'rgba(34, 197, 94, 0.1)' }}>
+            </a>
+            <a href="#workflow" onClick={(e) => { e.preventDefault(); handleNavClick('#workflow'); }} className="nl-floating-card" style={{ background: 'rgba(34, 197, 94, 0.1)' }} aria-label="Workflow Studio">
               <div className="nl-card-title" style={{ color: '#86efac' }}>Workflow Studio</div>
               <div className="nl-card-desc">Automation & integrations</div>
               <div className="nl-card-badge" style={{ background: 'rgba(34, 197, 94, 0.3)', borderColor: 'rgba(34, 197, 94, 0.5)', color: '#86efac' }}>
                 Planned
               </div>
-            </div>
+            </a>
           </div>
         </div>
       </section>
@@ -160,7 +175,13 @@ export default function Home() {
 
           <div className="nl-product-grid">
             {products.map((product, idx) => (
-              <div key={idx} className="nl-product-card">
+              <a
+                key={idx}
+                href={product.link}
+                onClick={(e) => { e.preventDefault(); handleNavClick(product.link); }}
+                className="nl-product-card"
+                aria-label={`Learn more about ${product.name}`}
+              >
                 <div className="nl-product-icon">💡</div>
                 <h3 className="nl-product-name">{product.name}</h3>
                 <p className="nl-product-desc">{product.description}</p>
@@ -168,7 +189,7 @@ export default function Home() {
                   <span className="nl-status-badge">{product.status}</span>
                   <div className="nl-product-dot"></div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
@@ -258,6 +279,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* PLATFORM SECTION (hidden anchor) */}
+      <section id="platform" style={{ display: 'none' }}></section>
+
       {/* CTA SECTION */}
       <section className="nl-cta">
         <div className="nl-cta-card">
@@ -268,8 +292,12 @@ export default function Home() {
             Nieves Labs is creating a connected ecosystem of AI products for productivity, automation, and small-business workflows.
           </p>
           <div className="nl-button-group">
-            <button className="nl-button-primary">Explore Products →</button>
-            <button className="nl-button-secondary">Follow the Roadmap</button>
+            <a href="#products" onClick={(e) => { e.preventDefault(); handleNavClick('#products'); }} className="nl-button-primary">
+              Explore Products →
+            </a>
+            <a href="#roadmap" onClick={(e) => { e.preventDefault(); handleNavClick('#roadmap'); }} className="nl-button-secondary">
+              Follow the Roadmap
+            </a>
           </div>
         </div>
       </section>
@@ -279,10 +307,10 @@ export default function Home() {
         <div className="nl-footer-content">
           <div className="nl-footer-grid">
             <div>
-              <div className="nl-footer-brand">
+              <a href="#hero" onClick={() => handleNavClick('#hero')} className="nl-footer-brand" aria-label="Nieves Labs">
                 <div className="nl-footer-brand-icon"></div>
                 <span className="nl-footer-brand-text">Nieves Labs</span>
-              </div>
+              </a>
               <p className="nl-footer-desc">
                 Practical AI products for real-world work
               </p>
@@ -291,32 +319,42 @@ export default function Home() {
             <div>
               <h4 className="nl-footer-section-title">Products</h4>
               <div className="nl-footer-links">
-                <a href="#" className="nl-footer-link">AnswerBrief AI</a>
-                <a href="#" className="nl-footer-link">AI Platform</a>
-                <a href="#" className="nl-footer-link">Interview Coach</a>
-                <a href="#" className="nl-footer-link">Workflow Studio</a>
+                <a href="#products" onClick={() => handleNavClick('#products')} className="nl-footer-link">AnswerBrief AI</a>
+                <a href="#platform" onClick={() => handleNavClick('#platform')} className="nl-footer-link">AI Platform</a>
+                <a href="#roadmap" onClick={() => handleNavClick('#roadmap')} className="nl-footer-link">Interview Coach</a>
+                <a href="#workflow" onClick={() => handleNavClick('#workflow')} className="nl-footer-link">Workflow Studio</a>
               </div>
             </div>
 
             <div>
               <h4 className="nl-footer-section-title">Resources</h4>
               <div className="nl-footer-links">
-                <a href="#" className="nl-footer-link">Roadmap</a>
-                <a href="#" className="nl-footer-link">Documentation</a>
-                <a href="#" className="nl-footer-link">Blog</a>
-                <a href="#" className="nl-footer-link">Contact</a>
+                <a href="#roadmap" onClick={() => handleNavClick('#roadmap')} className="nl-footer-link">Roadmap</a>
+                <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-link">Documentation</a>
+                <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-link">Blog</a>
+                <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-link">Contact</a>
               </div>
             </div>
 
             <div>
               <h4 className="nl-footer-section-title">Connect</h4>
               <div className="nl-footer-social">
-                <button className="nl-footer-social-button">
+                <a 
+                  href="https://github.com/boritomas/nieves-labs" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="nl-footer-social-button"
+                  aria-label="Visit GitHub repository"
+                >
                   <Github size={20} />
-                </button>
-                <button className="nl-footer-social-button">
+                </a>
+                <a
+                  href="mailto:hello@nieves-labs.com"
+                  className="nl-footer-social-button"
+                  aria-label="Send email"
+                >
                   <Mail size={20} />
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -326,13 +364,16 @@ export default function Home() {
               &copy; {new Date().getFullYear()} Nieves Labs. All rights reserved.
             </p>
             <div className="nl-footer-bottom-links">
-              <a href="#" className="nl-footer-bottom-link">Privacy</a>
-              <a href="#" className="nl-footer-bottom-link">Terms</a>
-              <a href="#" className="nl-footer-bottom-link">Cookies</a>
+              <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-bottom-link">Privacy</a>
+              <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-bottom-link">Terms</a>
+              <a href="#contact" onClick={() => handleNavClick('#contact')} className="nl-footer-bottom-link">Cookies</a>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* CONTACT SECTION (hidden anchor) */}
+      <section id="contact" style={{ display: 'none' }}></section>
     </div>
   );
 }
