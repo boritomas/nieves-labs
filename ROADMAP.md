@@ -1,39 +1,23 @@
 # Nieves Labs Roadmap
 
-## Vision
-Build a connected ecosystem of AI-powered products that help professionals and small businesses move faster, reduce manual work, and turn ideas into usable tools.
+## Completed
 
-## Public Roadmap
+- Central product hub with product cards and working CTAs
+- Product detail pages for every required product
+- Stripe-ready checkout API and webhook validation
+- Tokenized intake pages with file upload support
+- Shared workflow engine: `runWorkflow(productKey, orderId)`
+- Structured deliverable generation fallback
+- Google Drive, Gmail, and Apps Script integration adapters
+- Admin console for orders, products, payments, workflow status, errors, logs, needs review, and completed work
+- Operations documentation and environment variable registry
 
-### Completed
-- [x] GitHub repository setup and configuration
-- [x] Vercel deployment pipeline
-- [x] Foundation documentation and brand guidelines
-- [x] Brand messaging and positioning
-- [x] **Premium homepage v1** - Visual SaaS landing page with animations, glassmorphism, floating cards, and workflow visualization
+## Production Readiness Remaining
 
-### In Progress
-- [ ] AnswerBrief AI - Meeting intelligence and summaries
-  - Meeting transcription integration
-  - AI-powered summary generation
-  - Executive briefing creation
-  - Follow-up action tracking
-
-### Coming Soon
-- [ ] Product detail pages and individual product landing pages
-- [ ] Command Center - Central dashboard for all Nieves Labs products
-- [ ] Component library - Reusable UI components for all products
-- [ ] API documentation and developer portal
-- [ ] User authentication and account management
-- [ ] Analytics dashboard for product insights
-- [ ] Nieves AI Platform - Operating system for managing products, workflows, and AI agents
-- [ ] Interview Coach - AI-powered interview preparation and feedback
-- [ ] Workflow Studio - Automation and integration tools
-- [ ] TaxAppealBuddy - Property tax appeal support tools
-
-### Future Considerations
-- Advanced AI model integrations
-- Multi-language support
-- Enterprise features and licensing
-- Mobile applications
-- Community and marketplace features
+- Configure production credentials in Vercel
+- Replace local JSON store with durable managed database
+- Configure persistent object storage for uploads
+- Create Stripe products/prices and webhook endpoint
+- Create Google OAuth refresh tokens and Drive root folder
+- Validate Gmail sending limits and support mailbox
+- Add production monitoring and alerting
