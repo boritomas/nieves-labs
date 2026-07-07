@@ -15,9 +15,9 @@ export async function sendOrderEmail(order: Order, product: Product, kind: 'conf
     const accessToken = await getGmailAccessToken();
     const subject = emailSubject(product, kind);
     const body = emailBody(order, product, kind);
-    const raw = Buffer.from([
-      `To: ${kind === 'failure_alert' ? env.supportEmail : order.customerEmail}`,
-      `From: ${env.supportEmail}`,
+      const raw = Buffer.from([
+        `To: ${kind === 'failure_alert' ? env.supportEmail : order.customerEmail}`,
+      `From: ${env.gmailFromEmail}`,
       `Subject: ${subject}`,
       'Content-Type: text/plain; charset=utf-8',
       '',

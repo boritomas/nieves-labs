@@ -9,6 +9,7 @@ type AdminData = {
   orders: Order[];
   logs: WorkflowLog[];
   credentials: Record<string, boolean>;
+  storageMode: string;
 };
 
 export default function AdminConsole() {
@@ -81,6 +82,7 @@ export default function AdminConsole() {
 
           <section className="panel">
             <h2>Integration Status</h2>
+            <p>Storage mode: {data.storageMode}</p>
             <div className="status-list">
               {Object.entries(data.credentials).map(([key, ready]) => (
                 <span key={key} className={ready ? 'status-pill ready' : 'status-pill missing'}>{key}: {ready ? 'ready' : 'missing'}</span>

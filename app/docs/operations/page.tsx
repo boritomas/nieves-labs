@@ -15,14 +15,28 @@ const envVars = [
   'STRIPE_PRICE_INTERVIEW_COACH_PLAN',
   'STRIPE_PRICE_WORKFORCE_STUDY_REPORT',
   'STRIPE_PRICE_PLATFORM_CONSULTATION',
+  'NEXT_PUBLIC_STRIPE_QUICK_PREP_LINK',
+  'NEXT_PUBLIC_STRIPE_FULL_INTERVIEW_BRIEF_LINK',
+  'NEXT_PUBLIC_STRIPE_PREMIUM_PREP_LINK',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
   'GOOGLE_REFRESH_TOKEN',
   'GOOGLE_DRIVE_FOLDER_ROOT_ID',
+  'GOOGLE_DRIVE_ROOT_FOLDER_ID',
   'GOOGLE_APPS_SCRIPT_URL',
+  'GOOGLE_APPS_SCRIPT_WEBHOOK_URL',
+  'GOOGLE_SERVICE_ACCOUNT_EMAIL',
+  'GOOGLE_PRIVATE_KEY',
+  'GOOGLE_SHEETS_SPREADSHEET_ID',
+  'GOOGLE_SHEETS_ORDERS_SHEET_NAME',
+  'GOOGLE_SHEETS_INTAKE_SHEET_NAME',
   'GMAIL_CLIENT_ID',
   'GMAIL_CLIENT_SECRET',
   'GMAIL_REFRESH_TOKEN',
+  'GMAIL_FROM_EMAIL',
+  'DATABASE_URL',
+  'POSTGRES_URL',
+  'BLOB_READ_WRITE_TOKEN',
 ];
 
 export default function OperationsDocsPage() {
@@ -43,7 +57,7 @@ export default function OperationsDocsPage() {
         <article className="panel">
           <h2>Architecture</h2>
           <p>Next.js App Router serves product pages, checkout APIs, tokenized intake, workflow execution, and the admin console.</p>
-          <p>Orders, customers, uploads, deliverables, logs, and workflow status are normalized in the platform store. The current implementation uses a local JSON adapter and should be switched to durable managed storage before high-volume production use.</p>
+          <p>Orders, customers, uploads, deliverables, logs, and workflow status are normalized in the platform store. Local JSON is used for development. Production can mirror normalized entities to Google Sheets when the approved service-account and spreadsheet variables are configured.</p>
         </article>
         <article className="panel">
           <h2>Credential Status</h2>
@@ -72,7 +86,7 @@ export default function OperationsDocsPage() {
       </section>
       <section className="section panel">
         <h2>Troubleshooting</h2>
-        <p>If checkout redirects directly to intake, Stripe credentials are missing. If Drive or Gmail steps are skipped, configure Google OAuth variables. Production admin APIs fail closed until ADMIN_TOKEN is configured.</p>
+        <p>If checkout redirects directly to intake, Stripe credentials and approved payment links are missing. If Drive or Gmail steps are skipped, configure Google OAuth or service-account variables. Production admin APIs fail closed until ADMIN_TOKEN is configured.</p>
       </section>
     </main>
   );

@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { mirrorStoreToDurableStorage } from './durable-storage';
 import type { Customer, Order, StoreData, WorkflowLog } from './types';
 import type { ProductKey } from './products';
 
@@ -25,6 +26,7 @@ async function readStore(): Promise<StoreData> {
 async function writeStore(data: StoreData) {
   await mkdir(dataDir, { recursive: true });
   await writeFile(dataFile, JSON.stringify(data, null, 2));
+  await mirrorStoreToDurableStorage(data);
 }
 
 export async function listOrders() {

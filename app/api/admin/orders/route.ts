@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { env, requiredCredentialStatus } from '@/lib/env';
+import { storageMode } from '@/lib/durable-storage';
 import { listLogs, listOrders } from '@/lib/store';
 import { products } from '@/lib/products';
 
@@ -24,5 +25,6 @@ export async function GET(request: Request) {
     orders,
     logs,
     credentials: requiredCredentialStatus(),
+    storageMode: storageMode(),
   });
 }

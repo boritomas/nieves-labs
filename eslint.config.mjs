@@ -1,14 +1,36 @@
-import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import tsParser from '@typescript-eslint/parser';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const compat = new FlatCompat({ baseDirectory: __dirname });
+const browserGlobals = {
+  Blob: 'readonly',
+  Buffer: 'readonly',
+  FormData: 'readonly',
+  React: 'readonly',
+  console: 'readonly',
+  fetch: 'readonly',
+  process: 'readonly',
+  window: 'readonly',
+};
 
 const config = [
-  ...compat.extends('next/core-web-vitals'),
   {
     ignores: ['.next/**', 'node_modules/**', 'out/**', '.data/**'],
+  },
+  js.configs.recommended,
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      globals: browserGlobals,
+    },
+    rules: {
+      'no-unused-vars': 'off',
+    },
   },
 ];
 

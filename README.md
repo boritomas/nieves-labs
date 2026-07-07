@@ -57,14 +57,21 @@ Critical variables:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - Stripe price IDs for every product package
+- AnswerBrief payment link aliases: `NEXT_PUBLIC_STRIPE_QUICK_PREP_LINK`, `NEXT_PUBLIC_STRIPE_FULL_INTERVIEW_BRIEF_LINK`, `NEXT_PUBLIC_STRIPE_PREMIUM_PREP_LINK`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REFRESH_TOKEN`
-- `GOOGLE_DRIVE_FOLDER_ROOT_ID`
-- `GOOGLE_APPS_SCRIPT_URL`
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_PRIVATE_KEY`
+- `GOOGLE_DRIVE_FOLDER_ROOT_ID` or `GOOGLE_DRIVE_ROOT_FOLDER_ID`
+- `GOOGLE_APPS_SCRIPT_WEBHOOK_URL` or `GOOGLE_APPS_SCRIPT_URL`
+- `GOOGLE_SHEETS_SPREADSHEET_ID`
+- `GOOGLE_SHEETS_ORDERS_SHEET_NAME`
+- `GOOGLE_SHEETS_INTAKE_SHEET_NAME`
 - `GMAIL_CLIENT_ID`
 - `GMAIL_CLIENT_SECRET`
 - `GMAIL_REFRESH_TOKEN`
+- `GMAIL_FROM_EMAIL`
 - `OPENAI_API_KEY`
 
 ## Deployment
@@ -80,4 +87,4 @@ The repository is configured for Vercel with `vercel.json`.
 
 ## Credential Behavior
 
-If Stripe credentials are missing, checkout creates a traceable manual-review order and redirects to secure intake. If Google Drive, Gmail, Apps Script, or OpenAI credentials are missing, the workflow logs the skipped step and generates structured templates instead of failing.
+If Stripe credentials are missing, checkout uses approved AnswerBrief payment links when configured; otherwise it creates a traceable manual-review order and redirects to secure intake. If Google Drive, Gmail, Apps Script, or OpenAI credentials are missing, the workflow logs the skipped step and generates structured templates instead of failing. When `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_PRIVATE_KEY` are configured, order, customer, upload, deliverable, workflow log, product config, and intake-token metadata are mirrored to Google Sheets as durable production storage.

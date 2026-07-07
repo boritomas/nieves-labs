@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
+import { generateDeliverableContent } from './ai';
 import { sendOrderEmail } from './email';
-import { createCustomerDriveFolder, triggerAppsScript } from './google';
+import { createCustomerDriveFolder, triggerAppsScript, uploadDeliverableToDrive, uploadOrderFilesToDrive } from './google';
 import { getProductByKey } from './products';
 import { addLog, getOrder, updateOrder } from './store';
 import type { Deliverable } from './types';
@@ -24,8 +25,11 @@ export async function runWorkflow(productKey: string, orderId: string) {
   await addLog(order.id, 'info', 'Workflow started', { productKey });
 
   const folderId = await createCustomerDriveFolder(order, product);
-  const deliverable = generateStructuredDeliverable(order.id, product.title, product.deliverables, order.intakeAnswers);
+  const orderWithFolder = await getOrder(order.id);
+  const uploadedFiles = orderWithFolder ? await uploadOrderFilesToDrive(orderWithFolder, folderId || orderWithFolder.driveFolderId) : order.uploads;
   const latestOrder = await getOrder(order.id);
+  const generated = await generateDeliverableContent(latestOrder || order, product);
+  const deliverable = await uploadDeliverableToDrive(latestOrder || order, generateStructuredDeliverable(order.id, product.title, generated.content), folderId || latestOrder?.driveFolderId);
 
   await updateOrder(order.id, {
     status: 'completed',
@@ -38,11 +42,11 @@ export async function runWorkflow(productKey: string, orderId: string) {
       appsScript: 'pending',
     },
   });
-  await addLog(order.id, 'info', 'Structured deliverable generated', { deliverableId: deliverable.id });
+  await addLog(order.id, 'info', generated.mode === 'openai' ? 'OpenAI deliverable generated' : 'Structured fallback deliverable generated', { deliverableId: deliverable.id });
 
   const refreshedOrder = await getOrder(order.id);
   if (refreshedOrder) {
-    await triggerAppsScript(refreshedOrder);
+    await triggerAppsScript(refreshedOrder, uploadedFiles.map((upload) => upload.googleFileId).filter((fileId): fileId is string => Boolean(fileId)));
     await sendOrderEmail(refreshedOrder, product, 'deliverable_ready');
     await updateOrder(order.id, {
       workflowStatus: {
@@ -56,23 +60,7 @@ export async function runWorkflow(productKey: string, orderId: string) {
   return getOrder(order.id);
 }
 
-function generateStructuredDeliverable(orderId: string, productTitle: string, deliverables: string[], answers: Record<string, string>): Deliverable {
-  const answerLines = Object.entries(answers).map(([key, value]) => `- ${key}: ${value || 'Not provided'}`);
-  const content = [
-    `# ${productTitle} Deliverable`,
-    '',
-    '## Package Outputs',
-    ...deliverables.map((item) => `- ${item}`),
-    '',
-    '## Intake Summary',
-    ...(answerLines.length ? answerLines : ['- No intake answers submitted.']),
-    '',
-    '## Next Steps',
-    '- Review the generated package.',
-    '- Confirm any missing or unclear details.',
-    '- Use this structured template as the baseline when AI generation credentials are unavailable.',
-  ].join('\n');
-
+function generateStructuredDeliverable(orderId: string, productTitle: string, content: string): Deliverable {
   return {
     id: randomUUID(),
     orderId,

@@ -17,6 +17,7 @@ export type UploadRecord = {
   fileType: string;
   size: number;
   storagePath: string;
+  googleFileId?: string;
   createdAt: string;
 };
 
@@ -26,6 +27,7 @@ export type Deliverable = {
   title: string;
   type: string;
   content: string;
+  googleFileId?: string;
   createdAt: string;
 };
 

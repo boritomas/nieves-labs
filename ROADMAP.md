@@ -9,6 +9,7 @@
 - Shared workflow engine: `runWorkflow(productKey, orderId)`
 - Structured deliverable generation fallback
 - Google Drive, Gmail, and Apps Script integration adapters
+- Google service-account, payment-link, and Google Sheets durable-storage aliases
 - Admin console for orders, products, payments, workflow status, errors, logs, needs review, and completed work
 - Operations documentation and environment variable registry
 

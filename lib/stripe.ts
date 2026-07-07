@@ -3,7 +3,21 @@ import { env } from './env';
 import type { Order } from './types';
 import type { Product, ProductPackage } from './products';
 
+const answerBriefPaymentLinks: Record<string, string> = {
+  brief: env.answerBriefFullBriefLink || env.answerBriefQuickPrepLink,
+  premium: env.answerBriefPremiumPrepLink,
+};
+
 export async function createCheckoutSession(order: Order, product: Product, selectedPackage: ProductPackage) {
+  const paymentLink = product.key === 'answerbrief_ai' ? answerBriefPaymentLinks[selectedPackage.id] : '';
+  if (!env.stripeSecretKey && paymentLink) {
+    return {
+      mode: 'payment_link' as const,
+      url: paymentLink,
+      sessionId: undefined,
+    };
+  }
+
   if (!env.stripeSecretKey) {
     return {
       mode: 'missing_credentials' as const,

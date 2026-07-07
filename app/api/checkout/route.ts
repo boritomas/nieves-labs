@@ -35,12 +35,14 @@ export async function POST(request: Request) {
     const checkout = await createCheckoutSession(order, product, selectedPackage);
     await updateOrder(order.id, {
       stripeCheckoutSessionId: checkout.sessionId,
-      paymentStatus: checkout.mode === 'stripe' ? 'pending' : 'manual_review',
-      status: checkout.mode === 'stripe' ? 'checkout_pending' : 'intake_pending',
+      paymentStatus: checkout.mode === 'stripe' || checkout.mode === 'payment_link' ? 'pending' : 'manual_review',
+      status: checkout.mode === 'stripe' || checkout.mode === 'payment_link' ? 'checkout_pending' : 'intake_pending',
     });
 
     if (checkout.mode === 'missing_credentials') {
       await addLog(order.id, 'warn', 'Stripe Checkout skipped: STRIPE_SECRET_KEY is not configured');
+    } else if (checkout.mode === 'payment_link') {
+      await addLog(order.id, 'info', 'Using approved Stripe payment link fallback');
     }
 
     await sendOrderEmail(order, product, 'confirmation');
