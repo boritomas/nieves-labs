@@ -27,9 +27,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <header className="topbar">
         <Link href="/" className="brand"><span className="brand-mark">NL</span><span>Nieves Labs</span></Link>
         <nav className="nav-links">
+          <Link href="/">Home</Link>
           <Link href="/#products">Products</Link>
+          <Link href="/#services">Services</Link>
           <Link href="#pricing">Pricing</Link>
-          <a href={`mailto:${env.supportEmail}`}>Support</a>
+          <a href={`mailto:${env.supportEmail}`}>Contact</a>
         </nav>
       </header>
 
@@ -58,14 +60,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <section className="section split-section">
         <div>
           <p className="eyebrow">How it works</p>
-          <h2>Checkout, intake, automation, delivery.</h2>
-          <p>After purchase, the platform creates an order, sends intake instructions, collects files, runs the product workflow, and exposes status in the admin console.</p>
+          <h2>Choose a package, share the details, receive your deliverable.</h2>
+          <p>After purchase, you will complete a focused intake form and upload the files needed to prepare your package.</p>
         </div>
         <ol className="steps">
           <li>Select package</li>
-          <li>Pay through Stripe Checkout</li>
+          <li>Complete secure checkout</li>
           <li>Submit product intake and files</li>
-          <li>Workflow creates folders, logs, emails, and deliverables</li>
+          <li>Receive a prepared deliverable</li>
         </ol>
       </section>
 
@@ -108,7 +110,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </article>
         <article className="panel">
           <h2>Privacy and disclaimers</h2>
-          <p>Files are stored for order processing and automation. Configure production storage and retention policies before accepting sensitive customer data at scale.</p>
+          <p>Your information is used to prepare the package you request. Avoid submitting unnecessary sensitive information.</p>
           <p>{product.disclaimer}</p>
           <p>Support: <a href={`mailto:${env.supportEmail}`}>{env.supportEmail}</a></p>
         </article>

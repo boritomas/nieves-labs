@@ -4,10 +4,10 @@ import AdminConsole from '@/components/AdminConsole';
 import { env } from '@/lib/env';
 
 export const metadata = {
-  title: 'Admin | Nieves Labs',
+  title: 'Orders | Nieves Labs Admin',
 };
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
   const authorized = Boolean(env.adminToken && token === env.adminToken);
 
@@ -15,20 +15,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     <main className="site-shell">
       <header className="topbar">
         <Link href="/" className="brand"><span className="brand-mark">NL</span><span>Nieves Labs</span></Link>
-        <nav className="nav-links"><Link href="/">Home</Link></nav>
+        <nav className="nav-links"><Link href="/">Home</Link><Link href={`/admin?token=${encodeURIComponent(token)}`}>Admin</Link></nav>
       </header>
       {!authorized ? (
-        <AdminAccessForm title="Admin Access" />
+        <AdminAccessForm title="Orders Access" />
       ) : (
         <>
           <section className="product-hero">
             <p className="eyebrow">Internal</p>
-            <h1>Admin Console</h1>
-            <p>Order status, fulfillment queue, and product operations.</p>
-            <div className="hero-actions">
-              <Link className="button-secondary" href={`/admin/orders?token=${encodeURIComponent(token)}`}>Orders</Link>
-              <Link className="button-secondary" href={`/admin/operations?token=${encodeURIComponent(token)}`}>Operations</Link>
-            </div>
+            <h1>Orders</h1>
+            <p>Review order status, fulfillment progress, and recent activity.</p>
           </section>
           <AdminConsole initialToken={token} />
         </>

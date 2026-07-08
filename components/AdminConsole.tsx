@@ -12,8 +12,8 @@ type AdminData = {
   storageMode: string;
 };
 
-export default function AdminConsole() {
-  const [token, setToken] = useState('');
+export default function AdminConsole({ initialToken = '' }: { initialToken?: string }) {
+  const [token, setToken] = useState(initialToken);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [data, setData] = useState<AdminData | null>(null);
