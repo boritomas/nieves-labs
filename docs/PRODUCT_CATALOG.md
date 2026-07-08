@@ -33,6 +33,10 @@ Interview practice planning with a coaching plan, question bank, response improv
 
 Operational workforce/process study package that creates a concise report, workflow map, opportunity backlog, and executive summary.
 
+### MixPilot AI
+
+AI-powered DJ set planning for parties, events, workouts, lounges, and creators. MixPilot AI turns playlists into structured set plans with energy flow, transition ideas, cue notes, and event-ready sequencing.
+
 ### Nieves AI Platform
 
 AI product and automation planning package for teams that need architecture, workflow design, integration planning, and implementation roadmap support.
@@ -42,7 +46,7 @@ AI product and automation planning package for teams that need architecture, wor
 Every product follows the same production workflow:
 
 1. Package selection
-2. Stripe Checkout
+2. Stripe Checkout or free beta start
 3. Webhook validation
 4. Order creation
 5. Secure intake and uploads

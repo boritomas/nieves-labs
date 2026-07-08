@@ -11,6 +11,7 @@
 | Tax Appeal Buddy | SaaS | Operational workflow | boritomas/nieves-labs | `/products/tax-appeal-buddy` | `tax_appeal_buddy` | Validate appeal packet templates |
 | Interview Coach | SaaS | Operational workflow | boritomas/nieves-labs | `/products/interview-coach` | `interview_coach` | Add optional AI refinement |
 | Workforce Study | SaaS | Operational workflow | boritomas/nieves-labs | `/products/workforce-study` | `workforce_study` | Add durable report storage |
+| MixPilot AI | Product app + hub | Free beta / operational workflow | boritomas/automix-pro + boritomas/nieves-labs | `/products/mixpilot-ai` | `mixpilot_ai` | Decide paid checkout timing; keep `automix_pro` alias |
 | Nieves AI Platform | Platform | Operational workflow | boritomas/nieves-labs | `/products/nieves-ai-platform` | `nieves_ai_platform` | Configure consulting package fulfillment |
 
 ## Shared Operational Requirements
@@ -30,4 +31,4 @@
 
 ## Current Credential Dependencies
 
-Production automation requires Stripe, Google Drive, Gmail, and optional OpenAI credentials. Missing credentials are logged and surfaced in `/admin` and `/docs/operations`.
+Production automation requires Stripe, Google Drive, Gmail, and optional OpenAI credentials. Missing credentials are logged and surfaced in protected `/admin` and `/admin/operations`.

@@ -26,6 +26,8 @@ This file documents the normalized Nieves Labs environment schema and the approv
 | `STRIPE_PRICE_INTERVIEW_COACH_PLAN` | none | not found in inspected Vercel projects |
 | `STRIPE_PRICE_WORKFORCE_STUDY_REPORT` | none | not found in inspected Vercel projects |
 | `STRIPE_PRICE_PLATFORM_CONSULTATION` | none | not found in inspected Vercel projects |
+| `STRIPE_PRICE_MIXPILOT_FREE_BETA` | none | not found in inspected Vercel projects; optional while MixPilot AI is Free Beta |
+| `NEXT_PUBLIC_MIXPILOT_AI_URL` | `MIXPILOT_AI_URL` | standalone product app; defaults to existing `automix-pro` Vercel deployment |
 | `PAYMENT_LINK_ANSWERBRIEF_QUICK_PREP` | `NEXT_PUBLIC_STRIPE_QUICK_PREP_LINK` | `answerbrief-ai-automation-riwu` |
 | `PAYMENT_LINK_ANSWERBRIEF_FULL_BRIEF` | `NEXT_PUBLIC_STRIPE_FULL_INTERVIEW_BRIEF_LINK` | `answerbrief-ai-automation-riwu` |
 | `PAYMENT_LINK_ANSWERBRIEF_PREMIUM_PREP` | `NEXT_PUBLIC_STRIPE_PREMIUM_PREP_LINK` | `answerbrief-ai-automation-riwu` |

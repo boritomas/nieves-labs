@@ -46,7 +46,7 @@ export default function CheckoutForm({ product, selectedPackage }: { product: Pr
         <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" />
       </label>
       <button className="button-primary" type="submit" disabled={status === 'loading'}>
-        {status === 'loading' ? 'Starting checkout...' : `Buy ${selectedPackage.name}`}
+        {status === 'loading' ? 'Starting checkout...' : selectedPackage.price === 0 ? `Start ${selectedPackage.name}` : `Buy ${selectedPackage.name}`}
       </button>
       {message && <p className="form-error">{message}</p>}
     </form>

@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import CheckoutForm from '@/components/CheckoutForm';
 import { getProductBySlug, products } from '@/lib/products';
 import { env } from '@/lib/env';
 
 export function generateStaticParams() {
-  return products.map((product) => ({ slug: product.slug }));
+  return [...products.map((product) => ({ slug: product.slug })), { slug: 'automix-pro' }];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -19,8 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  if (slug === 'automix-pro') {
+    redirect('/products/mixpilot-ai');
+  }
+
   const product = getProductBySlug(slug);
   if (!product) notFound();
+  const isMixPilot = product.key === 'mixpilot_ai';
 
   return (
     <main className="site-shell">
@@ -40,8 +45,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <h1>{product.title}</h1>
         <p>{product.tagline}</p>
         <div className="hero-actions">
-          <Link className="button-primary" href="#pricing">Purchase package</Link>
-          <Link className="button-secondary" href="#intake">Review intake</Link>
+          {isMixPilot ? (
+            <a className="button-primary" href={env.mixpilotAppUrl}>Build a Mix</a>
+          ) : (
+            <Link className="button-primary" href="#pricing">Purchase package</Link>
+          )}
+          <Link className="button-secondary" href={isMixPilot ? '#pricing' : '#intake'}>
+            {isMixPilot ? 'Start Free Beta' : 'Review intake'}
+          </Link>
         </div>
       </section>
 

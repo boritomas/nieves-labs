@@ -7,6 +7,7 @@ export const env = {
   answerBriefQuickPrepLink: process.env.PAYMENT_LINK_ANSWERBRIEF_QUICK_PREP || process.env.NEXT_PUBLIC_STRIPE_QUICK_PREP_LINK || '',
   answerBriefFullBriefLink: process.env.PAYMENT_LINK_ANSWERBRIEF_FULL_BRIEF || process.env.NEXT_PUBLIC_STRIPE_FULL_INTERVIEW_BRIEF_LINK || '',
   answerBriefPremiumPrepLink: process.env.PAYMENT_LINK_ANSWERBRIEF_PREMIUM_PREP || process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PREP_LINK || '',
+  mixpilotAppUrl: process.env.NEXT_PUBLIC_MIXPILOT_AI_URL || process.env.MIXPILOT_AI_URL || 'https://automix-pro-nine.vercel.app',
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   googleRefreshToken: process.env.GOOGLE_REFRESH_TOKEN || '',

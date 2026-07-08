@@ -4,6 +4,8 @@ export type ProductKey =
   | 'tax_appeal_buddy'
   | 'interview_coach'
   | 'workforce_study'
+  | 'mixpilot_ai'
+  | 'automix_pro'
   | 'nieves_ai_platform';
 
 export type ProductPackage = {
@@ -181,6 +183,38 @@ export const products: Product[] = [
     disclaimer: 'Workforce Study provides operational recommendations and does not replace legal, HR, or compliance advice.',
   },
   {
+    key: 'mixpilot_ai',
+    slug: 'mixpilot-ai',
+    title: 'MixPilot AI',
+    shortTitle: 'MixPilot',
+    tagline: 'Your AI DJ set planner.',
+    description: 'AI-powered DJ set planning for parties, events, workouts, lounges, and creators.',
+    idealCustomer: 'Party hosts, mobile DJs, fitness instructors, event planners, creators, and small venues.',
+    problem: 'Playlists are easy to collect but hard to sequence into a set that opens well, builds energy, creates a peak, resets the room, and closes cleanly.',
+    solution: 'MixPilot AI turns playlists into structured DJ-style set plans with energy flow, transition ideas, cue notes, and event-ready sequencing.',
+    features: ['Event mode and audience intake', 'Song list sequencing', 'Opening, Build, Peak, Reset, and Finale sections', 'Energy curve guidance', 'Transition ideas and cue notes', 'Copy, markdown, and print-ready cue sheet'],
+    deliverables: ['AI DJ Set Plan / Cue Sheet', 'Energy flow outline', 'Transition idea list', 'Clean-version reminders', 'Crowd and event notes'],
+    requiredFiles: ['Optional playlist export, song list, or event notes'],
+    requiredQuestions: [
+      { id: 'mix_title', label: 'Mix title or event name', type: 'text', required: true },
+      { id: 'event_type', label: 'Event type', type: 'select', required: true, options: ['Party', 'Wedding', 'Workout', 'Lounge', 'Creator set', 'Casual DJ', 'Corporate event', 'Other'] },
+      { id: 'audience', label: 'Who is the audience?', type: 'text', required: true },
+      { id: 'desired_length', label: 'Desired set length', type: 'select', required: true, options: ['30 minutes', '45 minutes', '1 hour', '2 hours', '3 hours', '4+ hours'] },
+      { id: 'energy_style', label: 'Energy style', type: 'select', required: true, options: ['Chill start, big finish', 'Steady lounge flow', 'High energy', 'Workout push', 'Family friendly', 'Dance party'] },
+      { id: 'clean_preference', label: 'Clean or explicit preference', type: 'select', required: true, options: ['Clean', 'Prefer clean', 'Explicit is okay'] },
+      { id: 'song_list', label: 'Paste the song list', type: 'textarea', required: true },
+      { id: 'notes', label: 'Event notes or must-play moments', type: 'textarea', required: false },
+    ],
+    packages: [
+      { id: 'free_beta', name: 'Free Beta', price: 0, stripePriceIdEnv: 'STRIPE_PRICE_MIXPILOT_FREE_BETA', turnaround: 'Instant self-serve or manual-review fallback', description: 'Start a MixPilot AI set plan while checkout is in beta.', includes: ['AI DJ Set Plan / Cue Sheet', 'Energy flow', 'Transition ideas', 'Cue notes'] },
+    ],
+    faq: [
+      { question: 'Does MixPilot AI mix or stream audio?', answer: 'No. MixPilot AI provides set planning and cue-sheet guidance. It does not stream, mix, download, or export audio.' },
+      { question: 'Does it include music licensing?', answer: 'No. Customers are responsible for music licensing, streaming, public performance, and distribution rights.' },
+    ],
+    disclaimer: 'MixPilot AI provides music planning and cue-sheet guidance. It does not grant music licensing, streaming, public performance, or distribution rights.',
+  },
+  {
     key: 'nieves_ai_platform',
     slug: 'nieves-ai-platform',
     title: 'Nieves AI Platform',
@@ -210,10 +244,18 @@ export const products: Product[] = [
 ];
 
 export function getProductBySlug(slug: string) {
+  if (slug === 'automix-pro') {
+    return products.find((product) => product.slug === 'mixpilot-ai');
+  }
+
   return products.find((product) => product.slug === slug);
 }
 
 export function getProductByKey(key: string) {
+  if (key === 'automix_pro') {
+    return products.find((product) => product.key === 'mixpilot_ai');
+  }
+
   return products.find((product) => product.key === key);
 }
 

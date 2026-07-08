@@ -4,6 +4,7 @@
 
 - Central product hub with product cards and working CTAs
 - Product detail pages for every required product
+- MixPilot AI product hub listing, `/products/mixpilot-ai`, and legacy `/products/automix-pro` redirect
 - Stripe-ready checkout API and webhook validation
 - Tokenized intake pages with file upload support
 - Shared workflow engine: `runWorkflow(productKey, orderId)`
@@ -19,6 +20,7 @@
 - Replace local JSON store with durable managed database
 - Configure persistent object storage for uploads
 - Create Stripe products/prices and webhook endpoint
+- Decide whether MixPilot AI remains Free Beta or gets paid Stripe pricing
 - Create Google OAuth refresh tokens and Drive root folder
 - Validate Gmail sending limits and support mailbox
 - Add production monitoring and alerting

@@ -92,8 +92,17 @@ export default function Home() {
                 <strong>${Math.min(...product.packages.map((item) => item.price))}</strong>
               </div>
               <div className="card-actions">
-                <Link className="button-primary" href={`/products/${product.slug}`}>View product</Link>
-                <Link className="button-secondary" href={`/products/${product.slug}#pricing`}>See pricing</Link>
+                {product.key === 'mixpilot_ai' ? (
+                  <>
+                    <a className="button-primary" href={env.mixpilotAppUrl}>Build a Mix</a>
+                    <Link className="button-secondary" href="/products/mixpilot-ai">Learn More</Link>
+                  </>
+                ) : (
+                  <>
+                    <Link className="button-primary" href={`/products/${product.slug}`}>View product</Link>
+                    <Link className="button-secondary" href={`/products/${product.slug}#pricing`}>See pricing</Link>
+                  </>
+                )}
               </div>
             </article>
           ))}

@@ -11,6 +11,7 @@ Production site: https://nieveslabs.com
 - Tax Appeal Buddy
 - Interview Coach
 - Workforce Study
+- MixPilot AI
 - Nieves AI Platform
 
 ## Architecture
@@ -47,7 +48,7 @@ npm run build
 
 ## Required Production Variables
 
-See `.env.local.example` and `/docs/operations`.
+See `.env.local.example` and protected `/admin/operations`.
 
 Critical variables:
 
@@ -57,6 +58,8 @@ Critical variables:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - Stripe price IDs for every product package
+- `STRIPE_PRICE_MIXPILOT_FREE_BETA` if paid/beta checkout is configured for MixPilot AI
+- `NEXT_PUBLIC_MIXPILOT_AI_URL` or `MIXPILOT_AI_URL`
 - AnswerBrief payment links: `PAYMENT_LINK_ANSWERBRIEF_QUICK_PREP`, `PAYMENT_LINK_ANSWERBRIEF_FULL_BRIEF`, `PAYMENT_LINK_ANSWERBRIEF_PREMIUM_PREP`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
