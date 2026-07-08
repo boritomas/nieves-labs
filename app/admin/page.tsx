@@ -28,6 +28,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <div className="hero-actions">
               <Link className="button-secondary" href={`/admin/orders?token=${encodeURIComponent(token)}`}>Orders</Link>
               <Link className="button-secondary" href={`/admin/operations?token=${encodeURIComponent(token)}`}>Operations</Link>
+              <Link className="button-secondary" href={`/admin/product-excellence?token=${encodeURIComponent(token)}`}>Product Excellence</Link>
             </div>
           </section>
           <AdminConsole initialToken={token} />

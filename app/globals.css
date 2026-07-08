@@ -541,6 +541,80 @@ li {
   color: var(--brand);
 }
 
+.review-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.review-card-top,
+.review-summary,
+.review-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.score-orb {
+  display: inline-grid;
+  place-items: center;
+  min-width: 112px;
+  min-height: 112px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--text);
+}
+
+.score-orb.small {
+  min-width: 78px;
+  min-height: 78px;
+}
+
+.score-orb strong {
+  font-size: 38px;
+  line-height: 1;
+}
+
+.score-orb.small strong {
+  font-size: 28px;
+}
+
+.score-orb span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.review-detail {
+  padding-bottom: 72px;
+}
+
+.review-summary {
+  margin-bottom: 12px;
+}
+
+.review-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.editable-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.editable-panel textarea {
+  min-height: 190px;
+}
+
+.editable-panel ul {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -563,7 +637,9 @@ li {
   }
 
   .product-grid,
-  .pricing-grid {
+  .pricing-grid,
+  .review-card-grid,
+  .review-edit-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -607,10 +683,19 @@ li {
 
   .product-grid,
   .pricing-grid,
+  .review-card-grid,
+  .review-edit-grid,
   .trust-grid,
   .feature-grid,
   .metrics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .review-card-top,
+  .review-summary,
+  .review-actions {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .log-row {
