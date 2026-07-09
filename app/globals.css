@@ -615,6 +615,150 @@ li {
   margin-bottom: 8px;
 }
 
+.atlas-hero {
+  padding-bottom: 28px;
+}
+
+.atlas-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.atlas-nav a {
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.atlas-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.atlas-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.atlas-input-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.atlas-input-wrap span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.atlas-checklist {
+  display: grid;
+  gap: 12px;
+}
+
+.atlas-checklist.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.atlas-check-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.74);
+  color: var(--text);
+  text-align: left;
+}
+
+.atlas-check-row span:first-child {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(168, 179, 199, 0.4);
+  border-radius: 8px;
+  color: var(--green);
+  font-weight: 900;
+}
+
+.atlas-check-row.complete {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.atlas-check-row p,
+.atlas-check-row small {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.atlas-risk-card,
+.atlas-task-row {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.74);
+}
+
+.atlas-task-list {
+  display: grid;
+  gap: 12px;
+}
+
+.atlas-task-row {
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: center;
+}
+
+.atlas-task-row p,
+.atlas-risk-card p {
+  margin: 0;
+}
+
+.atlas-mini-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.table-actions .button-secondary {
+  min-height: 36px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.positive {
+  color: var(--green);
+  font-weight: 800;
+}
+
+.negative {
+  color: var(--red);
+  font-weight: 800;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -639,7 +783,9 @@ li {
   .product-grid,
   .pricing-grid,
   .review-card-grid,
-  .review-edit-grid {
+  .review-edit-grid,
+  .atlas-form-grid,
+  .atlas-checklist.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -685,6 +831,8 @@ li {
   .pricing-grid,
   .review-card-grid,
   .review-edit-grid,
+  .atlas-form-grid,
+  .atlas-checklist.compact,
   .trust-grid,
   .feature-grid,
   .metrics-grid {
@@ -699,6 +847,10 @@ li {
   }
 
   .log-row {
+    grid-template-columns: 1fr;
+  }
+
+  .atlas-task-row {
     grid-template-columns: 1fr;
   }
 }
