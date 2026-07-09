@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AdminAccessForm from '@/components/AdminAccessForm';
+import AtlasReadinessBreakdown from '@/components/AtlasReadinessBreakdown';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
 import { env } from '@/lib/env';
 import { getAtlasData } from '@/lib/atlas-store';
@@ -25,8 +26,12 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
             <Metric label="Capital readiness" value={`${data.readinessScores.capitalReadiness}%`} />
             <Metric label="Product readiness" value={`${data.readinessScores.productReadiness}%`} />
             <Metric label="Documentation readiness" value={`${data.readinessScores.documentationReadiness}%`} />
+            <Metric label="Application readiness" value={`${data.readinessScores.applicationReadiness}%`} />
+            <Metric label="Overall readiness" value={`${data.readinessScores.overallReadiness}%`} />
             <Metric label="Funding target" value={`${money(data.companyProfile.fundingTargetMin)}-${money(data.companyProfile.fundingTargetMax)}`} />
           </section>
+
+          <AtlasReadinessBreakdown scores={data.readinessScores} />
 
           <section className="two-column">
             <div className="panel">
@@ -36,6 +41,7 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
               <div className="hero-actions">
                 <Link className="button-primary" href={`/atlas/sba-loan-package?token=${encodeURIComponent(token)}`}>Open SBA Package</Link>
                 <Link className="button-secondary" href={`/atlas/document-vault?token=${encodeURIComponent(token)}`}>Review Documents</Link>
+                <Link className="button-secondary" href={`/atlas/application-builder?token=${encodeURIComponent(token)}`}>Build Application</Link>
               </div>
             </div>
             <div className="panel">
@@ -71,7 +77,7 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
                     <span className="atlas-mini-dot" />
                     <div>
                       <strong>{opportunity.fundingSource}</strong>
-                      <span>{money(opportunity.targetAmount)} • {opportunity.status.replaceAll('_', ' ')} • Next: {opportunity.nextAction}</span>
+                      <span>{money(opportunity.targetAmount)} • fit {opportunity.fitScore}/100 • {opportunity.status.replaceAll('_', ' ')} • Next: {opportunity.nextAction}</span>
                     </div>
                   </div>
                 ))}

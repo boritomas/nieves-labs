@@ -1,4 +1,5 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
+import AtlasReadinessBreakdown from '@/components/AtlasReadinessBreakdown';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
 import { env } from '@/lib/env';
 import { getAtlasData } from '@/lib/atlas-store';
@@ -20,6 +21,13 @@ export default async function CapitalOfficePage({ searchParams }: { searchParams
       ) : (
         <>
           <AtlasHero token={token} title="Capital Office" subtitle="Executive funding command center for readiness, target capital, lender packaging, and operating discipline." />
+          <section className="metrics-grid">
+            <Metric label="Capital readiness" value={`${data.readinessScores.capitalReadiness}%`} />
+            <Metric label="Application readiness" value={`${data.readinessScores.applicationReadiness}%`} />
+            <Metric label="Overall readiness" value={`${data.readinessScores.overallReadiness}%`} />
+            <Metric label="Active funding sources" value={String(data.fundingOpportunities.filter((item) => item.status !== 'declined').length)} />
+          </section>
+          <AtlasReadinessBreakdown scores={data.readinessScores} />
           <section className="two-column">
             <div className="panel">
               <p className="eyebrow">Company</p>
@@ -43,5 +51,14 @@ export default async function CapitalOfficePage({ searchParams }: { searchParams
         </>
       )}
     </main>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="metric-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }

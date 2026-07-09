@@ -5,11 +5,22 @@ import { atlasFundingStatuses, atlasFundingTypes, type AtlasFundingOpportunity, 
 
 const blankOpportunity = {
   fundingSource: '',
+  lenderName: '',
   type: 'CDFI' as AtlasFundingType,
   targetAmount: 25000,
   status: 'researching' as AtlasFundingStatus,
   deadline: '',
   contact: '',
+  website: '',
+  applicationUrl: '',
+  contactName: '',
+  contactEmail: '',
+  phone: '',
+  fitScore: 50,
+  requirements: '',
+  nextFollowUpDate: '',
+  lastContactedDate: '',
+  statusNotes: '',
   notes: '',
   nextAction: '',
 };
@@ -73,6 +84,10 @@ export default function AtlasFundingTracker({ initialOpportunities, token }: { i
             <input value={draft.fundingSource || ''} onChange={(event) => setDraft({ ...draft, fundingSource: event.target.value })} />
           </label>
           <label>
+            Lender/intermediary name
+            <input value={draft.lenderName || ''} onChange={(event) => setDraft({ ...draft, lenderName: event.target.value })} />
+          </label>
+          <label>
             Type
             <select value={draft.type || 'CDFI'} onChange={(event) => setDraft({ ...draft, type: event.target.value as AtlasFundingType })}>
               {atlasFundingTypes.map((type) => <option key={type} value={type}>{type}</option>)}
@@ -97,8 +112,48 @@ export default function AtlasFundingTracker({ initialOpportunities, token }: { i
             <input value={draft.contact || ''} onChange={(event) => setDraft({ ...draft, contact: event.target.value })} />
           </label>
           <label>
+            Website
+            <input value={draft.website || ''} onChange={(event) => setDraft({ ...draft, website: event.target.value })} />
+          </label>
+          <label>
+            Application URL
+            <input value={draft.applicationUrl || ''} onChange={(event) => setDraft({ ...draft, applicationUrl: event.target.value })} />
+          </label>
+          <label>
+            Contact name
+            <input value={draft.contactName || ''} onChange={(event) => setDraft({ ...draft, contactName: event.target.value })} />
+          </label>
+          <label>
+            Contact email
+            <input type="email" value={draft.contactEmail || ''} onChange={(event) => setDraft({ ...draft, contactEmail: event.target.value })} />
+          </label>
+          <label>
+            Phone
+            <input value={draft.phone || ''} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} />
+          </label>
+          <label>
+            Fit score
+            <input type="number" min="0" max="100" value={draft.fitScore || 0} onChange={(event) => setDraft({ ...draft, fitScore: Number(event.target.value) })} />
+          </label>
+          <label>
+            Next follow-up date
+            <input value={draft.nextFollowUpDate || ''} onChange={(event) => setDraft({ ...draft, nextFollowUpDate: event.target.value })} />
+          </label>
+          <label>
+            Last contacted date
+            <input value={draft.lastContactedDate || ''} onChange={(event) => setDraft({ ...draft, lastContactedDate: event.target.value })} />
+          </label>
+          <label>
+            Requirements
+            <textarea value={draft.requirements || ''} onChange={(event) => setDraft({ ...draft, requirements: event.target.value })} />
+          </label>
+          <label>
             Notes
             <textarea value={draft.notes || ''} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} />
+          </label>
+          <label>
+            Status notes
+            <textarea value={draft.statusNotes || ''} onChange={(event) => setDraft({ ...draft, statusNotes: event.target.value })} />
           </label>
           <label>
             Next action
@@ -118,11 +173,13 @@ export default function AtlasFundingTracker({ initialOpportunities, token }: { i
             <thead>
               <tr>
                 <th>Funding source</th>
+                <th>Lender</th>
                 <th>Type</th>
                 <th>Target</th>
+                <th>Fit</th>
                 <th>Status</th>
-                <th>Deadline</th>
                 <th>Contact</th>
+                <th>Follow-up</th>
                 <th>Next action</th>
                 <th>Actions</th>
               </tr>
@@ -131,12 +188,30 @@ export default function AtlasFundingTracker({ initialOpportunities, token }: { i
               {opportunities.map((opportunity) => (
                 <tr key={opportunity.id}>
                   <td>{opportunity.fundingSource}</td>
+                  <td>
+                    <strong>{opportunity.lenderName || opportunity.fundingSource}</strong>
+                    <p>{opportunity.website || 'Website TBD'}</p>
+                    <p>{opportunity.applicationUrl || 'Application URL TBD'}</p>
+                  </td>
                   <td>{opportunity.type}</td>
                   <td>{money(opportunity.targetAmount)}</td>
+                  <td>{opportunity.fitScore}/100</td>
                   <td>{opportunity.status.replaceAll('_', ' ')}</td>
-                  <td>{opportunity.deadline || 'TBD'}</td>
-                  <td>{opportunity.contact || 'TBD'}</td>
-                  <td>{opportunity.nextAction}</td>
+                  <td>
+                    <strong>{opportunity.contactName || opportunity.contact || 'TBD'}</strong>
+                    <p>{opportunity.contactEmail || 'Email TBD'}</p>
+                    <p>{opportunity.phone || 'Phone TBD'}</p>
+                  </td>
+                  <td>
+                    <strong>{opportunity.nextFollowUpDate || 'TBD'}</strong>
+                    <p>Last: {opportunity.lastContactedDate || 'not contacted'}</p>
+                    <p>Deadline: {opportunity.deadline || 'TBD'}</p>
+                  </td>
+                  <td>
+                    <strong>{opportunity.nextAction}</strong>
+                    <p>{opportunity.requirements}</p>
+                    <p>{opportunity.statusNotes}</p>
+                  </td>
                   <td>
                     <div className="table-actions">
                       <button className="button-secondary" type="button" onClick={() => edit(opportunity)}>Edit</button>
@@ -156,4 +231,3 @@ export default function AtlasFundingTracker({ initialOpportunities, token }: { i
 function money(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 }
-

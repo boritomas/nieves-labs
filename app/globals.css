@@ -730,6 +730,83 @@ li {
   margin: 0;
 }
 
+.atlas-application-grid,
+.atlas-review-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.atlas-application-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.74);
+}
+
+.atlas-application-card ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.atlas-select-label {
+  min-width: min(100%, 340px);
+}
+
+.atlas-preview {
+  overflow-x: auto;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0f172a;
+  color: #dbeafe;
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+.atlas-score-bars {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas-score-row {
+  display: grid;
+  gap: 8px;
+}
+
+.atlas-score-row > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--muted);
+}
+
+.atlas-score-row strong {
+  color: var(--text);
+}
+
+.atlas-score-track {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.atlas-score-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--brand-strong), var(--brand));
+}
+
+.atlas-founder-review-card.complete {
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
 .atlas-mini-dot {
   width: 12px;
   height: 12px;
@@ -783,6 +860,8 @@ li {
   .product-grid,
   .pricing-grid,
   .review-card-grid,
+  .atlas-application-grid,
+  .atlas-review-list,
   .review-edit-grid,
   .atlas-form-grid,
   .atlas-checklist.compact {
@@ -830,6 +909,8 @@ li {
   .product-grid,
   .pricing-grid,
   .review-card-grid,
+  .atlas-application-grid,
+  .atlas-review-list,
   .review-edit-grid,
   .atlas-form-grid,
   .atlas-checklist.compact,

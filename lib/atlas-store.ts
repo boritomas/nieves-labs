@@ -2,12 +2,15 @@ import { mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import {
+  atlasApplicationSectionIds,
   type AtlasData,
+  type AtlasApplicationSection,
   type AtlasDocument,
   type AtlasFinancialAssumptions,
   type AtlasFundingOpportunity,
   type AtlasTask,
   calculateReadinessScores,
+  getAtlasApplicationSectionTitle,
 } from './atlas';
 
 const dataDir = path.join(process.cwd(), '.data');
@@ -66,11 +69,22 @@ const seedData: AtlasData = {
     {
       id: 'sba-microloan',
       fundingSource: 'SBA Microloan intermediary',
+      lenderName: 'SBA Microloan intermediary placeholder',
       type: 'SBA Microloan',
       targetAmount: 35000,
       status: 'preparing',
       deadline: 'Rolling',
       contact: 'Local SBA microlender / CDFI intake',
+      website: 'https://www.sba.gov/funding-programs/loans/microloans',
+      applicationUrl: 'https://www.sba.gov/funding-programs/loans/lender-match',
+      contactName: 'Loan intake coordinator',
+      contactEmail: 'intake@example-sba-microlender.org',
+      phone: 'TBD',
+      fitScore: 82,
+      requirements: 'Business plan, use-of-funds summary, projections, personal financial statement, recent bank statements, credit/background explanation, and supporting formation documents.',
+      nextFollowUpDate: 'Next 10 days',
+      lastContactedDate: '',
+      statusNotes: 'Strong fit for a conservative early-stage request if documentation is complete and underwriting concerns are addressed directly.',
       notes: 'Best fit for conservative early-stage working capital request.',
       nextAction: 'Prepare business plan, projections, and document packet.',
       createdAt: now,
@@ -79,13 +93,48 @@ const seedData: AtlasData = {
     {
       id: 'cdfi-working-capital',
       fundingSource: 'Regional CDFI working capital program',
+      lenderName: 'CDFI placeholder',
       type: 'CDFI',
       targetAmount: 25000,
       status: 'targeted',
       deadline: 'Rolling',
       contact: 'CDFI loan officer',
+      website: 'https://www.cdfifund.gov/',
+      applicationUrl: 'TBD after lender selection',
+      contactName: 'Small business lending officer',
+      contactEmail: 'smallbusiness@example-cdfi.org',
+      phone: 'TBD',
+      fitScore: 76,
+      requirements: 'Owner background, business plan, revenue model, funding purpose, formation documents, projections, and clear repayment assumptions.',
+      nextFollowUpDate: 'Next 14 days',
+      lastContactedDate: '',
+      statusNotes: 'Useful alternative if SBA timeline is slow or if local mission-fit underwriting is more flexible.',
       notes: 'Use if SBA underwriting timeline is slow or collateral requirements are heavy.',
       nextAction: 'Confirm eligibility and required personal financial statement format.',
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'local-small-business-grant',
+      fundingSource: 'Local small business grant program',
+      lenderName: 'Local small business grant placeholder',
+      type: 'Grant',
+      targetAmount: 10000,
+      status: 'researching',
+      deadline: 'TBD',
+      contact: 'Economic development office',
+      website: 'TBD',
+      applicationUrl: 'TBD',
+      contactName: 'Program administrator',
+      contactEmail: 'grants@example-local.org',
+      phone: 'TBD',
+      fitScore: 58,
+      requirements: 'Eligibility review, business summary, use-of-funds statement, proof of location, founder background, and project narrative.',
+      nextFollowUpDate: 'Next 21 days',
+      lastContactedDate: '',
+      statusNotes: 'Potential non-dilutive supplement, but deadlines and eligibility need confirmation.',
+      notes: 'Track as a supplemental funding path, not the primary capital source.',
+      nextAction: 'Identify local programs and confirm application windows.',
       createdAt: now,
       updatedAt: now,
     },
@@ -138,26 +187,79 @@ const seedData: AtlasData = {
     { id: 'contact-cdfi', title: 'Contact target CDFI about eligibility and underwriting criteria', area: 'Funding Tracker', status: 'not_started', dueDate: 'Next 10 days', owner: 'Tomas Nieves' },
     { id: 'chapter-7-note', title: 'Draft Chapter 7 explanation and mitigation note', area: 'Due Diligence', status: 'in_progress', dueDate: 'Next 7 days', owner: 'Tomas Nieves' },
   ],
+  applicationSections: atlasApplicationSectionIds.map((id) => ({
+    id,
+    title: getAtlasApplicationSectionTitle(id),
+    reviewed: ['business_information', 'funding_request', 'use_of_funds'].includes(id),
+    notes: '',
+    updatedAt: now,
+  })),
   readinessScores: {
     id: 'readiness_scores',
     capitalReadiness: 0,
     productReadiness: 0,
     documentationReadiness: 0,
+    applicationReadiness: 0,
+    overallReadiness: 0,
+    breakdown: {
+      requiredDocuments: 0,
+      financialAssumptions: 0,
+      fundingTracker: 0,
+      dueDiligenceTasks: 0,
+      riskMitigation: 0,
+      applicationSections: 0,
+    },
     updatedAt: now,
   },
 };
 
 function withScores(data: AtlasData): AtlasData {
+  const normalized = normalizeAtlasData(data);
   return {
-    ...data,
+    ...normalized,
     readinessScores: calculateReadinessScores({
-      companyProfile: data.companyProfile,
-      financialAssumptions: data.financialAssumptions,
-      fundingOpportunities: data.fundingOpportunities,
-      documents: data.documents,
-      risks: data.risks,
-      tasks: data.tasks,
+      companyProfile: normalized.companyProfile,
+      financialAssumptions: normalized.financialAssumptions,
+      fundingOpportunities: normalized.fundingOpportunities,
+      documents: normalized.documents,
+      risks: normalized.risks,
+      tasks: normalized.tasks,
+      applicationSections: normalized.applicationSections,
     }),
+  };
+}
+
+function normalizeAtlasData(data: AtlasData): AtlasData {
+  const timestamp = new Date().toISOString();
+  const applicationSections = atlasApplicationSectionIds.map((id) => {
+    const existing = data.applicationSections?.find((section) => section.id === id);
+    return {
+      id,
+      title: existing?.title || getAtlasApplicationSectionTitle(id),
+      reviewed: Boolean(existing?.reviewed),
+      notes: existing?.notes || '',
+      updatedAt: existing?.updatedAt || timestamp,
+    };
+  }) as AtlasApplicationSection[];
+
+  return {
+    ...seedData,
+    ...data,
+    fundingOpportunities: data.fundingOpportunities.map((opportunity) => ({
+      ...opportunity,
+      lenderName: opportunity.lenderName || opportunity.fundingSource,
+      website: opportunity.website || '',
+      applicationUrl: opportunity.applicationUrl || '',
+      contactName: opportunity.contactName || opportunity.contact || '',
+      contactEmail: opportunity.contactEmail || '',
+      phone: opportunity.phone || '',
+      fitScore: Number(opportunity.fitScore) || 50,
+      requirements: opportunity.requirements || '',
+      nextFollowUpDate: opportunity.nextFollowUpDate || '',
+      lastContactedDate: opportunity.lastContactedDate || '',
+      statusNotes: opportunity.statusNotes || '',
+    })),
+    applicationSections,
   };
 }
 
@@ -189,11 +291,22 @@ export async function upsertAtlasFundingOpportunity(input: Partial<AtlasFundingO
   const opportunity: AtlasFundingOpportunity = {
     id: input.id || randomUUID(),
     fundingSource: input.fundingSource,
+    lenderName: input.lenderName || input.fundingSource,
     type: input.type,
     targetAmount: Number(input.targetAmount) || 0,
     status: input.status,
     deadline: input.deadline || '',
     contact: input.contact || '',
+    website: input.website || '',
+    applicationUrl: input.applicationUrl || '',
+    contactName: input.contactName || input.contact || '',
+    contactEmail: input.contactEmail || '',
+    phone: input.phone || '',
+    fitScore: Number(input.fitScore) || 50,
+    requirements: input.requirements || '',
+    nextFollowUpDate: input.nextFollowUpDate || '',
+    lastContactedDate: input.lastContactedDate || '',
+    statusNotes: input.statusNotes || '',
     notes: input.notes || '',
     nextAction: input.nextAction || '',
     createdAt: existingIndex >= 0 ? data.fundingOpportunities[existingIndex].createdAt : timestamp,
@@ -230,3 +343,9 @@ export async function updateAtlasTask(id: string, patch: Partial<AtlasTask>) {
   return data.tasks.find((task) => task.id === id);
 }
 
+export async function updateAtlasApplicationSection(id: string, patch: Partial<AtlasApplicationSection>) {
+  const data = await getAtlasData();
+  data.applicationSections = data.applicationSections.map((section) => section.id === id ? { ...section, ...patch, updatedAt: new Date().toISOString() } : section);
+  await writeAtlasData(data);
+  return data.applicationSections.find((section) => section.id === id);
+}
