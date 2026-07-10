@@ -850,6 +850,26 @@ li {
   gap: 18px;
 }
 
+.contact-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.contact-actions button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.contact-email {
+  color: var(--muted);
+  flex-basis: 100%;
+  margin: 0;
+}
+
 @media (max-width: 920px) {
   .hero-section,
   .split-section,

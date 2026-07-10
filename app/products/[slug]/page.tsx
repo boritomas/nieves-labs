@@ -36,7 +36,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <Link href="/#products">Products</Link>
           <Link href="/#services">Services</Link>
           <Link href="#pricing">Pricing</Link>
-          <a href={`mailto:${env.supportEmail}`}>Contact</a>
+          <Link href="/contact">Contact</Link>
         </nav>
       </header>
 
@@ -123,7 +123,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <h2>Privacy and disclaimers</h2>
           <p>Your information is used to prepare the package you request. Avoid submitting unnecessary sensitive information.</p>
           <p>{product.disclaimer}</p>
-          <p>Support: <a href={`mailto:${env.supportEmail}`}>{env.supportEmail}</a></p>
+          <p>Support: <Link href="/contact">Contact Nieves Labs</Link></p>
         </article>
       </section>
     </main>

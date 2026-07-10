@@ -34,8 +34,8 @@ export default function Home() {
           <Link href="#services">Services</Link>
           <Link href="#pricing">Pricing</Link>
           <Link href="#about">About</Link>
-          <a href={`mailto:${env.supportEmail}`}>Contact</a>
-          <a className="nav-cta" href={`mailto:${env.supportEmail}?subject=Consultation%20Request`}>Book a Consultation</a>
+          <Link href="/contact">Contact</Link>
+          <Link className="nav-cta" href="/contact">Book a Consultation</Link>
         </nav>
       </header>
 
@@ -48,7 +48,7 @@ export default function Home() {
           </p>
           <div className="hero-actions">
             <Link className="button-primary" href="#products">Explore Products <ArrowRight size={18} /></Link>
-            <a className="button-secondary" href={`mailto:${env.supportEmail}?subject=Consultation%20Request`}>Book a Consultation</a>
+            <Link className="button-secondary" href="/contact">Book a Consultation</Link>
           </div>
         </div>
         <div className="operations-panel" aria-label="Nieves Labs services">
@@ -159,7 +159,7 @@ export default function Home() {
         <p className="eyebrow">Contact</p>
         <h2>Have a workflow or product idea to discuss?</h2>
         <p>Book a consultation to scope the right product, automation workflow, or custom package for your situation.</p>
-        <a className="button-primary" href={`mailto:${env.supportEmail}?subject=Consultation%20Request`}>Book a Consultation</a>
+        <Link className="button-primary" href="/contact">Book a Consultation</Link>
       </section>
 
       <footer className="footer">
@@ -167,7 +167,7 @@ export default function Home() {
         <div>
           <Link href="#products">Products</Link>
           <Link href="#services">Services</Link>
-          <a href={`mailto:${env.supportEmail}`}>Contact</a>
+          <Link href="/contact">Contact</Link>
         </div>
       </footer>
     </main>
