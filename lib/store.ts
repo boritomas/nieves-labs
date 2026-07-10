@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
-import { mirrorStoreToDurableStorage } from './durable-storage';
+import { PersistentStorageUnavailableError, readStoreFromDurableStorage, storageMode, writeStoreToDurableStorage } from './durable-storage';
 import type { Customer, Order, StoreData, WorkflowLog } from './types';
 import type { ProductKey } from './products';
 
@@ -15,6 +15,14 @@ const emptyStore: StoreData = {
 };
 
 async function readStore(): Promise<StoreData> {
+  if (storageMode() === 'google_sheets') {
+    return readStoreFromDurableStorage();
+  }
+
+  if (storageMode() === 'unconfigured') {
+    throw new PersistentStorageUnavailableError();
+  }
+
   try {
     const raw = await readFile(dataFile, 'utf8');
     return JSON.parse(raw) as StoreData;
@@ -24,9 +32,17 @@ async function readStore(): Promise<StoreData> {
 }
 
 async function writeStore(data: StoreData) {
+  if (storageMode() === 'google_sheets') {
+    await writeStoreToDurableStorage(data);
+    return;
+  }
+
+  if (storageMode() === 'unconfigured') {
+    throw new PersistentStorageUnavailableError();
+  }
+
   await mkdir(dataDir, { recursive: true });
   await writeFile(dataFile, JSON.stringify(data, null, 2));
-  await mirrorStoreToDurableStorage(data);
 }
 
 export async function listOrders() {

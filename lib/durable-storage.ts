@@ -2,14 +2,62 @@ import crypto from 'crypto';
 import { env } from './env';
 import type { StoreData } from './types';
 
-export type StorageMode = 'google_sheets' | 'local_only';
+export type StorageMode = 'google_sheets' | 'local_json' | 'unconfigured';
 
-export function storageMode(): StorageMode {
-  return env.googleSheetsSpreadsheetId && env.googleServiceAccountEmail && env.googlePrivateKey ? 'google_sheets' : 'local_only';
+const emptyStore: StoreData = {
+  customers: [],
+  orders: [],
+  logs: [],
+};
+
+export class PersistentStorageUnavailableError extends Error {
+  constructor(message = 'Persistent storage is not configured for this environment.') {
+    super(message);
+    this.name = 'PersistentStorageUnavailableError';
+  }
 }
 
-export async function mirrorStoreToDurableStorage(data: StoreData) {
-  if (storageMode() !== 'google_sheets') return;
+function hasGoogleSheetsCredentials() {
+  return Boolean(env.googleSheetsSpreadsheetId && env.googleServiceAccountEmail && env.googlePrivateKey);
+}
+
+export function storageMode(): StorageMode {
+  if (hasGoogleSheetsCredentials()) return 'google_sheets';
+  if (process.env.NODE_ENV === 'development' || process.env.ALLOW_LOCAL_FILE_STORAGE === 'true') {
+    return 'local_json';
+  }
+  return 'unconfigured';
+}
+
+export async function readStoreFromDurableStorage(): Promise<StoreData> {
+  if (storageMode() !== 'google_sheets') {
+    throw new PersistentStorageUnavailableError();
+  }
+
+  try {
+    const accessToken = await getServiceAccountAccessToken();
+    const range = encodeURIComponent(`${env.googleSheetsOrdersSheetName}!A:D`);
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${env.googleSheetsSpreadsheetId}/values/${range}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: 'no-store',
+    });
+
+    if (response.status === 404) return emptyStore;
+    if (!response.ok) throw new Error(await response.text());
+
+    const payload = await response.json() as { values?: string[][] };
+    return rowsToStore(payload.values || []);
+  } catch (error) {
+    throw new PersistentStorageUnavailableError(`Persistent storage read failed: ${String(error)}`);
+  }
+}
+
+export async function writeStoreToDurableStorage(data: StoreData) {
+  if (storageMode() !== 'google_sheets') {
+    throw new PersistentStorageUnavailableError();
+  }
 
   try {
     const rows = [
@@ -27,7 +75,7 @@ export async function mirrorStoreToDurableStorage(data: StoreData) {
     if (!rows.length) return;
     const accessToken = await getServiceAccountAccessToken();
     const range = encodeURIComponent(`${env.googleSheetsOrdersSheetName}!A:D`);
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${env.googleSheetsSpreadsheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${env.googleSheetsSpreadsheetId}/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -35,9 +83,36 @@ export async function mirrorStoreToDurableStorage(data: StoreData) {
       },
       body: JSON.stringify({ values: rows }),
     });
-  } catch {
-    // Durable mirroring must never block checkout, intake, or delivery workflows.
+
+    if (!response.ok) throw new Error(await response.text());
+  } catch (error) {
+    throw new PersistentStorageUnavailableError(`Persistent storage write failed: ${String(error)}`);
   }
+}
+
+function rowsToStore(rows: string[][]): StoreData {
+  const customers = new Map<string, StoreData['customers'][number]>();
+  const orders = new Map<string, StoreData['orders'][number]>();
+  const logs = new Map<string, StoreData['logs'][number]>();
+
+  for (const row of rows) {
+    const [type, id, , raw] = row;
+    if (!type || !id || !raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (type === 'customer') customers.set(id, parsed);
+      if (type === 'order') orders.set(id, parsed);
+      if (type === 'workflow_log') logs.set(id, parsed);
+    } catch {
+      // Ignore malformed historic rows rather than taking down checkout.
+    }
+  }
+
+  return {
+    customers: Array.from(customers.values()),
+    orders: Array.from(orders.values()),
+    logs: Array.from(logs.values()),
+  };
 }
 
 function redact<T>(value: T): T {

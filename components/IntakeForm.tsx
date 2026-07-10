@@ -20,7 +20,7 @@ export default function IntakeForm({ order, product }: { order: Order; product: 
     const data = await response.json();
     if (!response.ok) {
       setStatus('error');
-      setMessage(data.error || 'Intake failed');
+      setMessage(data.error || "We couldn't submit your intake. Please try again or contact support.");
       return;
     }
     setStatus('done');

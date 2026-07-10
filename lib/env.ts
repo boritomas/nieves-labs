@@ -28,15 +28,18 @@ export const env = {
 };
 
 export function requiredCredentialStatus() {
+  const hasGoogleDriveAuth = Boolean(env.googleClientId && env.googleClientSecret && env.googleRefreshToken || env.googleServiceAccountEmail && env.googlePrivateKey);
+  const hasGoogleSheetsStorage = Boolean(env.googleSheetsSpreadsheetId && env.googleServiceAccountEmail && env.googlePrivateKey);
+
   return {
     stripe: Boolean(env.stripeSecretKey && env.stripeWebhookSecret),
     stripePaymentLinks: Boolean(env.answerBriefQuickPrepLink || env.answerBriefFullBriefLink || env.answerBriefPremiumPrepLink),
-    googleDrive: Boolean((env.googleClientId && env.googleClientSecret && env.googleRefreshToken || env.googleServiceAccountEmail && env.googlePrivateKey) && env.googleDriveRootId),
+    googleDrive: Boolean(hasGoogleDriveAuth && env.googleDriveRootId),
     gmail: Boolean(env.gmailClientId && env.gmailClientSecret && env.gmailRefreshToken),
     appsScript: Boolean(env.googleAppsScriptUrl),
     openai: Boolean(env.openaiApiKey),
     admin: Boolean(env.adminToken),
-    durableDatabase: Boolean(env.databaseUrl || env.googleSheetsSpreadsheetId),
-    objectStorage: Boolean(env.blobReadWriteToken || ((env.googleClientId && env.googleClientSecret && env.googleRefreshToken || env.googleServiceAccountEmail && env.googlePrivateKey) && env.googleDriveRootId)),
+    durableDatabase: Boolean(env.databaseUrl || hasGoogleSheetsStorage),
+    objectStorage: Boolean(env.blobReadWriteToken || (hasGoogleDriveAuth && env.googleDriveRootId)),
   };
 }

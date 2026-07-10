@@ -3,6 +3,7 @@ import { createOrder, addLog, updateOrder } from '@/lib/store';
 import { createCheckoutSession } from '@/lib/stripe';
 import { getPackage, getProductByKey } from '@/lib/products';
 import { sendOrderEmail } from '@/lib/email';
+import { PersistentStorageUnavailableError } from '@/lib/durable-storage';
 
 export const runtime = 'nodejs';
 
@@ -54,6 +55,10 @@ export async function POST(request: Request) {
       mode: checkout.mode,
     });
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    console.error('Checkout failed', error);
+    if (error instanceof PersistentStorageUnavailableError) {
+      return NextResponse.json({ error: "We couldn't start checkout. Please try again or contact support." }, { status: 503 });
+    }
+    return NextResponse.json({ error: "We couldn't start checkout. Please try again or contact support." }, { status: 500 });
   }
 }

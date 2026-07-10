@@ -26,9 +26,9 @@ Production site: https://nieveslabs.com
 - `app/api/workflows/run`: admin workflow rerun endpoint
 - `lib/workflows.ts`: shared `runWorkflow(productKey, orderId)` engine
 - `lib/google.ts` and `lib/email.ts`: Google Drive, Apps Script, and Gmail adapters
-- `lib/store.ts`: local JSON storage adapter for orders, customers, uploads, deliverables, logs, and workflow status
+- `lib/store.ts`: storage adapter for orders, customers, uploads, deliverables, logs, and workflow status
 
-The local JSON adapter is useful for development and preview verification. Before high-volume production use, replace it with durable storage such as Postgres, Supabase, Neon, or another managed database.
+The local JSON adapter is only for development and preview verification. Production fails closed unless durable storage is configured. The current production-ready durable store is Google Sheets using `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_PRIVATE_KEY`; this prevents Vercel serverless functions from writing customer/order data to ephemeral local files.
 
 ## Setup
 
@@ -44,6 +44,7 @@ npm run dev
 npm run lint
 npm run typecheck
 npm run build
+npm run check:ctas
 ```
 
 ## Required Production Variables
@@ -90,4 +91,4 @@ The repository is configured for Vercel with `vercel.json`.
 
 ## Credential Behavior
 
-If Stripe credentials are missing, checkout uses approved AnswerBrief payment links when configured; otherwise it creates a traceable manual-review order and redirects to secure intake. If Google Drive, Gmail, Apps Script, or OpenAI credentials are missing, the workflow logs the skipped step and generates structured templates instead of failing. When `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_PRIVATE_KEY` are configured, order, customer, upload, deliverable, workflow log, product config, and intake-token metadata are mirrored to Google Sheets as durable production storage. Legacy AnswerBrief and portfolio env names are accepted during migration, but the canonical Nieves Labs names in `.env.local.example` should be used going forward.
+If Stripe credentials are missing, checkout uses approved AnswerBrief payment links when configured; otherwise it creates a traceable manual-review order and redirects to secure intake. If Google Drive, Gmail, Apps Script, or OpenAI credentials are missing, the workflow logs the skipped step and generates structured templates instead of failing. When `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_PRIVATE_KEY` are configured, order, customer, upload, deliverable, workflow log, product config, and intake-token metadata are persisted to Google Sheets as durable production storage. If durable storage is missing in production, checkout and intake return a safe customer-facing error instead of writing to local JSON or exposing runtime paths. Legacy AnswerBrief and portfolio env names are accepted during migration, but the canonical Nieves Labs names in `.env.local.example` should be used going forward.

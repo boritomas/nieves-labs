@@ -28,7 +28,7 @@ export default function CheckoutForm({ product, selectedPackage }: { product: Pr
     const data = await response.json();
     if (!response.ok) {
       setStatus('error');
-      setMessage(data.error || 'Checkout failed');
+      setMessage(data.error || "We couldn't start checkout. Please try again or contact support.");
       return;
     }
 

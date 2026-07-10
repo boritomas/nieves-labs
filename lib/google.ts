@@ -166,7 +166,7 @@ async function getServiceAccountAccessToken() {
   return data.access_token;
 }
 
-async function uploadBufferToDrive(folderId: string, name: string, mimeType: string, content: Buffer) {
+export async function uploadBufferToDrive(folderId: string, name: string, mimeType: string, content: Buffer) {
   const accessToken = await getGoogleAccessToken();
   const boundary = `nl-${crypto.randomUUID()}`;
   const metadata = {

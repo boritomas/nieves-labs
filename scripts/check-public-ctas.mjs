@@ -25,6 +25,7 @@ const forbiddenInternalPrefixes = [
 
 const failures = [];
 const checked = [];
+const repositoryRoot = new URL('../', import.meta.url);
 
 function normalizePath(path) {
   if (!path.startsWith('/')) return path;
@@ -124,6 +125,67 @@ async function validateHref(href, page) {
   }
 }
 
+async function validateTransactionalCta() {
+  const response = await fetch(new URL('/api/checkout', baseUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      productKey: 'tax_buddy',
+      packageId: 'organize',
+      customerName: 'CTA Smoke Test',
+      customerEmail: 'codex-cta-smoke@example.com',
+    }),
+  });
+
+  const text = await response.text().catch(() => '');
+  const leakedInternals = /ENOENT|\/var\/task|process\.cwd|orders\.json|\.data|stack/i.test(text);
+  if (leakedInternals) {
+    failures.push(`/api/checkout tax_buddy.organize: leaked internal storage failure (${response.status})`);
+    return;
+  }
+
+  if (process.env.CTA_REQUIRE_TRANSACTION_SUCCESS === '1' && !response.ok) {
+    failures.push(`/api/checkout tax_buddy.organize: expected transaction success, got ${response.status}`);
+    return;
+  }
+
+  if (!response.ok && ![400, 401, 403, 503].includes(response.status)) {
+    failures.push(`/api/checkout tax_buddy.organize: unexpected status ${response.status}`);
+    return;
+  }
+
+  checked.push(`/api/checkout tax_buddy.organize ${response.ok ? 'PASS' : `SAFE_FAIL_${response.status}`}`);
+}
+
+async function validateStorageGuards() {
+  const { readFile } = await import('node:fs/promises');
+  const sourceFiles = [
+    'lib/store.ts',
+    'lib/durable-storage.ts',
+    'app/api/checkout/route.ts',
+    'app/api/intake/route.ts',
+  ];
+
+  for (const file of sourceFiles) {
+    const source = await readFile(new URL(file, repositoryRoot), 'utf8');
+    if (source.includes('/var/task')) {
+      failures.push(`${file}: contains raw Vercel runtime path`);
+    }
+  }
+
+  const storeSource = await readFile(new URL('lib/store.ts', repositoryRoot), 'utf8');
+  if (!storeSource.includes("storageMode() === 'unconfigured'") || !storeSource.includes('PersistentStorageUnavailableError')) {
+    failures.push('lib/store.ts: production storage must fail closed when durable storage is unavailable');
+  }
+
+  const intakeSource = await readFile(new URL('app/api/intake/route.ts', repositoryRoot), 'utf8');
+  if (!intakeSource.includes("process.env.NODE_ENV === 'production'") || !intakeSource.includes('uploadBufferToDrive')) {
+    failures.push('app/api/intake/route.ts: production uploads must use durable object storage');
+  }
+
+  checked.push('production storage guard PASS');
+}
+
 for (const path of publicPages) {
   const { response, text } = await fetchHtml(path);
 
@@ -146,6 +208,9 @@ for (const path of publicPages) {
     await validateHref(href, page);
   }
 }
+
+await validateTransactionalCta();
+await validateStorageGuards();
 
 if (failures.length > 0) {
   console.error('CTA integrity check failed:');
