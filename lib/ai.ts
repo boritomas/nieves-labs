@@ -1,4 +1,5 @@
 import { env } from './env';
+import { getPromptForProduct } from './prompt-registry';
 import type { Product } from './products';
 import type { Order } from './types';
 
@@ -11,6 +12,7 @@ export async function generateDeliverableContent(order: Order, product: Product)
   }
 
   try {
+    const prompt = getPromptForProduct(product.key);
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -22,12 +24,17 @@ export async function generateDeliverableContent(order: Order, product: Product)
         input: [
           {
             role: 'system',
-            content: 'Generate concise, practical customer deliverables for Nieves Labs. Do not invent legal, tax, employment, or guaranteed outcome claims. Use markdown.',
+            content: [
+              'Generate concise, practical customer deliverables for Nieves Labs. Do not invent legal, tax, employment, or guaranteed outcome claims. Use markdown.',
+              prompt ? `Use prompt registry record ${prompt.id} version ${prompt.version}. Purpose: ${prompt.purpose}` : 'No prompt registry record was found; use the product configuration as the source of truth.',
+            ].join('\n'),
           },
           {
             role: 'user',
             content: JSON.stringify({
               product: product.title,
+              workflow: product.workflow,
+              prompt,
               deliverables: product.deliverables,
               disclaimer: product.disclaimer,
               answers: order.intakeAnswers,

@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint app components lib",
     "typecheck": "tsc --noEmit",
-    "check:ctas": "node scripts/check-public-ctas.mjs"
+    "check:ctas": "node scripts/check-public-ctas.mjs",
+    "check:platform": "node scripts/check-platform-integrity.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.263.1",

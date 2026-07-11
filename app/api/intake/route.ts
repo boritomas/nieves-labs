@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
 
     const answers: Record<string, string> = {};
-    for (const question of product.requiredQuestions) {
+    for (const question of product.intakeSchema.questions) {
       const value = String(form.get(question.id) || '');
       if (question.required && !value.trim()) {
         return NextResponse.json({ error: `${question.label} is required` }, { status: 400 });

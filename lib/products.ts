@@ -26,6 +26,35 @@ export type IntakeQuestion = {
   options?: string[];
 };
 
+export type ProductWorkflowKey =
+  | 'answerbrief_fulfillment'
+  | 'tax_buddy_organizer'
+  | 'tax_appeal_packet'
+  | 'interview_coach_plan'
+  | 'workforce_study_report'
+  | 'mixpilot_set_plan'
+  | 'platform_consultation';
+
+export type ProductWorkflowStep = {
+  id: string;
+  label: string;
+  required: boolean;
+};
+
+export type ProductWorkflowDefinition = {
+  key: ProductWorkflowKey;
+  version: string;
+  engine: 'naip_shared_workflow';
+  requiresPayment: boolean;
+  durableStorageRequired: boolean;
+  steps: ProductWorkflowStep[];
+};
+
+export type ProductIntakeSchema = {
+  requiredFiles: string[];
+  questions: IntakeQuestion[];
+};
+
 export type Product = {
   key: ProductKey;
   slug: string;
@@ -40,12 +69,18 @@ export type Product = {
   deliverables: string[];
   requiredFiles: string[];
   requiredQuestions: IntakeQuestion[];
+  intakeSchema: ProductIntakeSchema;
+  workflow: ProductWorkflowDefinition;
+  lifecycleStage: 'live' | 'beta' | 'internal';
+  publicAvailability: 'available' | 'waitlist' | 'internal';
   packages: ProductPackage[];
   faq: Array<{ question: string; answer: string }>;
   disclaimer: string;
 };
 
-export const products: Product[] = [
+type ProductDefinition = Omit<Product, 'intakeSchema' | 'workflow' | 'lifecycleStage' | 'publicAvailability'> & Partial<Pick<Product, 'intakeSchema' | 'workflow' | 'lifecycleStage' | 'publicAvailability'>>;
+
+export const products: Product[] = defineProducts([
   {
     key: 'answerbrief_ai',
     slug: 'answerbrief-ai',
@@ -241,7 +276,57 @@ export const products: Product[] = [
     ],
     disclaimer: 'Platform consultation is strategic and technical planning, not a guarantee of business outcomes.',
   },
-];
+]);
+
+function defineProducts(definitions: ProductDefinition[]): Product[] {
+  return definitions.map(createProduct);
+}
+
+function createProduct(definition: ProductDefinition): Product {
+  return {
+    ...definition,
+    intakeSchema: definition.intakeSchema || {
+      requiredFiles: definition.requiredFiles,
+      questions: definition.requiredQuestions,
+    },
+    workflow: definition.workflow || defaultWorkflow(definition),
+    lifecycleStage: definition.lifecycleStage || (definition.key === 'mixpilot_ai' ? 'beta' : 'live'),
+    publicAvailability: definition.publicAvailability || 'available',
+  };
+}
+
+function defaultWorkflow(product: ProductDefinition): ProductWorkflowDefinition {
+  return {
+    key: workflowKeyForProduct(product.key),
+    version: '1.0.0',
+    engine: 'naip_shared_workflow',
+    requiresPayment: product.packages.some((item) => item.price > 0),
+    durableStorageRequired: true,
+    steps: [
+      { id: 'checkout', label: 'Checkout or package start', required: product.packages.some((item) => item.price > 0) },
+      { id: 'order', label: 'Durable order creation', required: true },
+      { id: 'intake', label: 'Product-specific intake', required: true },
+      { id: 'uploads', label: 'Customer file capture', required: product.requiredFiles.length > 0 },
+      { id: 'generation', label: 'Configured deliverable generation', required: true },
+      { id: 'qa', label: 'Automated quality checks', required: true },
+      { id: 'delivery', label: 'Customer delivery and admin visibility', required: true },
+    ],
+  };
+}
+
+function workflowKeyForProduct(key: ProductKey): ProductWorkflowKey {
+  const workflows: Record<ProductKey, ProductWorkflowKey> = {
+    answerbrief_ai: 'answerbrief_fulfillment',
+    tax_buddy: 'tax_buddy_organizer',
+    tax_appeal_buddy: 'tax_appeal_packet',
+    interview_coach: 'interview_coach_plan',
+    workforce_study: 'workforce_study_report',
+    mixpilot_ai: 'mixpilot_set_plan',
+    automix_pro: 'mixpilot_set_plan',
+    nieves_ai_platform: 'platform_consultation',
+  };
+  return workflows[key];
+}
 
 export function getProductBySlug(slug: string) {
   if (slug === 'automix-pro') {

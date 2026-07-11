@@ -30,7 +30,7 @@ export default function IntakeForm({ order, product }: { order: Order; product: 
   return (
     <form className="intake-form" onSubmit={submit}>
       <input type="hidden" name="token" value={order.intakeToken} />
-      {product.requiredQuestions.map((question) => (
+      {product.intakeSchema.questions.map((question) => (
         <label key={question.id}>
           {question.label}{question.required ? ' *' : ''}
           {question.type === 'textarea' ? (
