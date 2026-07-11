@@ -80,6 +80,7 @@ export async function POST(request: Request) {
     await addLog(order.id, 'info', 'Intake submitted', { uploads: uploadRecords.length });
     if (updated) {
       await sendOrderEmail(updated, product, 'files_received');
+      await sendOrderEmail(updated, product, 'owner_update');
       await runWorkflow(product.key, order.id);
     }
 

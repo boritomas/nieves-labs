@@ -63,7 +63,13 @@ The default workflow includes:
 
 ## Release Gate Status
 
-The platform foundation is implemented, but the full NAIP-OS v3.0 mission is not production-complete until the following are configured and verified in production:
+The platform foundation is implemented. The stricter NAIP-OS release gate is:
+
+- A product may be marked `available` only after its complete customer journey is automated and verified.
+- Products without a passing synthetic end-to-end gate must be marked `waitlist` or `internal`.
+- AnswerBrief AI is the current flagship/reference implementation for the automated journey.
+
+The full NAIP-OS v3.0 mission is not production-complete until the following are configured and verified in production:
 
 - Durable order storage credentials.
 - Stripe secret key and webhook signing secret.

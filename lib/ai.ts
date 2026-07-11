@@ -1,13 +1,26 @@
 import { env } from './env';
+import { generateAnswerBriefPackage } from './answerbrief-fulfillment';
 import { getPromptForProduct } from './prompt-registry';
 import type { Product } from './products';
 import type { Order } from './types';
 
 export async function generateDeliverableContent(order: Order, product: Product) {
+  if (product.key === 'answerbrief_ai') {
+    const generated = await generateAnswerBriefPackage(order);
+    return {
+      mode: 'answerbrief' as const,
+      content: generated.content,
+      qa: generated.qa,
+      events: generated.events,
+    };
+  }
+
   if (!env.openaiApiKey) {
     return {
       mode: 'fallback' as const,
       content: structuredTemplate(order, product),
+      qa: undefined,
+      events: [],
     };
   }
 
@@ -50,11 +63,15 @@ export async function generateDeliverableContent(order: Order, product: Product)
     return {
       mode: 'openai' as const,
       content: data.output_text || structuredTemplate(order, product),
+      qa: undefined,
+      events: [],
     };
   } catch {
     return {
       mode: 'fallback' as const,
       content: structuredTemplate(order, product),
+      qa: undefined,
+      events: [],
     };
   }
 }

@@ -30,6 +30,9 @@ export async function startPlatformCheckout(input: CheckoutStartInput): Promise<
 
   const product = getProductByKey(input.productKey);
   if (!product) return { ok: false, status: 404, error: 'Unknown product' };
+  if (product.publicAvailability !== 'available') {
+    return { ok: false, status: 409, error: `${product.title} is not available for self-service checkout yet. Please contact Nieves Labs.` };
+  }
 
   const selectedPackage = getPackage(product, input.packageId);
   if (!selectedPackage) return { ok: false, status: 404, error: 'Unknown package' };
@@ -63,6 +66,7 @@ export async function startPlatformCheckout(input: CheckoutStartInput): Promise<
 
   await sendOrderEmail(order, product, 'confirmation');
   await sendOrderEmail(order, product, 'intake');
+  await sendOrderEmail(order, product, 'owner_update');
 
   return {
     ok: true,

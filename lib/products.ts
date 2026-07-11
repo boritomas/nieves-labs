@@ -95,8 +95,13 @@ export const products: Product[] = defineProducts([
     deliverables: ['Interview Brief', 'STAR story bank', 'Role-fit talking points', 'Final prep checklist'],
     requiredFiles: ['Resume', 'Job posting or role description'],
     requiredQuestions: [
+      { id: 'candidate_name', label: 'Candidate name', type: 'text', required: true },
       { id: 'target_role', label: 'Target role and company', type: 'text', required: true },
+      { id: 'target_company', label: 'Target company', type: 'text', required: false },
       { id: 'interview_stage', label: 'Interview stage', type: 'select', required: true, options: ['Recruiter screen', 'Hiring manager', 'Panel', 'Final round', 'Other'] },
+      { id: 'interview_date', label: 'Interview date if known', type: 'text', required: false },
+      { id: 'career_lane', label: 'Career lane or current field', type: 'text', required: true },
+      { id: 'job_posting_text', label: 'Paste the job posting or role description', type: 'textarea', required: true },
       { id: 'focus_areas', label: 'What should the brief emphasize?', type: 'textarea', required: false },
     ],
     packages: [
@@ -291,7 +296,7 @@ function createProduct(definition: ProductDefinition): Product {
     },
     workflow: definition.workflow || defaultWorkflow(definition),
     lifecycleStage: definition.lifecycleStage || (definition.key === 'mixpilot_ai' ? 'beta' : 'live'),
-    publicAvailability: definition.publicAvailability || 'available',
+    publicAvailability: definition.publicAvailability || (definition.key === 'answerbrief_ai' ? 'available' : 'waitlist'),
   };
 }
 

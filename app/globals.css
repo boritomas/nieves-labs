@@ -870,6 +870,19 @@ li {
   margin: 0;
 }
 
+.deliverable-preview {
+  background: #0f172a;
+  border-radius: 16px;
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 16px 0 0;
+  max-height: 520px;
+  overflow: auto;
+  padding: 20px;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 920px) {
   .hero-section,
   .split-section,

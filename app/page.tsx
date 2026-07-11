@@ -79,7 +79,7 @@ export default function Home() {
           {products.map((product) => (
             <article className="product-card" key={product.key}>
               <div>
-                <p className="card-kicker">Available</p>
+                <p className="card-kicker">{product.publicAvailability === 'available' ? 'Available' : 'Waitlist'}</p>
                 <h3>{product.title}</h3>
                 <p>{product.description}</p>
               </div>
@@ -92,7 +92,12 @@ export default function Home() {
                 <strong>${Math.min(...product.packages.map((item) => item.price))}</strong>
               </div>
               <div className="card-actions">
-                {product.key === 'mixpilot_ai' ? (
+                {product.publicAvailability !== 'available' ? (
+                  <>
+                    <Link className="button-primary" href="/contact">Join waitlist</Link>
+                    <Link className="button-secondary" href={`/products/${product.slug}`}>Learn More</Link>
+                  </>
+                ) : product.key === 'mixpilot_ai' ? (
                   <>
                     <a className="button-primary" href={env.mixpilotAppUrl}>Build a Mix</a>
                     <Link className="button-secondary" href="/products/mixpilot-ai">Learn More</Link>

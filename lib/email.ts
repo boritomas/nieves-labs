@@ -3,7 +3,7 @@ import { addLog } from './store';
 import type { Order } from './types';
 import type { Product } from './products';
 
-export async function sendOrderEmail(order: Order, product: Product, kind: 'confirmation' | 'intake' | 'files_received' | 'deliverable_ready' | 'failure_alert') {
+export async function sendOrderEmail(order: Order, product: Product, kind: 'confirmation' | 'intake' | 'files_received' | 'deliverable_ready' | 'failure_alert' | 'owner_update') {
   if (!env.gmailClientId || !env.gmailClientSecret || !env.gmailRefreshToken) {
     await addLog(order.id, 'warn', `Email skipped: missing Gmail credentials for ${kind}`, {
       missing: ['GMAIL_CLIENT_ID', 'GMAIL_CLIENT_SECRET', 'GMAIL_REFRESH_TOKEN'],
@@ -16,7 +16,7 @@ export async function sendOrderEmail(order: Order, product: Product, kind: 'conf
     const subject = emailSubject(product, kind);
     const body = emailBody(order, product, kind);
       const raw = Buffer.from([
-        `To: ${kind === 'failure_alert' ? env.supportEmail : order.customerEmail}`,
+        `To: ${kind === 'failure_alert' || kind === 'owner_update' ? env.supportEmail : order.customerEmail}`,
       `From: ${env.gmailFromEmail}`,
       `Subject: ${subject}`,
       'Content-Type: text/plain; charset=utf-8',
@@ -47,17 +47,36 @@ function emailSubject(product: Product, kind: string) {
     files_received: `Files received for ${product.title}`,
     deliverable_ready: `Your ${product.title} deliverable is ready`,
     failure_alert: `Nieves Labs workflow needs review: ${product.title}`,
+    owner_update: `Nieves Labs order update: ${product.title}`,
   };
   return subjects[kind] || `${product.title} update`;
 }
 
 function emailBody(order: Order, product: Product, kind: string) {
   const intakeUrl = `${env.appBaseUrl}/intake/${order.intakeToken}`;
+  const portalUrl = `${env.appBaseUrl}/portal/${order.intakeToken}`;
   if (kind === 'intake') return `Thanks for ordering ${product.title}.\n\nPlease complete your secure intake here:\n${intakeUrl}\n\nSupport: ${env.supportEmail}`;
-  if (kind === 'files_received') return `We received your files for ${product.title}. Your order ID is ${order.id}.`;
-  if (kind === 'deliverable_ready') return `Your ${product.title} deliverable is ready. Reply to this email if you need support.`;
+  if (kind === 'files_received') return `We received your files for ${product.title}. Your order ID is ${order.id}.\n\nTrack your order here:\n${portalUrl}`;
+  if (kind === 'deliverable_ready') return `Your ${product.title} deliverable is ready.\n\nOpen your secure portal here:\n${portalUrl}\n\nReply to this email if you need support.`;
+  if (kind === 'owner_update') {
+    return [
+      `Order ${order.id} update`,
+      `Product: ${product.title}`,
+      `Package: ${order.packageId}`,
+      `Customer: ${order.customerName || 'Not provided'} <${order.customerEmail}>`,
+      `Payment: ${order.paymentStatus}`,
+      `Status: ${order.status}`,
+      `Intake submitted: ${order.intakeSubmittedAt || 'No'}`,
+      `Uploads: ${order.uploads.length}`,
+      `Deliverables: ${order.deliverables.length}`,
+      `Workflow attempts: ${order.workflowAttempts || 0}`,
+      `Last workflow error: ${order.lastWorkflowError || 'None'}`,
+      `Admin: ${env.appBaseUrl}/admin/orders`,
+      `Portal: ${portalUrl}`,
+    ].join('\n');
+  }
   if (kind === 'failure_alert') return `Order ${order.id} needs review.\nProduct: ${product.title}\nCustomer: ${order.customerEmail}`;
-  return `Thanks for your ${product.title} order.\nOrder ID: ${order.id}\nNext step: ${intakeUrl}`;
+  return `Thanks for your ${product.title} order.\nOrder ID: ${order.id}\nNext step: ${intakeUrl}\nPortal: ${portalUrl}`;
 }
 
 async function getGmailAccessToken() {

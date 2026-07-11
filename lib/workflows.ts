@@ -13,61 +13,88 @@ export async function runWorkflow(productKey: string, orderId: string) {
     throw new Error('Order or product not found');
   }
 
-  await updateOrder(order.id, {
-    status: 'processing',
-    workflowStatus: {
-      intake: order.intakeSubmittedAt ? 'completed' : 'pending',
-      drive: 'pending',
-      generation: 'pending',
-      qa: 'pending',
-      email: 'pending',
-    },
-  });
-  await addLog(order.id, 'info', 'Workflow started', {
-    productKey,
-    workflowKey: product.workflow.key,
-    workflowVersion: product.workflow.version,
-  });
+  const attempts = (order.workflowAttempts || 0) + 1;
 
-  const folderId = await createCustomerDriveFolder(order, product);
-  const orderWithFolder = await getOrder(order.id);
-  const uploadedFiles = orderWithFolder ? await uploadOrderFilesToDrive(orderWithFolder, folderId || orderWithFolder.driveFolderId) : order.uploads;
-  const latestOrder = await getOrder(order.id);
-  const generated = await generateDeliverableContent(latestOrder || order, product);
-  const qa = validateGeneratedDeliverable(generated.content, product);
-  if (!qa.passed) {
-    await addLog(order.id, 'warn', 'Deliverable QA warnings', { warnings: qa.warnings });
-  }
-  const deliverable = await uploadDeliverableToDrive(latestOrder || order, generateStructuredDeliverable(order.id, product.title, generated.content), folderId || latestOrder?.driveFolderId);
-
-  await updateOrder(order.id, {
-    status: 'completed',
-    deliverables: [...(latestOrder?.deliverables || []), deliverable],
-    workflowStatus: {
-      intake: 'completed',
-      drive: folderId ? 'completed' : 'skipped',
-      generation: 'completed',
-      qa: qa.passed ? 'completed' : 'failed',
-      email: 'pending',
-      appsScript: 'pending',
-    },
-  });
-  await addLog(order.id, 'info', generated.mode === 'openai' ? 'OpenAI deliverable generated' : 'Structured fallback deliverable generated', { deliverableId: deliverable.id });
-
-  const refreshedOrder = await getOrder(order.id);
-  if (refreshedOrder) {
-    await triggerAppsScript(refreshedOrder, uploadedFiles.map((upload) => upload.googleFileId).filter((fileId): fileId is string => Boolean(fileId)));
-    await sendOrderEmail(refreshedOrder, product, 'deliverable_ready');
+  try {
     await updateOrder(order.id, {
+      status: 'processing',
+      workflowAttempts: attempts,
+      lastWorkflowError: undefined,
       workflowStatus: {
-        ...refreshedOrder.workflowStatus,
-        email: 'completed',
-        appsScript: 'completed',
+        intake: order.intakeSubmittedAt ? 'completed' : 'pending',
+        drive: 'pending',
+        generation: 'pending',
+        qa: 'pending',
+        email: 'pending',
       },
     });
-  }
+    await addLog(order.id, 'info', 'Workflow started', {
+      productKey,
+      workflowKey: product.workflow.key,
+      workflowVersion: product.workflow.version,
+      attempt: attempts,
+    });
 
-  return getOrder(order.id);
+    const folderId = await createCustomerDriveFolder(order, product);
+    const orderWithFolder = await getOrder(order.id);
+    const uploadedFiles = orderWithFolder ? await uploadOrderFilesToDrive(orderWithFolder, folderId || orderWithFolder.driveFolderId) : order.uploads;
+    const latestOrder = await getOrder(order.id);
+    const generated = await generateDeliverableContent(latestOrder || order, product);
+    for (const event of generated.events || []) {
+      await addLog(order.id, event.severity === 'error' ? 'error' : event.severity === 'warning' ? 'warn' : 'info', event.message, { event: event.event });
+    }
+    const structuralQa = validateGeneratedDeliverable(generated.content, product);
+    const qaPassed = generated.qa ? generated.qa.passed && structuralQa.passed : structuralQa.passed;
+    const qaWarnings = [...structuralQa.warnings, ...(generated.qa?.warnings || []), ...(generated.qa?.issues || [])];
+    if (!qaPassed) {
+      await addLog(order.id, 'warn', 'Deliverable QA warnings', { warnings: qaWarnings });
+    }
+    const deliverable = await uploadDeliverableToDrive(latestOrder || order, generateStructuredDeliverable(order.id, product.title, generated.content), folderId || latestOrder?.driveFolderId);
+
+    await updateOrder(order.id, {
+      status: qaPassed ? 'completed' : 'needs_review',
+      deliverables: [...(latestOrder?.deliverables || []), deliverable],
+      workflowStatus: {
+        intake: 'completed',
+        drive: folderId ? 'completed' : 'skipped',
+        generation: 'completed',
+        qa: qaPassed ? 'completed' : 'failed',
+        email: 'pending',
+        appsScript: 'pending',
+      },
+    });
+    await addLog(order.id, 'info', generated.mode === 'openai' ? 'OpenAI deliverable generated' : generated.mode === 'answerbrief' ? 'AnswerBrief deliverable generated' : 'Structured fallback deliverable generated', { deliverableId: deliverable.id });
+
+    const refreshedOrder = await getOrder(order.id);
+    if (refreshedOrder) {
+      await triggerAppsScript(refreshedOrder, uploadedFiles.map((upload) => upload.googleFileId).filter((fileId): fileId is string => Boolean(fileId)));
+      await sendOrderEmail(refreshedOrder, product, 'deliverable_ready');
+      await sendOrderEmail(refreshedOrder, product, 'owner_update');
+      await updateOrder(order.id, {
+        workflowStatus: {
+          ...refreshedOrder.workflowStatus,
+          email: 'completed',
+          appsScript: 'completed',
+        },
+      });
+    }
+
+    return getOrder(order.id);
+  } catch (error) {
+    const message = String(error);
+    await updateOrder(order.id, {
+      status: 'failed',
+      lastWorkflowError: message,
+      workflowAttempts: attempts,
+      workflowStatus: {
+        ...order.workflowStatus,
+        generation: 'failed',
+      },
+    });
+    await addLog(order.id, 'error', 'Workflow failed', { error: message, attempt: attempts });
+    await sendOrderEmail({ ...order, lastWorkflowError: message, workflowAttempts: attempts }, product, 'failure_alert');
+    return getOrder(order.id);
+  }
 }
 
 function validateGeneratedDeliverable(content: string, product: { deliverables: string[]; disclaimer: string }) {

@@ -66,7 +66,7 @@ export async function writeStoreToDurableStorage(data: StoreData) {
       ...data.logs.map((log) => ['workflow_log', log.id, log.createdAt, JSON.stringify(redact(log))]),
       ...data.orders.flatMap((order) => [
         ...order.uploads.map((upload) => ['upload', upload.id, upload.createdAt, JSON.stringify(redact(upload))]),
-        ...order.deliverables.map((deliverable) => ['deliverable', deliverable.id, deliverable.createdAt, JSON.stringify(redact({ ...deliverable, content: '[content stored in workflow artifact]' }))]),
+        ...order.deliverables.map((deliverable) => ['deliverable', deliverable.id, deliverable.createdAt, JSON.stringify(redact(deliverable))]),
         ['intake_token', order.id, order.updatedAt, JSON.stringify({ orderId: order.id, tokenConfigured: Boolean(order.intakeToken) })],
         ['product_config', order.productKey, order.updatedAt, JSON.stringify({ productKey: order.productKey, packageId: order.packageId })],
       ]),
@@ -117,7 +117,8 @@ function rowsToStore(rows: string[][]): StoreData {
 
 function redact<T>(value: T): T {
   return JSON.parse(JSON.stringify(value, (key, item) => {
-    if (/token|secret|key|content/i.test(key)) return '[redacted]';
+    if (key === 'intakeToken') return item;
+    if (/token|secret|key/i.test(key)) return '[redacted]';
     return item;
   })) as T;
 }

@@ -59,6 +59,8 @@ export type Order = {
   deliverables: Deliverable[];
   driveFolderId?: string;
   workflowStatus: Record<string, WorkflowStepStatus>;
+  workflowAttempts?: number;
+  lastWorkflowError?: string;
   createdAt: string;
   updatedAt: string;
 };

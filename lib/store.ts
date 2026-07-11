@@ -136,6 +136,20 @@ export async function addLog(orderId: string, level: WorkflowLog['level'], messa
   return log;
 }
 
+export async function deleteOrder(orderId: string) {
+  const data = await readStore();
+  const order = data.orders.find((item) => item.id === orderId);
+  if (!order) return false;
+
+  data.orders = data.orders.filter((item) => item.id !== orderId);
+  data.logs = data.logs.filter((log) => log.orderId !== orderId);
+  if (!data.orders.some((item) => item.customerId === order.customerId)) {
+    data.customers = data.customers.filter((customer) => customer.id !== order.customerId);
+  }
+  await writeStore(data);
+  return true;
+}
+
 function makeLog(orderId: string, level: WorkflowLog['level'], message: string, meta?: Record<string, unknown>): WorkflowLog {
   return {
     id: randomUUID(),

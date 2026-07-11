@@ -26,6 +26,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const product = getProductBySlug(slug);
   if (!product) notFound();
   const isMixPilot = product.key === 'mixpilot_ai';
+  const isAvailable = product.publicAvailability === 'available';
 
   return (
     <main className="site-shell">
@@ -45,13 +46,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <h1>{product.title}</h1>
         <p>{product.tagline}</p>
         <div className="hero-actions">
-          {isMixPilot ? (
+          {!isAvailable ? (
+            <Link className="button-primary" href="/contact">Join waitlist</Link>
+          ) : isMixPilot ? (
             <a className="button-primary" href={env.mixpilotAppUrl}>Build a Mix</a>
           ) : (
             <Link className="button-primary" href="#pricing">Purchase package</Link>
           )}
           <Link className="button-secondary" href={isMixPilot ? '#pricing' : '#intake'}>
-            {isMixPilot ? 'Start Free Beta' : 'Review intake'}
+            {!isAvailable ? 'Ask about availability' : isMixPilot ? 'Start Free Beta' : 'Review intake'}
           </Link>
         </div>
       </section>
@@ -103,7 +106,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <strong>${item.price}</strong>
               <span>{item.turnaround}</span>
               <ul>{item.includes.map((include) => <li key={include}>{include}</li>)}</ul>
-              <CheckoutForm product={product} selectedPackage={item} />
+              {isAvailable ? (
+                <CheckoutForm product={product} selectedPackage={item} />
+              ) : (
+                <Link className="button-primary" href="/contact">Request access</Link>
+              )}
             </article>
           ))}
         </div>
