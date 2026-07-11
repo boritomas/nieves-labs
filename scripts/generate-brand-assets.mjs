@@ -99,15 +99,20 @@ function parentMonogramSvg(options = {}) {
         <stop offset="1" stop-color="${colors.black}"/>
       </linearGradient>
       <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="${highlight}"/>
-        <stop offset="0.55" stop-color="${stroke}"/>
-        <stop offset="1" stop-color="#8A641C"/>
+        <stop offset="0" stop-color="#FFF1AE"/>
+        <stop offset="0.18" stop-color="${stroke}"/>
+        <stop offset="0.42" stop-color="#9B6A18"/>
+        <stop offset="0.7" stop-color="${highlight}"/>
+        <stop offset="1" stop-color="#6F4712"/>
       </linearGradient>
     </defs>
     <rect x="20" y="20" width="472" height="472" rx="96" fill="${bg}"/>
-    <path d="M116 396V112h280v284H116Z" fill="none" stroke="url(#gold)" stroke-width="26" stroke-linejoin="round"/>
-    <path d="M156 378V138l204 236V138" fill="none" stroke="url(#gold)" stroke-width="40" stroke-linecap="square" stroke-linejoin="miter"/>
-    <path d="M210 138h74l76 90" fill="none" stroke="${highlight}" stroke-width="18" stroke-linecap="square"/>
+    <path d="M116 414V98h280v316" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="54" stroke-linecap="square" stroke-linejoin="miter" transform="translate(8 8)"/>
+    <path d="M116 414V98h280v316" fill="none" stroke="url(#gold)" stroke-width="48" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="M158 404V118l196 286V118" fill="none" stroke="rgba(0,0,0,.48)" stroke-width="70" stroke-linecap="square" stroke-linejoin="miter" transform="translate(7 7)"/>
+    <path d="M158 404V118l196 286V118" fill="none" stroke="url(#gold)" stroke-width="58" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="M230 120h86l58 76" fill="none" stroke="#FFF4B7" stroke-width="24" stroke-linecap="square"/>
+    <path d="M126 108h82" fill="none" stroke="#FFF4B7" stroke-width="14" stroke-linecap="square"/>
   `);
 }
 
