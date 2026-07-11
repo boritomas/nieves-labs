@@ -149,7 +149,7 @@ async function validateTransactionalCta() {
     return;
   }
 
-  if (!response.ok && ![400, 401, 403, 503].includes(response.status)) {
+  if (!response.ok && ![400, 401, 403, 409, 503].includes(response.status)) {
     failures.push(`/api/checkout tax_buddy.organize: unexpected status ${response.status}`);
     return;
   }

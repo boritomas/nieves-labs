@@ -296,7 +296,7 @@ function createProduct(definition: ProductDefinition): Product {
     },
     workflow: definition.workflow || defaultWorkflow(definition),
     lifecycleStage: definition.lifecycleStage || (definition.key === 'mixpilot_ai' ? 'beta' : 'live'),
-    publicAvailability: definition.publicAvailability || (definition.key === 'answerbrief_ai' ? 'available' : 'waitlist'),
+    publicAvailability: definition.publicAvailability || 'waitlist',
   };
 }
 
