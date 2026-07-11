@@ -7,8 +7,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Nieves Labs - Operational AI Product Hub',
-  description: 'AI product services with checkout, secure intake, automation workflows, and admin visibility.',
+  title: 'Nieves Labs - AI Product Portfolio',
+  description: 'Portfolio and marketplace for Nieves Labs products, with verified operational applications and waitlisted upcoming tools.',
   icons: {
     icon: '/favicon.ico',
   },

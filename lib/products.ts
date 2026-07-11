@@ -12,7 +12,6 @@ export type ProductPackage = {
   id: string;
   name: string;
   price: number;
-  stripePriceIdEnv: string;
   turnaround: string;
   description: string;
   includes: string[];
@@ -55,6 +54,25 @@ export type ProductIntakeSchema = {
   questions: IntakeQuestion[];
 };
 
+export type ProductArchitecture =
+  | 'portfolio_marketing_site'
+  | 'operational_product_application'
+  | 'external_application'
+  | 'coming_soon'
+  | 'waitlist'
+  | 'internal_only';
+
+export type ProductExternalApp = {
+  baseUrl: string;
+  label: string;
+  ctas: Array<{
+    label: string;
+    url: string;
+    kind: 'primary' | 'secondary';
+  }>;
+  verifiedRoutes: string[];
+};
+
 export type Product = {
   key: ProductKey;
   slug: string;
@@ -72,13 +90,15 @@ export type Product = {
   intakeSchema: ProductIntakeSchema;
   workflow: ProductWorkflowDefinition;
   lifecycleStage: 'live' | 'beta' | 'internal';
-  publicAvailability: 'available' | 'waitlist' | 'internal';
+  publicAvailability: 'available' | 'coming_soon' | 'waitlist' | 'internal';
+  architecture: ProductArchitecture;
+  externalApp?: ProductExternalApp;
   packages: ProductPackage[];
   faq: Array<{ question: string; answer: string }>;
   disclaimer: string;
 };
 
-type ProductDefinition = Omit<Product, 'intakeSchema' | 'workflow' | 'lifecycleStage' | 'publicAvailability'> & Partial<Pick<Product, 'intakeSchema' | 'workflow' | 'lifecycleStage' | 'publicAvailability'>>;
+type ProductDefinition = Omit<Product, 'intakeSchema' | 'workflow' | 'lifecycleStage' | 'publicAvailability' | 'architecture'> & Partial<Pick<Product, 'intakeSchema' | 'workflow' | 'lifecycleStage' | 'publicAvailability' | 'architecture'>>;
 
 export const products: Product[] = defineProducts([
   {
@@ -105,14 +125,26 @@ export const products: Product[] = defineProducts([
       { id: 'focus_areas', label: 'What should the brief emphasize?', type: 'textarea', required: false },
     ],
     packages: [
-      { id: 'brief', name: 'Interview Brief', price: 49, stripePriceIdEnv: 'STRIPE_PRICE_ANSWERBRIEF_BRIEF', turnaround: '1 business day', description: 'A polished role-specific interview brief.', includes: ['Interview Brief', 'Story prompts', 'Prep checklist'] },
-      { id: 'premium', name: 'Premium Prep', price: 129, stripePriceIdEnv: 'STRIPE_PRICE_ANSWERBRIEF_PREMIUM', turnaround: '2 business days', description: 'Deeper prep with coaching notes and follow-up strategy.', includes: ['Everything in Brief', 'Coaching plan', 'Follow-up email drafts'] },
+      { id: 'brief', name: 'Interview Brief', price: 49, turnaround: '1 business day', description: 'A polished role-specific interview brief.', includes: ['Interview Brief', 'Story prompts', 'Prep checklist'] },
+      { id: 'premium', name: 'Premium Prep', price: 129, turnaround: '2 business days', description: 'Deeper prep with coaching notes and follow-up strategy.', includes: ['Everything in Brief', 'Coaching plan', 'Follow-up email drafts'] },
     ],
     faq: [
       { question: 'Do you write answers for me?', answer: 'The package gives structure, story prompts, and role-specific guidance so your answers remain accurate and authentic.' },
       { question: 'Can I upload multiple resumes?', answer: 'Yes. Upload the most relevant resume first and include alternates as supporting files.' },
     ],
     disclaimer: 'Career guidance is informational and does not guarantee interview outcomes or employment offers.',
+    publicAvailability: 'available',
+    architecture: 'external_application',
+    externalApp: {
+      baseUrl: 'https://www.answer-brief.com',
+      label: 'AnswerBrief AI operational app',
+      ctas: [
+        { label: 'Explore AnswerBrief AI', url: 'https://www.answer-brief.com', kind: 'primary' },
+        { label: 'Try the Free Fit Check', url: 'https://www.answer-brief.com/fit-check', kind: 'secondary' },
+        { label: 'View Packages', url: 'https://www.answer-brief.com/#pricing', kind: 'secondary' },
+      ],
+      verifiedRoutes: ['/', '/fit-check', '/sample-brief'],
+    },
   },
   {
     key: 'tax_buddy',
@@ -133,7 +165,7 @@ export const products: Product[] = defineProducts([
       { id: 'notes', label: 'Anything unusual this year?', type: 'textarea', required: false },
     ],
     packages: [
-      { id: 'organize', name: 'Organizer', price: 79, stripePriceIdEnv: 'STRIPE_PRICE_TAX_BUDDY_ORGANIZE', turnaround: '2 business days', description: 'Document organization and missing-item review.', includes: ['Foldered packet', 'Checklist', 'Summary'] },
+      { id: 'organize', name: 'Organizer', price: 79, turnaround: '2 business days', description: 'Document organization and missing-item review.', includes: ['Foldered packet', 'Checklist', 'Summary'] },
     ],
     faq: [
       { question: 'Is this tax advice?', answer: 'No. This organizes materials for review and does not replace a licensed tax professional.' },
@@ -160,7 +192,7 @@ export const products: Product[] = defineProducts([
       { id: 'appeal_deadline', label: 'Appeal deadline if known', type: 'text', required: false },
     ],
     packages: [
-      { id: 'appeal_packet', name: 'Appeal Packet', price: 99, stripePriceIdEnv: 'STRIPE_PRICE_TAX_APPEAL_PACKET', turnaround: '2 business days', description: 'A structured packet to prepare for an appeal.', includes: ['Appeal package', 'Comps worksheet', 'Hearing notes'] },
+      { id: 'appeal_packet', name: 'Appeal Packet', price: 99, turnaround: '2 business days', description: 'A structured packet to prepare for an appeal.', includes: ['Appeal package', 'Comps worksheet', 'Hearing notes'] },
     ],
     faq: [
       { question: 'Do you file the appeal?', answer: 'No. The product helps prepare materials; customers remain responsible for filing.' },
@@ -187,7 +219,7 @@ export const products: Product[] = defineProducts([
       { id: 'hardest_questions', label: 'Which questions feel hardest?', type: 'textarea', required: false },
     ],
     packages: [
-      { id: 'plan', name: 'Coaching Plan', price: 69, stripePriceIdEnv: 'STRIPE_PRICE_INTERVIEW_COACH_PLAN', turnaround: '1 business day', description: 'A structured plan for practice and improvement.', includes: ['Coaching plan', 'Question bank', 'Improvement checklist'] },
+      { id: 'plan', name: 'Coaching Plan', price: 69, turnaround: '1 business day', description: 'A structured plan for practice and improvement.', includes: ['Coaching plan', 'Question bank', 'Improvement checklist'] },
     ],
     faq: [
       { question: 'Is this live coaching?', answer: 'This package is an asynchronous coaching plan unless a custom engagement is arranged.' },
@@ -214,7 +246,7 @@ export const products: Product[] = defineProducts([
       { id: 'current_tools', label: 'Current tools', type: 'textarea', required: false },
     ],
     packages: [
-      { id: 'study', name: 'Study Report', price: 299, stripePriceIdEnv: 'STRIPE_PRICE_WORKFORCE_STUDY_REPORT', turnaround: '5 business days', description: 'A focused study report with practical recommendations.', includes: ['Study report', 'Workflow map', 'Opportunity backlog'] },
+      { id: 'study', name: 'Study Report', price: 299, turnaround: '5 business days', description: 'A focused study report with practical recommendations.', includes: ['Study report', 'Workflow map', 'Opportunity backlog'] },
     ],
     faq: [
       { question: 'Is this a consulting engagement?', answer: 'It is a fixed-scope study package. Larger implementation work can be scoped separately.' },
@@ -246,13 +278,25 @@ export const products: Product[] = defineProducts([
       { id: 'notes', label: 'Event notes or must-play moments', type: 'textarea', required: false },
     ],
     packages: [
-      { id: 'free_beta', name: 'Free Beta', price: 0, stripePriceIdEnv: 'STRIPE_PRICE_MIXPILOT_FREE_BETA', turnaround: 'Instant self-serve or manual-review fallback', description: 'Start a MixPilot AI set plan while checkout is in beta.', includes: ['AI DJ Set Plan / Cue Sheet', 'Energy flow', 'Transition ideas', 'Cue notes'] },
+      { id: 'free_beta', name: 'Free Beta', price: 0, turnaround: 'Instant self-serve or manual-review fallback', description: 'Start a MixPilot AI set plan while checkout is in beta.', includes: ['AI DJ Set Plan / Cue Sheet', 'Energy flow', 'Transition ideas', 'Cue notes'] },
     ],
     faq: [
       { question: 'Does MixPilot AI mix or stream audio?', answer: 'No. MixPilot AI provides set planning and cue-sheet guidance. It does not stream, mix, download, or export audio.' },
       { question: 'Does it include music licensing?', answer: 'No. Customers are responsible for music licensing, streaming, public performance, and distribution rights.' },
     ],
     disclaimer: 'MixPilot AI provides music planning and cue-sheet guidance. It does not grant music licensing, streaming, public performance, or distribution rights.',
+    publicAvailability: 'available',
+    architecture: 'external_application',
+    externalApp: {
+      baseUrl: 'https://automix-pro-nine.vercel.app',
+      label: 'MixPilot AI operational app',
+      ctas: [
+        { label: 'Open MixPilot AI', url: 'https://automix-pro-nine.vercel.app', kind: 'primary' },
+        { label: 'Create a Mix', url: 'https://automix-pro-nine.vercel.app/create', kind: 'secondary' },
+        { label: 'Try Demo Mix', url: 'https://automix-pro-nine.vercel.app/demo', kind: 'secondary' },
+      ],
+      verifiedRoutes: ['/', '/create', '/demo', '/listen'],
+    },
   },
   {
     key: 'nieves_ai_platform',
@@ -273,7 +317,7 @@ export const products: Product[] = defineProducts([
       { id: 'timeline', label: 'Target timeline', type: 'text', required: false },
     ],
     packages: [
-      { id: 'consultation', name: 'Platform Consultation', price: 499, stripePriceIdEnv: 'STRIPE_PRICE_PLATFORM_CONSULTATION', turnaround: '5 business days', description: 'A strategy and implementation planning package.', includes: ['Consultation summary', 'Architecture outline', 'Roadmap'] },
+      { id: 'consultation', name: 'Platform Consultation', price: 499, turnaround: '5 business days', description: 'A strategy and implementation planning package.', includes: ['Consultation summary', 'Architecture outline', 'Roadmap'] },
     ],
     faq: [
       { question: 'Does this include custom development?', answer: 'No. It creates the implementation plan; build work can be scoped afterward.' },
@@ -297,6 +341,7 @@ function createProduct(definition: ProductDefinition): Product {
     workflow: definition.workflow || defaultWorkflow(definition),
     lifecycleStage: definition.lifecycleStage || (definition.key === 'mixpilot_ai' ? 'beta' : 'live'),
     publicAvailability: definition.publicAvailability || 'waitlist',
+    architecture: definition.architecture || 'waitlist',
   };
 }
 

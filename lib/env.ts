@@ -1,45 +1,5 @@
 export const env = {
-  appBaseUrl: process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  supportEmail: process.env.SUPPORT_EMAIL || process.env.ANSWERBRIEF_NOTIFY_EMAIL || process.env.LAB_NOTIFY_EMAIL || process.env.BLOG_DRAFT_NOTIFY_EMAIL || process.env.GMAIL_FROM_EMAIL || 'hello@nieves-labs.com',
-  adminToken: process.env.ADMIN_TOKEN || process.env.ADMIN_DASHBOARD_PASSWORD || '',
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
-  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-  answerBriefQuickPrepLink: process.env.PAYMENT_LINK_ANSWERBRIEF_QUICK_PREP || process.env.NEXT_PUBLIC_STRIPE_QUICK_PREP_LINK || '',
-  answerBriefFullBriefLink: process.env.PAYMENT_LINK_ANSWERBRIEF_FULL_BRIEF || process.env.NEXT_PUBLIC_STRIPE_FULL_INTERVIEW_BRIEF_LINK || '',
-  answerBriefPremiumPrepLink: process.env.PAYMENT_LINK_ANSWERBRIEF_PREMIUM_PREP || process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PREP_LINK || '',
-  mixpilotAppUrl: process.env.NEXT_PUBLIC_MIXPILOT_AI_URL || process.env.MIXPILOT_AI_URL || 'https://automix-pro-nine.vercel.app',
-  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-  googleRefreshToken: process.env.GOOGLE_REFRESH_TOKEN || '',
-  googleServiceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
-  googlePrivateKey: process.env.GOOGLE_PRIVATE_KEY || '',
-  googleDriveRootId: process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '',
-  googleAppsScriptUrl: process.env.GOOGLE_APPS_SCRIPT_WEBHOOK_URL || process.env.GOOGLE_APPS_SCRIPT_URL || '',
-  googleSheetsSpreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '',
-  googleSheetsOrdersSheetName: process.env.GOOGLE_SHEETS_ORDERS_SHEET_NAME || process.env.GOOGLE_SHEETS_SHEET_NAME || 'orders',
-  googleSheetsIntakeSheetName: process.env.GOOGLE_SHEETS_INTAKE_SHEET_NAME || process.env.GOOGLE_SHEETS_SHEET_NAME || 'intake',
-  gmailClientId: process.env.GMAIL_CLIENT_ID || '',
-  gmailClientSecret: process.env.GMAIL_CLIENT_SECRET || '',
-  gmailRefreshToken: process.env.GMAIL_REFRESH_TOKEN || '',
-  gmailFromEmail: process.env.GMAIL_FROM_EMAIL || process.env.GMAIL_SENDER_EMAIL || process.env.SUPPORT_EMAIL || 'hello@nieves-labs.com',
-  openaiApiKey: process.env.OPENAI_API_KEY || '',
-  blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN || '',
-  databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.NEON_DATABASE_URL || process.env.SUPABASE_DB_URL || '',
+  appBaseUrl: process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_BASE_URL || 'http://localhost:3000',
+  supportEmail: process.env.SUPPORT_EMAIL || 'hello@nieves-labs.com',
+  adminToken: process.env.ADMIN_TOKEN || '',
 };
-
-export function requiredCredentialStatus() {
-  const hasGoogleDriveAuth = Boolean(env.googleClientId && env.googleClientSecret && env.googleRefreshToken || env.googleServiceAccountEmail && env.googlePrivateKey);
-  const hasGoogleSheetsStorage = Boolean(env.googleSheetsSpreadsheetId && env.googleServiceAccountEmail && env.googlePrivateKey);
-
-  return {
-    stripe: Boolean(env.stripeSecretKey && env.stripeWebhookSecret),
-    stripePaymentLinks: Boolean(env.answerBriefQuickPrepLink || env.answerBriefFullBriefLink || env.answerBriefPremiumPrepLink),
-    googleDrive: Boolean(hasGoogleDriveAuth && env.googleDriveRootId),
-    gmail: Boolean(env.gmailClientId && env.gmailClientSecret && env.gmailRefreshToken),
-    appsScript: Boolean(env.googleAppsScriptUrl),
-    openai: Boolean(env.openaiApiKey),
-    admin: Boolean(env.adminToken),
-    durableDatabase: Boolean(env.databaseUrl || hasGoogleSheetsStorage),
-    objectStorage: Boolean(env.blobReadWriteToken || (hasGoogleDriveAuth && env.googleDriveRootId)),
-  };
-}

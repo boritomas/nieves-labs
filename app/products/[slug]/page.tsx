@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import CheckoutForm from '@/components/CheckoutForm';
 import { getProductBySlug, products } from '@/lib/products';
-import { env } from '@/lib/env';
 
 export function generateStaticParams() {
   return [...products.map((product) => ({ slug: product.slug })), { slug: 'automix-pro' }];
@@ -25,8 +23,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const product = getProductBySlug(slug);
   if (!product) notFound();
-  const isMixPilot = product.key === 'mixpilot_ai';
-  const isAvailable = product.publicAvailability === 'available';
+  const externalCtas = product.externalApp?.ctas || [];
 
   return (
     <main className="site-shell">
@@ -46,16 +43,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <h1>{product.title}</h1>
         <p>{product.tagline}</p>
         <div className="hero-actions">
-          {!isAvailable ? (
-            <Link className="button-primary" href="/contact">Join waitlist</Link>
-          ) : isMixPilot ? (
-            <a className="button-primary" href={env.mixpilotAppUrl}>Build a Mix</a>
+          {externalCtas[0] ? (
+            <a className="button-primary" href={externalCtas[0].url}>{externalCtas[0].label}</a>
           ) : (
-            <Link className="button-primary" href="#pricing">Purchase package</Link>
+            <Link className="button-primary" href="/contact">Join waitlist</Link>
           )}
-          <Link className="button-secondary" href={isMixPilot ? '#pricing' : '#intake'}>
-            {!isAvailable ? 'Ask about availability' : isMixPilot ? 'Start Free Beta' : 'Review intake'}
-          </Link>
+          {externalCtas[1] ? (
+            <a className="button-secondary" href={externalCtas[1].url}>{externalCtas[1].label}</a>
+          ) : (
+            <Link className="button-secondary" href="/contact">Ask about availability</Link>
+          )}
         </div>
       </section>
 
@@ -74,14 +71,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <section className="section split-section">
         <div>
           <p className="eyebrow">How it works</p>
-          <h2>Choose a package, share the details, receive your deliverable.</h2>
-          <p>After purchase, you will complete a focused intake form and upload the files needed to prepare your package.</p>
+          <h2>{product.externalApp ? 'Open the verified product application to continue.' : 'Join the waitlist while the operational app is prepared.'}</h2>
+          <p>{product.externalApp ? 'Commerce, customer data, intake, fulfillment, and delivery are handled by the dedicated operational application, not by the Nieves Labs portfolio site.' : 'This product is not accepting self-service purchases yet. Nieves Labs will announce availability once its independent customer journey is verified.'}</p>
         </div>
         <ol className="steps">
-          <li>Select package</li>
-          <li>Complete secure checkout</li>
-          <li>Submit product intake and files</li>
-          <li>Receive a prepared deliverable</li>
+          <li>Review the product</li>
+          <li>{product.externalApp ? 'Open the operational app' : 'Request access or join the waitlist'}</li>
+          <li>{product.externalApp ? 'Complete the workflow in that app' : 'Wait for launch readiness'}</li>
+          <li>{product.externalApp ? 'Receive updates from the product app' : 'No purchase is collected on this site'}</li>
         </ol>
       </section>
 
@@ -97,20 +94,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </section>
 
       <section className="section" id="pricing">
-        <div className="section-heading"><p className="eyebrow">Pricing</p><h2>Choose a package</h2></div>
+        <div className="section-heading"><p className="eyebrow">{product.externalApp ? 'Operational app' : 'Availability'}</p><h2>{product.externalApp ? 'Continue in the product application' : 'Join the waitlist'}</h2></div>
         <div className="pricing-grid">
-          {product.packages.map((item) => (
+          {product.externalApp ? (
+            <article className="pricing-card">
+              <h3>{product.externalApp.label}</h3>
+              <p>Verified routes: {product.externalApp.verifiedRoutes.join(', ')}</p>
+              <strong>External app</strong>
+              <span>Owns commerce, intake, fulfillment, delivery, and customer data.</span>
+              <div className="card-actions">
+                {externalCtas.map((cta) => (
+                  <a key={cta.url} className={cta.kind === 'primary' ? 'button-primary' : 'button-secondary'} href={cta.url}>{cta.label}</a>
+                ))}
+              </div>
+            </article>
+          ) : product.packages.map((item) => (
             <article className="pricing-card" key={item.id}>
               <h3>{item.name}</h3>
               <p>{item.description}</p>
               <strong>${item.price}</strong>
               <span>{item.turnaround}</span>
               <ul>{item.includes.map((include) => <li key={include}>{include}</li>)}</ul>
-              {isAvailable ? (
-                <CheckoutForm product={product} selectedPackage={item} />
-              ) : (
-                <Link className="button-primary" href="/contact">Request access</Link>
-              )}
+              <Link className="button-primary" href="/contact">Request access</Link>
             </article>
           ))}
         </div>

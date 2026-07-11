@@ -1,94 +1,70 @@
 # Nieves Labs
 
-NievesLabs.com is the central product hub for Nieves Labs applications. It includes public product pages, package checkout, tokenized intake, file uploads, workflow automation, structured deliverable generation, Gmail/Google Drive integration points, and an admin console.
+NievesLabs.com is the portfolio, discovery, and marketplace website for Nieves Labs products. It presents product pages, routes visitors to verified operational product applications, and keeps unfinished products on waitlist until their independent customer journeys are production-ready.
 
-Production site: https://nieveslabs.com
+Production site: https://nieves-labs.com
 
 ## Products
 
-- AnswerBrief AI
-- Tax Buddy
-- Tax Appeal Buddy
-- Interview Coach
-- Workforce Study
-- MixPilot AI
-- Nieves AI Platform
+- AnswerBrief AI: operational app at https://www.answer-brief.com
+- MixPilot AI: operational app at https://automix-pro-nine.vercel.app
+- Tax Buddy: waitlist
+- Tax Appeal Buddy: waitlist
+- Interview Coach: waitlist
+- Workforce Study: waitlist
+- Nieves AI Platform: waitlist / internal platform work
 
 ## Architecture
 
-- `app/page.tsx`: public product hub
-- `app/products/[slug]/page.tsx`: product landing, pricing, checkout CTAs
-- `app/intake/[token]/page.tsx`: secure order intake and uploads
-- `app/admin/page.tsx`: order, workflow, credential, log, and review dashboard
-- `app/api/checkout`: order creation and Stripe Checkout session creation
-- `app/api/webhooks/stripe`: Stripe webhook validation and payment updates
-- `app/api/intake`: intake answers, file uploads, and workflow start
-- `app/api/workflows/run`: admin workflow rerun endpoint
-- `lib/workflows.ts`: shared `runWorkflow(productKey, orderId)` engine
-- `lib/google.ts` and `lib/email.ts`: Google Drive, Apps Script, and Gmail adapters
-- `lib/store.ts`: storage adapter for orders, customers, uploads, deliverables, logs, and workflow status
+Nieves Labs is not the backend for operational products. Each operational product owns its own production application, commerce, customer data, intake, fulfillment, delivery, and support workflow.
 
-The local JSON adapter is only for development and preview verification. Production fails closed unless durable storage is configured. The current production-ready durable store is Google Sheets using `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_PRIVATE_KEY`; this prevents Vercel serverless functions from writing customer/order data to ephemeral local files.
+- `app/page.tsx`: public portfolio hub
+- `app/products/[slug]/page.tsx`: product discovery pages and external app/waitlist CTAs
+- `app/admin/page.tsx`: protected admin entry point
+- `app/admin/operations/page.tsx`: protected portfolio operations notes
+- `app/atlas/*`: internal Atlas Capital Office module
+- `lib/products.ts`: portfolio product registry with operational-app and waitlist status
+- `scripts/check-public-ctas.mjs`: public CTA regression checks
+- `scripts/check-platform-integrity.mjs`: architecture regression checks
 
-## Setup
-
-```bash
-npm install
-cp .env.local.example .env.local
-npm run dev
-```
+The legacy Nieves Labs checkout, intake, Stripe webhook, and workflow endpoints are disabled with `410 Gone` responses. They remain present only as guardrails so accidental calls fail safely with a clear message.
 
 ## Verification
 
 ```bash
-npm run lint
-npm run typecheck
-npm run build
+npm install
+npm run check:platform
 npm run check:ctas
+npm run lint
+npx tsc --noEmit
+npm run build
 ```
 
 ## Required Production Variables
 
-See `.env.local.example` and protected `/admin/operations`.
-
-Critical variables:
+Nieves Labs portfolio production requires only:
 
 - `APP_BASE_URL`
-- `SUPPORT_EMAIL`
+- `NEXT_PUBLIC_APP_BASE_URL`
 - `ADMIN_TOKEN`
+
+Do not copy operational product secrets into Nieves Labs. In particular, AnswerBrief AI production secrets belong only in `boritomas/answerbrief-ai-automation` and its Vercel project.
+
+Do not configure these in Nieves Labs for AnswerBrief duplication:
+
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- Stripe price IDs for every product package
-- `STRIPE_PRICE_MIXPILOT_FREE_BETA` if paid/beta checkout is configured for MixPilot AI
-- `NEXT_PUBLIC_MIXPILOT_AI_URL` or `MIXPILOT_AI_URL`
-- AnswerBrief payment links: `PAYMENT_LINK_ANSWERBRIEF_QUICK_PREP`, `PAYMENT_LINK_ANSWERBRIEF_FULL_BRIEF`, `PAYMENT_LINK_ANSWERBRIEF_PREMIUM_PREP`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REFRESH_TOKEN`
-- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-- `GOOGLE_PRIVATE_KEY`
-- `GOOGLE_DRIVE_FOLDER_ROOT_ID` or `GOOGLE_DRIVE_ROOT_FOLDER_ID`
-- `GOOGLE_APPS_SCRIPT_WEBHOOK_URL` or `GOOGLE_APPS_SCRIPT_URL`
-- `GOOGLE_SHEETS_SPREADSHEET_ID`
-- `GOOGLE_SHEETS_ORDERS_SHEET_NAME`
-- `GOOGLE_SHEETS_INTAKE_SHEET_NAME`
-- `GMAIL_CLIENT_ID`
-- `GMAIL_CLIENT_SECRET`
-- `GMAIL_REFRESH_TOKEN`
-- `GMAIL_FROM_EMAIL`
+- Gmail OAuth credentials
+- Google Drive OAuth credentials
 - `OPENAI_API_KEY`
+- AnswerBrief Supabase credentials
 
 ## Deployment
 
 The repository is configured for Vercel with `vercel.json`.
 
-1. Configure environment variables in Vercel.
-2. Deploy `main`.
-3. Set `ADMIN_TOKEN`; production admin APIs fail closed without it.
-4. Configure the Stripe webhook endpoint: `/api/webhooks/stripe`.
-5. Run a test purchase for each product.
-6. Confirm admin console statuses and logs at `/admin`.
-
-## Credential Behavior
-
-If Stripe credentials are missing, checkout uses approved AnswerBrief payment links when configured; otherwise it creates a traceable manual-review order and redirects to secure intake. If Google Drive, Gmail, Apps Script, or OpenAI credentials are missing, the workflow logs the skipped step and generates structured templates instead of failing. When `GOOGLE_SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_PRIVATE_KEY` are configured, order, customer, upload, deliverable, workflow log, product config, and intake-token metadata are persisted to Google Sheets as durable production storage. If durable storage is missing in production, checkout and intake return a safe customer-facing error instead of writing to local JSON or exposing runtime paths. Legacy AnswerBrief and portfolio env names are accepted during migration, but the canonical Nieves Labs names in `.env.local.example` should be used going forward.
+1. Deploy `main` to the existing `nieves-labs` Vercel project.
+2. Ensure `nieves-labs.com` and `www.nieves-labs.com` point to the latest production deployment.
+3. Verify AnswerBrief CTAs route to `https://www.answer-brief.com`.
+4. Verify unfinished product CTAs route to `/contact` and do not expose Buy buttons.
+5. Run the CTA and platform integrity checks.

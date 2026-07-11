@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, Briefcase, CalendarCheck, CheckCircle2, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import { products } from '@/lib/products';
-import { env } from '@/lib/env';
 
 const serviceHighlights = [
   {
@@ -18,7 +17,7 @@ const serviceHighlights = [
   },
 ];
 
-const processSteps = ['Choose a product', 'Complete secure intake', 'Receive a prepared deliverable'];
+const processSteps = ['Explore a product', 'Open the operational app or join waitlist', 'Complete the product workflow in its dedicated application'];
 
 export default function Home() {
   return (
@@ -79,7 +78,7 @@ export default function Home() {
           {products.map((product) => (
             <article className="product-card" key={product.key}>
               <div>
-                <p className="card-kicker">{product.publicAvailability === 'available' ? 'Available' : 'Waitlist'}</p>
+                <p className="card-kicker">{product.externalApp ? 'Operational app' : product.publicAvailability === 'coming_soon' ? 'Coming soon' : 'Waitlist'}</p>
                 <h3>{product.title}</h3>
                 <p>{product.description}</p>
               </div>
@@ -88,24 +87,19 @@ export default function Home() {
                 <p>{product.idealCustomer}</p>
               </div>
               <div className="price-row">
-                <span>Starting at</span>
-                <strong>${Math.min(...product.packages.map((item) => item.price))}</strong>
+                <span>{product.externalApp ? 'Opens in' : 'Status'}</span>
+                <strong>{product.externalApp ? product.externalApp.label.replace(' operational app', '') : 'Waitlist'}</strong>
               </div>
               <div className="card-actions">
-                {product.publicAvailability !== 'available' ? (
+                {product.externalApp ? (
                   <>
-                    <Link className="button-primary" href="/contact">Join waitlist</Link>
+                    <a className="button-primary" href={product.externalApp.ctas[0].url}>{product.externalApp.ctas[0].label}</a>
                     <Link className="button-secondary" href={`/products/${product.slug}`}>Learn More</Link>
-                  </>
-                ) : product.key === 'mixpilot_ai' ? (
-                  <>
-                    <a className="button-primary" href={env.mixpilotAppUrl}>Build a Mix</a>
-                    <Link className="button-secondary" href="/products/mixpilot-ai">Learn More</Link>
                   </>
                 ) : (
                   <>
-                    <Link className="button-primary" href={`/products/${product.slug}`}>View product</Link>
-                    <Link className="button-secondary" href={`/products/${product.slug}#pricing`}>See pricing</Link>
+                    <Link className="button-primary" href="/contact">Join waitlist</Link>
+                    <Link className="button-secondary" href={`/products/${product.slug}`}>Learn More</Link>
                   </>
                 )}
               </div>
@@ -136,7 +130,7 @@ export default function Home() {
       </section>
 
       <section id="pricing" className="section trust-grid">
-        <div className="trust-item"><Briefcase size={24} /><strong>Fixed packages</strong><span>Clear product pricing is shown before checkout.</span></div>
+        <div className="trust-item"><Briefcase size={24} /><strong>Dedicated product apps</strong><span>Operational products run commerce, intake, and fulfillment in their own verified applications.</span></div>
         <div className="trust-item"><ShieldCheck size={24} /><strong>Private intake</strong><span>Customers submit only the details needed to prepare their package.</span></div>
         <div className="trust-item"><CalendarCheck size={24} /><strong>Clear next steps</strong><span>Each package explains what happens after purchase.</span></div>
         <div className="trust-item"><Mail size={24} /><strong>Support included</strong><span>Questions and custom consulting requests go directly to Nieves Labs.</span></div>

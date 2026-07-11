@@ -144,26 +144,21 @@ async function validateTransactionalCta() {
     return;
   }
 
-  if (process.env.CTA_REQUIRE_TRANSACTION_SUCCESS === '1' && !response.ok) {
-    failures.push(`/api/checkout tax_buddy.organize: expected transaction success, got ${response.status}`);
+  if (response.status !== 410) {
+    failures.push(`/api/checkout tax_buddy.organize: expected disabled portfolio checkout status 410, got ${response.status}`);
     return;
   }
 
-  if (!response.ok && ![400, 401, 403, 409, 503].includes(response.status)) {
-    failures.push(`/api/checkout tax_buddy.organize: unexpected status ${response.status}`);
-    return;
-  }
-
-  checked.push(`/api/checkout tax_buddy.organize ${response.ok ? 'PASS' : `SAFE_FAIL_${response.status}`}`);
+  checked.push('/api/checkout disabled PASS');
 }
 
 async function validateStorageGuards() {
   const { readFile } = await import('node:fs/promises');
   const sourceFiles = [
-    'lib/store.ts',
-    'lib/durable-storage.ts',
     'app/api/checkout/route.ts',
     'app/api/intake/route.ts',
+    'app/api/webhooks/stripe/route.ts',
+    'app/api/workflows/run/route.ts',
   ];
 
   for (const file of sourceFiles) {
@@ -173,17 +168,41 @@ async function validateStorageGuards() {
     }
   }
 
-  const storeSource = await readFile(new URL('lib/store.ts', repositoryRoot), 'utf8');
-  if (!storeSource.includes("storageMode() === 'unconfigured'") || !storeSource.includes('PersistentStorageUnavailableError')) {
-    failures.push('lib/store.ts: production storage must fail closed when durable storage is unavailable');
-  }
-
+  const checkoutSource = await readFile(new URL('app/api/checkout/route.ts', repositoryRoot), 'utf8');
   const intakeSource = await readFile(new URL('app/api/intake/route.ts', repositoryRoot), 'utf8');
-  if (!intakeSource.includes("process.env.NODE_ENV === 'production'") || !intakeSource.includes('uploadBufferToDrive')) {
-    failures.push('app/api/intake/route.ts: production uploads must use durable object storage');
+  const stripeWebhookSource = await readFile(new URL('app/api/webhooks/stripe/route.ts', repositoryRoot), 'utf8');
+  if (!checkoutSource.includes('portfolio and marketplace site') || !checkoutSource.includes('status: 410')) {
+    failures.push('app/api/checkout/route.ts: portfolio checkout must be disabled');
+  }
+  if (!intakeSource.includes('does not collect operational product intake') || !intakeSource.includes('status: 410')) {
+    failures.push('app/api/intake/route.ts: portfolio intake must be disabled');
+  }
+  if (!stripeWebhookSource.includes('handled by each operational product application') || !stripeWebhookSource.includes('status: 410')) {
+    failures.push('app/api/webhooks/stripe/route.ts: portfolio Stripe webhook must be disabled');
   }
 
-  checked.push('production storage guard PASS');
+  checked.push('duplicated backend disabled PASS');
+}
+
+function validatePublicProductArchitecture(path, text) {
+  if (/Buy |Purchase package|Starting checkout|Submit Intake/.test(text)) {
+    failures.push(`${path}: exposes purchase or intake language from duplicated Nieves Labs backend`);
+  }
+
+  if (path === '/products/answerbrief-ai') {
+    for (const expected of ['https://www.answer-brief.com', 'https://www.answer-brief.com/fit-check', 'https://www.answer-brief.com/#pricing']) {
+      if (!text.includes(expected)) failures.push(`${path}: missing AnswerBrief operational CTA ${expected}`);
+    }
+  }
+
+  if (['/products/tax-buddy', '/products/tax-appeal-buddy', '/products/interview-coach', '/products/workforce-study', '/products/nieves-ai-platform'].includes(path)) {
+    if (!text.includes('Request access') && !text.includes('Join waitlist')) {
+      failures.push(`${path}: unfinished product must expose waitlist/request access CTA`);
+    }
+    if (text.includes('/api/checkout')) {
+      failures.push(`${path}: unfinished product exposes Nieves Labs checkout`);
+    }
+  }
 }
 
 for (const path of publicPages) {
@@ -197,6 +216,8 @@ for (const path of publicPages) {
   if (text.includes('/cdn-cgi/l/email-protection')) {
     failures.push(`${path}: contains Cloudflare email-protection rewrite`);
   }
+
+  validatePublicProductArchitecture(path, text);
 
   const page = {
     path,

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { env, requiredCredentialStatus } from '@/lib/env';
-import { storageMode } from '@/lib/durable-storage';
-import { listLogs, listOrders } from '@/lib/store';
+import { env } from '@/lib/env';
 import { products } from '@/lib/products';
 
 export const runtime = 'nodejs';
@@ -18,13 +16,16 @@ export async function GET(request: Request) {
     }
   }
 
-  const orders = await listOrders();
-  const logs = await listLogs();
   return NextResponse.json({
     products,
-    orders,
-    logs,
-    credentials: requiredCredentialStatus(),
-    storageMode: storageMode(),
+    orders: [],
+    logs: [],
+    credentials: {
+      portfolio: true,
+      answerBriefExternalApp: true,
+      mixPilotExternalApp: true,
+      duplicatedBackendsDisabled: true,
+    },
+    storageMode: 'portfolio_only',
   });
 }
