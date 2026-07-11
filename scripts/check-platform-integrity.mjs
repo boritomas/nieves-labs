@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -6,6 +7,10 @@ const failures = [];
 
 function read(relativePath) {
   return readFileSync(join(root, relativePath), 'utf8');
+}
+
+function sha256(relativePath) {
+  return createHash('sha256').update(readFileSync(join(root, relativePath))).digest('hex');
 }
 
 function assert(condition, message) {
@@ -29,6 +34,7 @@ const checkoutRoute = read('app/api/checkout/route.ts');
 const intakeRoute = read('app/api/intake/route.ts');
 const stripeWebhookRoute = read('app/api/webhooks/stripe/route.ts');
 const productPage = read('app/products/[slug]/page.tsx');
+const brandLogo = read('components/BrandLogo.tsx');
 
 const requiredProducts = [
   'answerbrief_ai',
@@ -53,6 +59,17 @@ assert(intakeRoute.includes('does not collect operational product intake') && in
 assert(stripeWebhookRoute.includes('handled by each operational product application') && stripeWebhookRoute.includes('status: 410'), 'Stripe webhook route must be disabled in Nieves Labs.');
 assert(!productPage.includes('CheckoutForm'), 'Product pages must not render Nieves Labs checkout forms.');
 assert(!productPage.includes('Purchase package'), 'Product pages must not expose purchase CTAs handled by Nieves Labs.');
+assert(brandLogo.includes('/brand/master/nieves-labs-approved-monogram.png'), 'BrandLogo must import the approved locked monogram asset.');
+assert(brandLogo.includes('/brand/master/nieves-labs-approved-horizontal-lockup.png'), 'BrandLogo must import the approved locked horizontal lockup asset.');
+assert(!brandLogo.includes('<svg') && !brandLogo.includes('<path'), 'BrandLogo must not reconstruct the parent logo with inline SVG paths.');
+assert(existsSync(join(root, 'public/brand/master/nieves-labs-approved-monogram.png')), 'Missing locked monogram asset.');
+assert(existsSync(join(root, 'public/brand/master/nieves-labs-approved-horizontal-lockup.png')), 'Missing locked horizontal lockup asset.');
+assert(existsSync(join(root, 'docs/brand/nieves-labs-approved-reference-board.png')), 'Missing approved reference board.');
+assert(sha256('public/brand/master/nieves-labs-approved-monogram.png') === '4b1fde44ec76b12c9bf62d7a67c76d61c32285b6ef6a2f25d3d56a892bc0d967', 'Locked monogram checksum changed.');
+assert(sha256('public/brand/master/nieves-labs-approved-horizontal-lockup.png') === '2bd90d0e867f54fff0a075158199b1fac0dceb466ee0b0e94ee3f5ac20581dd3', 'Locked horizontal lockup checksum changed.');
+assert(sha256('docs/brand/nieves-labs-approved-reference-board.png') === 'b9a1f209cb83feca18f0354269e10db7e6f90744e44b692acc3f18725595b82f', 'Approved reference board checksum changed.');
+assert(!existsSync(join(root, 'public/brand/candidate')), 'Deprecated reconstructed candidate logo directory must not exist.');
+assert(!existsSync(join(root, 'app/brand-logo-review')), 'Deprecated reconstructed logo review route must not exist.');
 
 const apiRoutes = walk('app/api').filter((file) => file.endsWith('route.ts'));
 const productSpecificCheckoutRoutes = apiRoutes.filter((file) => /checkout/i.test(file) && file !== 'app/api/checkout/route.ts');
@@ -68,6 +85,13 @@ const leakedInternalCopy = sourceFiles.filter((file) => {
   return /Operations Runbook|Required Environment Variables|Credential Status/.test(content) && !file.includes('/admin/') && !file.includes('/docs/operations/');
 });
 assert(leakedInternalCopy.length === 0, `Internal operations copy appears outside protected/admin docs: ${leakedInternalCopy.join(', ')}`);
+
+const reconstructedLogoCopy = sourceFiles.filter((file) => {
+  if (file === 'components/ProductIdentity.tsx') return false;
+  const content = read(file);
+  return /nl-frame|nl-stroke|nl-cut|nl-shine|<span className="brand-mark">NL<\/span>/.test(content);
+});
+assert(reconstructedLogoCopy.length === 0, `Deprecated reconstructed parent logo code found: ${reconstructedLogoCopy.join(', ')}`);
 
 if (failures.length) {
   console.error('Platform integrity check failed:');

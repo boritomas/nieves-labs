@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import { BrandLogo } from '@/components/BrandLogo';
 
 export default function PortalDisabledPage() {
   return (
     <main className="site-shell compact">
       <header className="topbar">
-        <Link href="/" className="brand"><span className="brand-mark">NL</span><span>Nieves Labs</span></Link>
+        <Link href="/" className="brand" aria-label="Nieves Labs home"><BrandLogo size="sm" /></Link>
       </header>
       <section className="product-hero">
         <p className="eyebrow">Portfolio site</p>

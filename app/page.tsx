@@ -208,7 +208,7 @@ export default function Home() {
       </section>
 
       <footer className="footer">
-        <span>Nieves Labs</span>
+        <BrandLogo size="sm" />
         <div>
           <Link href="#products">Products</Link>
           <Link href="#services">Services</Link>

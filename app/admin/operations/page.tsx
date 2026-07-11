@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
 import { env } from '@/lib/env';
 
@@ -19,7 +20,7 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
   return (
     <main className="site-shell">
       <header className="topbar">
-        <Link href="/" className="brand"><span className="brand-mark">NL</span><span>Nieves Labs</span></Link>
+        <Link href="/" className="brand" aria-label="Nieves Labs home"><BrandLogo size="sm" /></Link>
         <nav className="nav-links"><Link href="/">Home</Link><Link href={`/admin?token=${encodeURIComponent(token)}`}>Admin</Link></nav>
       </header>
       {!authorized ? (

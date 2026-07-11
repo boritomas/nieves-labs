@@ -1,0 +1,39 @@
+{
+  "status": "CANONICAL_LOCKED_ASSET",
+  "approvalStatus": "approved_source_assets_provided_by_tomas_nieves",
+  "sourceReference": {
+    "description": "Approved Nieves Labs brand-board extractions supplied by Tomas Nieves on 2026-07-11.",
+    "referenceBoard": "docs/brand/nieves-labs-approved-reference-board.png"
+  },
+  "canonicalAssets": [
+    {
+      "assetName": "Nieves Labs approved monogram",
+      "canonicalFilename": "public/brand/master/nieves-labs-approved-monogram.png",
+      "checksumSha256": "4b1fde44ec76b12c9bf62d7a67c76d61c32285b6ef6a2f25d3d56a892bc0d967",
+      "intendedUse": ["website hero", "favicon source", "app icon source", "social avatar", "presentation icon", "email icon"]
+    },
+    {
+      "assetName": "Nieves Labs approved horizontal lockup",
+      "canonicalFilename": "public/brand/master/nieves-labs-approved-horizontal-lockup.png",
+      "checksumSha256": "2bd90d0e867f54fff0a075158199b1fac0dceb466ee0b0e94ee3f5ac20581dd3",
+      "intendedUse": ["website header", "footer", "product pages", "email header", "presentation lockup"]
+    },
+    {
+      "assetName": "Nieves Labs approved reference board",
+      "canonicalFilename": "docs/brand/nieves-labs-approved-reference-board.png",
+      "checksumSha256": "b9a1f209cb83feca18f0354269e10db7e6f90744e44b692acc3f18725595b82f",
+      "intendedUse": ["brand QA", "visual approval reference", "asset audit"]
+    }
+  ],
+  "prohibitedModifications": [
+    "Do not redraw the logo.",
+    "Do not regenerate the logo with AI.",
+    "Do not vectorize, trace, or reconstruct the monogram.",
+    "Do not recreate the logo using CSS, SVG paths, text, or icon fonts.",
+    "Do not stretch, rotate, crop, recolor, or alter proportions.",
+    "Do not substitute alternate NL marks.",
+    "Do not use deprecated reconstructed logo candidates."
+  ],
+  "repositoryRule": "The Nieves Labs logo is an immutable brand asset. It must always be imported from the canonical approved PNG files in public/brand/master and must never be recreated by code, AI generation, SVG reconstruction, tracing, or CSS.",
+  "derivedAssetRule": "All favicon, Open Graph, social, presentation, email, and app icon derivatives must be generated from the canonical approved PNG assets."
+}

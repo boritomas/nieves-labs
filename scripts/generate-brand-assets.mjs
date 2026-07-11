@@ -1,12 +1,15 @@
-import { copyFile, mkdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import pngToIco from 'png-to-ico';
 
 const outDir = join(process.cwd(), 'public', 'brand');
+const masterDir = join(outDir, 'master');
 const productDir = join(outDir, 'products');
 const reviewDir = join(outDir, 'review');
 const sizes = [16, 32, 48, 64, 128, 256, 512, 1024];
+const masterMonogramPath = join(masterDir, 'nieves-labs-approved-monogram.png');
+const masterHorizontalPath = join(masterDir, 'nieves-labs-approved-horizontal-lockup.png');
 
 const colors = {
   navy: '#06111E',
@@ -29,9 +32,14 @@ const products = [
 ];
 
 await mkdir(outDir, { recursive: true });
+await mkdir(masterDir, { recursive: true });
 await mkdir(productDir, { recursive: true });
 await mkdir(reviewDir, { recursive: true });
 
+const monogramBuffer = await readFile(masterMonogramPath);
+const horizontalBuffer = await readFile(masterHorizontalPath);
+const monogramDataUrl = `data:image/png;base64,${monogramBuffer.toString('base64')}`;
+const horizontalDataUrl = `data:image/png;base64,${horizontalBuffer.toString('base64')}`;
 const monogramSvg = parentMonogramSvg();
 const horizontalSvg = parentHorizontalSvg();
 const stackedSvg = parentStackedSvg();
@@ -41,24 +49,22 @@ await writeText('nieves-labs-monogram.svg', monogramSvg);
 await writeText('nieves-labs-horizontal.svg', horizontalSvg);
 await writeText('nieves-labs-stacked.svg', stackedSvg);
 await writeText('nieves-labs-wordmark.svg', wordmarkSvg);
-await writeText('nieves-labs-monogram-white.svg', parentMonogramSvg({ mono: colors.white, bg: 'transparent' }));
-await writeText('nieves-labs-monogram-black.svg', parentMonogramSvg({ mono: colors.black, bg: 'transparent' }));
-await writeText('nieves-labs-monogram-gold.svg', parentMonogramSvg({ mono: colors.gold, bg: 'transparent' }));
+await removeDeprecatedParentLogoVariants();
 
 for (const size of sizes) {
-  await renderPng(monogramSvg, join(outDir, `nieves-labs-icon-${size}.png`), size, size);
+  await sharp(monogramBuffer).resize(size, size, { fit: 'contain' }).png().toFile(join(outDir, `nieves-labs-icon-${size}.png`));
 }
 
-await sharp(Buffer.from(monogramSvg)).resize(512, 512).webp({ quality: 92 }).toFile(join(outDir, 'nieves-labs-icon-512.webp'));
+await sharp(monogramBuffer).resize(512, 512, { fit: 'contain' }).webp({ quality: 92 }).toFile(join(outDir, 'nieves-labs-icon-512.webp'));
 await writeFile(join(outDir, 'nieves-labs.ico'), await pngToIco([
   join(outDir, 'nieves-labs-icon-16.png'),
   join(outDir, 'nieves-labs-icon-32.png'),
   join(outDir, 'nieves-labs-icon-48.png'),
 ]));
 await copyFile(join(outDir, 'nieves-labs.ico'), join(process.cwd(), 'public', 'favicon.ico'));
-await sharp(Buffer.from(monogramSvg)).resize(180, 180).png().toFile(join(outDir, 'apple-touch-icon.png'));
-await sharp(Buffer.from(ogSvg())).resize(1200, 630).png().toFile(join(outDir, 'nieves-labs-og.png'));
-await sharp(Buffer.from(ogSvg())).resize(1200, 630).webp({ quality: 92 }).toFile(join(outDir, 'nieves-labs-og.webp'));
+await sharp(monogramBuffer).resize(180, 180, { fit: 'contain' }).png().toFile(join(outDir, 'apple-touch-icon.png'));
+await ogImage().png().toFile(join(outDir, 'nieves-labs-og.png'));
+await ogImage().webp({ quality: 92 }).toFile(join(outDir, 'nieves-labs-og.webp'));
 await sharp(Buffer.from(homepageMockupSvg())).resize(1440, 980).png().toFile(join(reviewDir, 'website-homepage-mockup.png'));
 await sharp(Buffer.from(mobileMockupSvg())).resize(1080, 1350).png().toFile(join(reviewDir, 'mobile-app-mockup.png'));
 await sharp(Buffer.from(emailMockupSvg())).resize(1200, 760).png().toFile(join(reviewDir, 'email-template-mockup.png'));
@@ -88,47 +94,31 @@ function renderPng(svg, target, width, height) {
   return sharp(Buffer.from(svg)).resize(width, height).png().toFile(target);
 }
 
-function parentMonogramSvg(options = {}) {
-  const stroke = options.mono || colors.gold;
-  const highlight = options.mono || colors.gold2;
-  const bg = options.bg ?? `url(#bg)`;
+async function removeDeprecatedParentLogoVariants() {
+  await Promise.all([
+    rm(join(outDir, 'nieves-labs-monogram-white.svg'), { force: true }),
+    rm(join(outDir, 'nieves-labs-monogram-black.svg'), { force: true }),
+    rm(join(outDir, 'nieves-labs-monogram-gold.svg'), { force: true }),
+  ]);
+}
+
+function parentMonogramSvg() {
   return svgWrap(512, 512, `
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="${colors.navy2}"/>
-        <stop offset="1" stop-color="${colors.black}"/>
-      </linearGradient>
-      <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#FFF1AE"/>
-        <stop offset="0.18" stop-color="${stroke}"/>
-        <stop offset="0.42" stop-color="#9B6A18"/>
-        <stop offset="0.7" stop-color="${highlight}"/>
-        <stop offset="1" stop-color="#6F4712"/>
-      </linearGradient>
-    </defs>
-    <rect x="20" y="20" width="472" height="472" rx="96" fill="${bg}"/>
-    <path d="M116 414V98h280v316" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="54" stroke-linecap="square" stroke-linejoin="miter" transform="translate(8 8)"/>
-    <path d="M116 414V98h280v316" fill="none" stroke="url(#gold)" stroke-width="48" stroke-linecap="square" stroke-linejoin="miter"/>
-    <path d="M158 404V118l196 286V118" fill="none" stroke="rgba(0,0,0,.48)" stroke-width="70" stroke-linecap="square" stroke-linejoin="miter" transform="translate(7 7)"/>
-    <path d="M158 404V118l196 286V118" fill="none" stroke="url(#gold)" stroke-width="58" stroke-linecap="square" stroke-linejoin="miter"/>
-    <path d="M230 120h86l58 76" fill="none" stroke="#FFF4B7" stroke-width="24" stroke-linecap="square"/>
-    <path d="M126 108h82" fill="none" stroke="#FFF4B7" stroke-width="14" stroke-linecap="square"/>
+    <image href="${monogramDataUrl}" x="0" y="0" width="512" height="512" preserveAspectRatio="xMidYMid meet"/>
   `);
 }
 
 function parentHorizontalSvg() {
   return svgWrap(1200, 360, `
     <rect width="1200" height="360" rx="44" fill="${colors.navy}"/>
-    <g transform="translate(72 56) scale(.48)">${extractInner(parentMonogramSvg({ bg: 'transparent' }))}</g>
-    <text x="360" y="154" fill="${colors.white}" font-size="74" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="10">NIEVES LABS</text>
-    <text x="364" y="216" fill="${colors.gold2}" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700" letter-spacing="4">AI SOLUTIONS THAT EMPOWER PEOPLE</text>
+    <image href="${horizontalDataUrl}" x="72" y="56" width="944" height="300" preserveAspectRatio="xMinYMid meet"/>
   `);
 }
 
 function parentStackedSvg() {
   return svgWrap(720, 720, `
     <rect width="720" height="720" rx="56" fill="${colors.navy}"/>
-    <g transform="translate(176 64) scale(.72)">${extractInner(parentMonogramSvg({ bg: 'transparent' }))}</g>
+    <image href="${monogramDataUrl}" x="220" y="76" width="280" height="296" preserveAspectRatio="xMidYMid meet"/>
     <text x="360" y="530" text-anchor="middle" fill="${colors.white}" font-size="52" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="8">NIEVES LABS</text>
     <text x="360" y="586" text-anchor="middle" fill="${colors.gold2}" font-size="19" font-family="Inter, Arial, sans-serif" font-weight="700" letter-spacing="3">AI SOLUTIONS THAT EMPOWER PEOPLE</text>
   `);
@@ -168,11 +158,29 @@ function ogSvg() {
     </defs>
     <rect width="1200" height="630" fill="${colors.navy}"/>
     <rect width="1200" height="630" fill="url(#glow)"/>
-    <g transform="translate(770 104) scale(.62)">${extractInner(parentMonogramSvg({ bg: 'transparent' }))}</g>
-    <text x="84" y="190" fill="${colors.white}" font-size="74" font-family="Inter, Arial, sans-serif" font-weight="800">Nieves Labs</text>
-    <text x="88" y="252" fill="${colors.gold2}" font-size="30" font-family="Inter, Arial, sans-serif" font-weight="700" letter-spacing="3">AI SOLUTIONS THAT EMPOWER PEOPLE</text>
-    <text x="88" y="348" fill="${colors.slate}" font-size="34" font-family="Inter, Arial, sans-serif" font-weight="500">Practical AI products and automation workflows for clearer work, faster.</text>
+    <image href="${horizontalDataUrl}" x="76" y="70" width="472" height="150" preserveAspectRatio="xMinYMid meet"/>
+    <image href="${monogramDataUrl}" x="812" y="118" width="276" height="292" preserveAspectRatio="xMidYMid meet"/>
+    <text x="84" y="330" fill="${colors.white}" font-size="70" font-family="Inter, Arial, sans-serif" font-weight="850">AI solutions that</text>
+    <text x="84" y="408" fill="${colors.white}" font-size="70" font-family="Inter, Arial, sans-serif" font-weight="850">empower people.</text>
+    <text x="88" y="486" fill="${colors.slate}" font-size="30" font-family="Inter, Arial, sans-serif" font-weight="500">Practical AI products and automation workflows for clearer work, faster.</text>
   `);
+}
+
+function ogImage() {
+  return sharp({
+    create: {
+      width: 1200,
+      height: 630,
+      channels: 4,
+      background: colors.navy,
+    },
+  }).composite([
+    {
+      input: Buffer.from(ogSvg()),
+      top: 0,
+      left: 0,
+    },
+  ]);
 }
 
 function homepageMockupSvg() {

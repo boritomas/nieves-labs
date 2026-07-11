@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BrandLogo } from '@/components/BrandLogo';
 import { notFound } from 'next/navigation';
 import AdminAccessForm from '@/components/AdminAccessForm';
 import ProductExcellenceReviewEditor from '@/components/ProductExcellenceReviewEditor';
@@ -29,7 +30,7 @@ export default async function ProductExcellenceReviewPage({
   return (
     <main className="site-shell">
       <header className="topbar">
-        <Link href="/" className="brand"><span className="brand-mark">NL</span><span>Nieves Labs</span></Link>
+        <Link href="/" className="brand" aria-label="Nieves Labs home"><BrandLogo size="sm" /></Link>
         <nav className="nav-links">
           <Link href="/">Home</Link>
           <Link href={`/admin?token=${encodeURIComponent(token)}`}>Admin</Link>

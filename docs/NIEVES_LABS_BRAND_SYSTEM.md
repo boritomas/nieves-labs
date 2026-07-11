@@ -1,8 +1,26 @@
 # Nieves Labs Brand Identity System
 
-Release: 0.1 owner-review package  
-Status: Ready for approval, partially implemented in Nieves Labs portfolio site  
+Release: 0.2 locked-logo package  
+Status: Approved locked Nieves Labs logo assets implemented in the portfolio site  
 Reference direction: premium dark navy foundation, refined gold parent identity, distinct product accents, clean AI-product ecosystem
+
+## Canonical Logo Rule
+
+The Nieves Labs parent logo is an immutable locked brand asset.
+
+Use only:
+
+- `public/brand/master/nieves-labs-approved-monogram.png`
+- `public/brand/master/nieves-labs-approved-horizontal-lockup.png`
+- `docs/brand/nieves-labs-approved-reference-board.png`
+
+Repository rule:
+
+> The Nieves Labs logo must always be imported from the canonical approved PNG files. Never redraw it, regenerate it with AI, vectorize it, trace it, recreate it with CSS or SVG paths, approximate it with text, stretch it, rotate it, crop it, recolor it, or alter its proportions.
+
+The locked-asset manifest is stored at:
+
+- `docs/brand/NIEVES_LOGO_MANIFEST.json`
 
 ## Brand Strategy
 
@@ -42,7 +60,7 @@ Avoid:
 
 | Area | Current Finding | Classification | Action |
 | --- | --- | --- | --- |
-| Nieves Labs parent site | Strong dark SaaS direction, but plain text NL mark and no formal product identity system | Refine | Implemented parent monogram, product icons, tokens, OG, favicon |
+| Nieves Labs parent site | Strong dark SaaS direction with approved locked parent logo assets | Retain | Uses approved PNG monogram and horizontal lockup; no reconstructed parent logo |
 | Product registry | Solid operational architecture and external app routing | Retain | Preserve CTAs and backend separation |
 | AnswerBrief AI | Polished light product site with independent production infrastructure | Refine later | Apply shared brand only after owner approval |
 | MixPilot AI | Independent mobile-first creative app | Refine later | Apply product icon/app assets after owner approval |
@@ -67,23 +85,11 @@ Avoid:
 
 ## Parent Logo Concepts
 
-### A. Precision Monogram
+### A. Approved Locked Monogram
 
-Geometric NL monogram inside a disciplined square frame with premium gold strokes.
+The approved Nieves Labs monogram was extracted directly from the accepted brand board and is stored as a canonical PNG asset. It is not a reconstructed SVG, CSS drawing, trace, or AI-generated replacement.
 
-Strengths:
-
-- Strong small-size performance
-- Distinct enough for favicon/app use
-- Works in one-color, gold, black, and white
-- Premium without becoming ornate
-- Scales cleanly into a product ecosystem
-
-Risk:
-
-- Monogram category is common; distinct proportions and angular construction must be preserved.
-
-Status: **Selected**
+Status: **Approved and locked**
 
 ### B. Signal Network
 
@@ -195,6 +201,8 @@ Minimum size:
 
 Do not:
 
+- Redraw, trace, vectorize, or reinterpret the monogram.
+- Recreate the monogram with CSS, text, icon fonts, or SVG paths.
 - Stretch the monogram.
 - Place the gold mark on yellow, tan, or busy photo backgrounds.
 - Add bevels, extra glows, or shadows beyond approved system shadows.
@@ -204,17 +212,15 @@ Do not:
 
 Parent assets:
 
-- `public/brand/nieves-labs-monogram.svg`
-- `public/brand/nieves-labs-horizontal.svg`
-- `public/brand/nieves-labs-stacked.svg`
-- `public/brand/nieves-labs-wordmark.svg`
-- `public/brand/nieves-labs-monogram-black.svg`
-- `public/brand/nieves-labs-monogram-white.svg`
-- `public/brand/nieves-labs-monogram-gold.svg`
+- `public/brand/master/nieves-labs-approved-monogram.png`
+- `public/brand/master/nieves-labs-approved-horizontal-lockup.png`
+- `docs/brand/nieves-labs-approved-reference-board.png`
 - `public/brand/nieves-labs.ico`
 - `public/brand/apple-touch-icon.png`
 - `public/brand/nieves-labs-og.png`
 - `public/brand/nieves-labs-og.webp`
+
+Deprecated reconstructed parent logo SVG variants were removed from the canonical inventory. Compatibility derivatives, if generated, must embed or derive from the approved PNG assets only.
 
 Product assets:
 

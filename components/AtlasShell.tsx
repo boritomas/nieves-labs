@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import AtlasNav from './AtlasNav';
+import { BrandLogo } from './BrandLogo';
 
 export function AtlasHeader({ token }: { token: string }) {
   return (
     <header className="topbar">
-      <Link href="/" className="brand"><span className="brand-mark">NL</span><span>Nieves Labs</span></Link>
+      <Link href="/" className="brand" aria-label="Nieves Labs home"><BrandLogo size="sm" /></Link>
       <nav className="nav-links">
         <Link href="/">Home</Link>
         <Link href={`/admin?token=${encodeURIComponent(token)}`}>Admin</Link>
@@ -24,4 +25,3 @@ export function AtlasHero({ token, title, subtitle }: { token: string; title: st
     </section>
   );
 }
-
