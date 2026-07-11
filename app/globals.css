@@ -1,17 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 :root {
-  --bg: #0b1020;
-  --panel: #111827;
-  --panel-soft: #172033;
-  --line: #273449;
+  --bg: #06111e;
+  --bg-radial: radial-gradient(circle at 85% 8%, rgba(212, 175, 55, 0.2), transparent 28%), radial-gradient(circle at 10% 35%, rgba(37, 99, 235, 0.16), transparent 32%);
+  --panel: #0d1b2a;
+  --panel-soft: #13283d;
+  --line: rgba(226, 232, 240, 0.16);
   --text: #f8fafc;
-  --muted: #a8b3c7;
-  --brand: #38bdf8;
-  --brand-strong: #2563eb;
+  --muted: #b8c3d7;
+  --brand: #d4af37;
+  --brand-strong: #f2c14e;
+  --accent-blue: #2563eb;
+  --accent-teal: #14b8a6;
   --green: #34d399;
   --amber: #fbbf24;
   --red: #fb7185;
+  --radius-card: 18px;
+  --radius-control: 12px;
+  --shadow-soft: 0 24px 80px rgba(0, 0, 0, 0.28);
+  --shadow-gold: 0 24px 80px rgba(212, 175, 55, 0.12);
 }
 
 * {
@@ -26,6 +31,8 @@ body {
   margin: 0;
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
+  background-image: var(--bg-radial);
+  background-attachment: fixed;
   color: var(--text);
 }
 
@@ -113,9 +120,9 @@ details {
   justify-content: space-between;
   min-height: 72px;
   padding: 12px 0;
-  background: rgba(11, 16, 32, 0.9);
+  background: rgba(6, 17, 30, 0.9);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(39, 52, 73, 0.7);
+  border-bottom: 1px solid var(--line);
 }
 
 .brand {
@@ -125,14 +132,108 @@ details {
   font-weight: 800;
 }
 
-.brand-mark {
+.brand-mark,
+.nl-mark {
   display: inline-grid;
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--brand-strong), var(--brand));
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(242, 193, 78, 0.04));
   font-size: 13px;
+}
+
+.nl-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nl-logo-sm .nl-mark {
+  width: 38px;
+  height: 38px;
+}
+
+.nl-logo-md .nl-mark {
+  width: 54px;
+  height: 54px;
+}
+
+.nl-logo-lg .nl-mark {
+  width: min(300px, 62vw);
+  height: min(300px, 62vw);
+}
+
+.nl-mark svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 18px 28px rgba(212, 175, 55, 0.22));
+}
+
+.nl-frame,
+.nl-stroke,
+.nl-stroke-shadow,
+.nl-cut,
+.nl-shine {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.nl-frame {
+  stroke: url(#nl-metal);
+  stroke-width: 5;
+}
+
+.nl-stroke-shadow {
+  stroke: rgba(0, 0, 0, 0.42);
+  stroke-width: 10;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  transform: translate(1px, 1px);
+}
+
+.nl-stroke {
+  stroke: url(#nl-metal);
+  stroke-width: 8;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.nl-cut {
+  stroke: url(#nl-highlight);
+  stroke-width: 4;
+  stroke-linecap: square;
+}
+
+.nl-shine {
+  stroke: rgba(255, 244, 183, 0.88);
+  stroke-width: 2;
+  stroke-linecap: square;
+}
+
+.nl-logo-light .nl-frame,
+.nl-logo-light .nl-stroke,
+.nl-logo-light .nl-cut {
+  stroke: var(--text);
+}
+
+.nl-wordmark {
+  display: grid;
+  gap: 2px;
+  text-transform: uppercase;
+}
+
+.nl-wordmark strong {
+  color: var(--text);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+.nl-wordmark small {
+  color: var(--brand-strong);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
 }
 
 .nav-links {
@@ -242,19 +343,20 @@ li {
   gap: 8px;
   min-height: 44px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   padding: 11px 16px;
   font-weight: 800;
   cursor: pointer;
 }
 
 .button-primary {
-  background: linear-gradient(135deg, var(--brand-strong), var(--brand));
-  color: white;
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  color: #111827;
+  box-shadow: 0 16px 34px rgba(212, 175, 55, 0.18);
 }
 
 .button-secondary {
-  background: rgba(148, 163, 184, 0.08);
+  background: rgba(248, 250, 252, 0.07);
   border-color: var(--line);
   color: var(--text);
 }
@@ -273,9 +375,135 @@ li {
 .metric-card,
 .trust-item {
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.96));
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, rgba(13, 27, 42, 0.9), rgba(8, 18, 32, 0.92));
+  box-shadow: var(--shadow-soft);
+}
+
+.brand-showcase {
+  position: relative;
+  display: grid;
+  gap: 26px;
+  justify-items: center;
+  padding: clamp(28px, 5vw, 56px);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(212, 175, 55, 0.16), transparent 36%),
+    linear-gradient(160deg, rgba(13, 27, 42, 0.94), rgba(2, 6, 23, 0.94));
+  box-shadow: var(--shadow-gold);
+  overflow: hidden;
+}
+
+.brand-showcase::before {
+  content: "";
+  position: absolute;
+  inset: auto -20% 20% 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.65), transparent);
+  transform: rotate(-16deg);
+}
+
+.brand-showcase > * {
+  position: relative;
+}
+
+.brand-showcase h2 {
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.ecosystem-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.product-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-identity strong {
+  display: block;
+  color: var(--product-accent, var(--text));
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.product-identity small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.product-identity-sm {
+  gap: 8px;
+}
+
+.product-identity-sm strong {
+  font-size: 13px;
+}
+
+.product-identity-sm small {
+  display: none;
+}
+
+.product-identity-lg strong {
+  font-size: 26px;
+}
+
+.product-card-title {
+  margin: 8px 0 12px;
+}
+
+.product-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--product-accent, var(--brand)) 38%, transparent);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--product-accent, var(--brand)) 24%, transparent), transparent 44%),
+    rgba(248, 250, 252, 0.06);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--product-accent, var(--brand)) 14%, transparent);
+}
+
+.product-icon svg {
+  width: 31px;
+  height: 31px;
+  fill: none;
+  stroke: var(--product-accent, var(--brand));
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.product-card {
+  border-color: color-mix(in srgb, var(--product-accent, var(--line)) 30%, var(--line));
+}
+
+.product-card::before {
+  content: "";
+  display: block;
+  width: 54px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--product-accent, var(--brand));
+}
+
+.product-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-principle svg {
+  color: var(--brand);
 }
 
 .operations-panel {
@@ -290,13 +518,13 @@ li {
   gap: 12px;
   padding: 16px;
   border: 1px solid rgba(56, 189, 248, 0.16);
-  border-radius: 8px;
-  background: rgba(56, 189, 248, 0.06);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.05);
 }
 
 .capability-row svg,
 .trust-item svg {
-  color: var(--brand);
+  color: var(--brand-strong);
 }
 
 .capability-row div {
@@ -380,7 +608,7 @@ li {
   gap: 12px;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 14px;
   background: var(--panel);
 }
 
@@ -391,7 +619,7 @@ li {
   height: 28px;
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.14);
-  color: var(--brand);
+  color: var(--brand-strong);
   font-weight: 800;
 }
 
@@ -928,6 +1156,11 @@ li {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 4px;
+  }
+
+  .ecosystem-strip {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .hero-section,

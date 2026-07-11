@@ -1,0 +1,75 @@
+{
+  "brand": {
+    "name": "Nieves Labs",
+    "promise": "AI solutions that empower people.",
+    "fontFamily": {
+      "primary": "Inter",
+      "fallback": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+    }
+  },
+  "colors": {
+    "parent": {
+      "navy950": { "hex": "#06111E", "rgb": "6 17 30", "hsl": "212 67% 7%" },
+      "navy900": { "hex": "#0D1B2A", "rgb": "13 27 42", "hsl": "211 53% 11%" },
+      "navy800": { "hex": "#13283D", "rgb": "19 40 61", "hsl": "210 53% 16%" },
+      "gold500": { "hex": "#D4AF37", "rgb": "212 175 55", "hsl": "46 65% 52%" },
+      "gold400": { "hex": "#F2C14E", "rgb": "242 193 78", "hsl": "42 86% 63%" },
+      "slate400": { "hex": "#94A3B8", "rgb": "148 163 184", "hsl": "215 20% 65%" },
+      "slate200": { "hex": "#E2E8F0", "rgb": "226 232 240", "hsl": "214 32% 91%" },
+      "white": { "hex": "#F8FAFC", "rgb": "248 250 252", "hsl": "210 40% 98%" },
+      "black": { "hex": "#020617", "rgb": "2 6 23", "hsl": "229 84% 5%" }
+    },
+    "products": {
+      "answerbriefAI": { "hex": "#2563EB", "soft": "#DBEAFE", "dark": "#1D4ED8" },
+      "mixpilotAI": { "hex": "#A855F7", "soft": "#F3E8FF", "dark": "#7E22CE" },
+      "taxBuddyAI": { "hex": "#10B981", "soft": "#D1FAE5", "dark": "#047857" },
+      "taxAppealBuddyAI": { "hex": "#06B6D4", "soft": "#CFFAFE", "dark": "#0891B2" },
+      "interviewCoachAI": { "hex": "#F97316", "soft": "#FFEDD5", "dark": "#C2410C" },
+      "workforceStudyAI": { "hex": "#FBBF24", "soft": "#FEF3C7", "dark": "#B45309" },
+      "nievesAIPlatform": { "hex": "#6366F1", "soft": "#E0E7FF", "dark": "#4338CA" }
+    },
+    "semantic": {
+      "success": "#34D399",
+      "warning": "#FBBF24",
+      "error": "#FB7185",
+      "information": "#38BDF8",
+      "secure": "#14B8A6",
+      "pending": "#F97316",
+      "completed": "#10B981"
+    }
+  },
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "12px",
+    "lg": "16px",
+    "xl": "24px",
+    "2xl": "32px",
+    "3xl": "48px",
+    "4xl": "64px",
+    "5xl": "96px"
+  },
+  "radii": {
+    "control": "12px",
+    "card": "18px",
+    "panel": "24px",
+    "hero": "28px",
+    "pill": "999px"
+  },
+  "shadows": {
+    "soft": "0 24px 80px rgba(0, 0, 0, 0.28)",
+    "gold": "0 24px 80px rgba(212, 175, 55, 0.12)",
+    "product": "0 16px 34px color-mix(in srgb, var(--product-accent) 14%, transparent)"
+  },
+  "breakpoints": {
+    "mobile": "640px",
+    "tablet": "920px",
+    "desktop": "1180px"
+  },
+  "motion": {
+    "durationFast": "120ms",
+    "durationStandard": "180ms",
+    "durationSlow": "280ms",
+    "easing": "cubic-bezier(.2, .8, .2, 1)"
+  }
+}

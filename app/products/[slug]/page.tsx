@@ -1,5 +1,9 @@
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { notFound, redirect } from 'next/navigation';
+import { BrandLogo } from '@/components/BrandLogo';
+import { ProductIcon, ProductIdentity } from '@/components/ProductIdentity';
+import { productBrandByKey, type BrandProductKey } from '@/lib/brand';
 import { getProductBySlug, products } from '@/lib/products';
 
 export function generateStaticParams() {
@@ -24,11 +28,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const product = getProductBySlug(slug);
   if (!product) notFound();
   const externalCtas = product.externalApp?.ctas || [];
+  const brand = productBrandByKey[product.key as BrandProductKey];
 
   return (
-    <main className="site-shell">
+    <main
+      className="site-shell"
+      style={{
+        '--product-accent': brand?.accent,
+        '--product-soft': brand?.accentSoft,
+      } as CSSProperties}
+    >
       <header className="topbar">
-        <Link href="/" className="brand"><span className="brand-mark">NL</span><span>Nieves Labs</span></Link>
+        <Link href="/" className="brand"><BrandLogo size="sm" /></Link>
         <nav className="nav-links">
           <Link href="/">Home</Link>
           <Link href="/#products">Products</Link>
@@ -39,9 +50,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </header>
 
       <section className="product-hero">
-        <p className="eyebrow">{product.idealCustomer}</p>
+        <div className="product-hero-top">
+          <ProductIcon productKey={product.key as BrandProductKey} />
+          <p className="eyebrow">{brand?.category || product.idealCustomer}</p>
+        </div>
         <h1>{product.title}</h1>
         <p>{product.tagline}</p>
+        <ProductIdentity productKey={product.key as BrandProductKey} size="sm" />
         <div className="hero-actions">
           {externalCtas[0] ? (
             <a className="button-primary" href={externalCtas[0].url}>{externalCtas[0].label}</a>

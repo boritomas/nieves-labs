@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BrandLogo } from '@/components/BrandLogo';
 import ContactActions from '@/components/ContactActions';
 import { env } from '@/lib/env';
 
@@ -19,8 +20,7 @@ export default function ContactPage() {
     <main className="site-shell">
       <header className="topbar">
         <Link href="/" className="brand" aria-label="Nieves Labs home">
-          <span className="brand-mark">NL</span>
-          <span>Nieves Labs</span>
+          <BrandLogo size="sm" />
         </Link>
         <nav className="nav-links" aria-label="Main navigation">
           <Link href="/">Home</Link>

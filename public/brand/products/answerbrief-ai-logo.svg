@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260">
+    <rect width="960" height="260" rx="34" fill="#06111E"/>
+    <g transform="translate(54 54) scale(.31)">
+    <rect x="20" y="20" width="472" height="472" rx="108" fill="#0D1B2A" stroke="rgba(255,255,255,.14)" stroke-width="10"/>
+    <g transform="translate(96 96) scale(5)" fill="none" stroke="#2563EB" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14h48a8 8 0 0 1 8 8v18a8 8 0 0 1-8 8H32L16 58V48H8a8 8 0 0 1-8-8V22a8 8 0 0 1 8-8Z"/><circle cx="22" cy="31" r="3"/><circle cx="32" cy="31" r="3"/><circle cx="42" cy="31" r="3"/></g>
+  </g>
+    <text x="240" y="118" fill="#2563EB" font-size="52" font-family="Inter, Arial, sans-serif" font-weight="800">AnswerBrief AI</text>
+    <text x="242" y="172" fill="#94A3B8" font-size="25" font-family="Inter, Arial, sans-serif" font-weight="500">A Nieves Labs product</text>
+  </svg>

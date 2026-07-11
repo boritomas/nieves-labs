@@ -149,7 +149,7 @@ export const products: Product[] = defineProducts([
   {
     key: 'tax_buddy',
     slug: 'tax-buddy',
-    title: 'Tax Buddy',
+    title: 'Tax Buddy AI',
     shortTitle: 'Tax Buddy',
     tagline: 'Organize tax documents into a cleaner preparation package.',
     description: 'A guided intake and document organization workflow for individuals preparing annual tax materials.',
@@ -176,7 +176,7 @@ export const products: Product[] = defineProducts([
   {
     key: 'tax_appeal_buddy',
     slug: 'tax-appeal-buddy',
-    title: 'Tax Appeal Buddy',
+    title: 'Tax Appeal Buddy AI',
     shortTitle: 'Tax Appeal',
     tagline: 'Property tax appeal support with comps, packets, and hearing prep.',
     description: 'Build a clearer property tax appeal packet with evidence organization, comparable-property notes, and hearing preparation.',
@@ -203,7 +203,7 @@ export const products: Product[] = defineProducts([
   {
     key: 'interview_coach',
     slug: 'interview-coach',
-    title: 'Interview Coach',
+    title: 'Interview Coach AI',
     shortTitle: 'Interview Coach',
     tagline: 'Personalized interview practice and coaching plans.',
     description: 'Create a coaching plan based on target role, interview stage, strengths, and risk areas.',
@@ -230,7 +230,7 @@ export const products: Product[] = defineProducts([
   {
     key: 'workforce_study',
     slug: 'workforce-study',
-    title: 'Workforce Study',
+    title: 'Workforce Study AI',
     shortTitle: 'Workforce Study',
     tagline: 'Operational workforce insights from structured intake and documents.',
     description: 'A lightweight study package for teams examining roles, processes, workload, and automation opportunities.',

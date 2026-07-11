@@ -1,5 +1,9 @@
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { ArrowRight, Briefcase, CalendarCheck, CheckCircle2, Mail, ShieldCheck, Sparkles } from 'lucide-react';
+import { BrandLogo } from '@/components/BrandLogo';
+import { ProductEcosystemStrip, ProductIdentity } from '@/components/ProductIdentity';
+import { productBrandByKey, type BrandProductKey } from '@/lib/brand';
 import { products } from '@/lib/products';
 
 const serviceHighlights = [
@@ -24,8 +28,7 @@ export default function Home() {
     <main className="site-shell">
       <header className="topbar">
         <Link href="/" className="brand" aria-label="Nieves Labs home">
-          <span className="brand-mark">NL</span>
-          <span>Nieves Labs</span>
+          <BrandLogo size="sm" />
         </Link>
         <nav className="nav-links" aria-label="Main navigation">
           <Link href="/">Home</Link>
@@ -40,15 +43,49 @@ export default function Home() {
 
       <section className="hero-section">
         <div className="hero-copy">
-          <p className="eyebrow">AI products and automation services</p>
-          <h1>Practical AI tools for people who need clearer work, faster.</h1>
+          <p className="eyebrow">Nieves Labs product ecosystem</p>
+          <h1>AI solutions that empower people.</h1>
           <p className="hero-subtitle">
-            Nieves Labs builds focused AI products and automation workflows that help professionals save time, prepare better, and run smarter operations.
+            Premium AI products and automation workflows that simplify complex preparation, save time, and help people move with confidence.
           </p>
           <div className="hero-actions">
             <Link className="button-primary" href="#products">Explore Products <ArrowRight size={18} /></Link>
             <Link className="button-secondary" href="/contact">Book a Consultation</Link>
           </div>
+          <ProductEcosystemStrip />
+        </div>
+        <div className="brand-showcase" aria-label="Nieves Labs brand system preview">
+          <BrandLogo size="lg" showWordmark={false} />
+          <div>
+            <p className="eyebrow">Brand promise</p>
+            <h2>Clear. Confident. Human.</h2>
+            <p>Nieves Labs designs useful AI systems around trust, simplicity, measurable results, and practical customer outcomes.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section trust-grid">
+        {[
+          ['Innovation', 'Useful AI tools built for practical customer outcomes'],
+          ['Trust', 'Clear statuses, privacy-aware intake, and dedicated operational apps'],
+          ['Automation', 'Workflow systems that reduce routine manual work'],
+          ['Results', 'Briefs, plans, packets, and reports customers can act on'],
+        ].map(([title, body]) => (
+          <div key={title} className="trust-item brand-principle">
+            <CheckCircle2 size={24} />
+            <strong>{title}</strong>
+            <span>{body}</span>
+          </div>
+        ))}
+      </section>
+
+      <section className="section split-section">
+        <div>
+          <p className="eyebrow">What we build</p>
+          <h2>A connected product family with distinct customer jobs.</h2>
+          <p>
+            Nieves Labs is the parent company. Each operational product has its own application, workflow, and customer journey while sharing a consistent brand language.
+          </p>
         </div>
         <div className="operations-panel" aria-label="Nieves Labs services">
           {[
@@ -71,15 +108,24 @@ export default function Home() {
       <section id="products" className="section">
         <div className="section-heading">
           <p className="eyebrow">Products</p>
-          <h2>Focused packages for real customer needs.</h2>
-          <p>Each product is designed around a clear outcome, straightforward intake, and a practical deliverable.</p>
+          <h2>The Nieves AI product ecosystem.</h2>
+          <p>Every product has its own role, accent color, icon, and operating model while staying visibly connected to the Nieves Labs parent brand.</p>
         </div>
         <div className="product-grid">
           {products.map((product) => (
-            <article className="product-card" key={product.key}>
+            <article
+              className="product-card"
+              key={product.key}
+              style={{
+                '--product-accent': productBrandByKey[product.key as BrandProductKey]?.accent,
+                '--product-soft': productBrandByKey[product.key as BrandProductKey]?.accentSoft,
+              } as CSSProperties}
+            >
               <div>
                 <p className="card-kicker">{product.externalApp ? 'Operational app' : product.publicAvailability === 'coming_soon' ? 'Coming soon' : 'Waitlist'}</p>
-                <h3>{product.title}</h3>
+                <h3 className="product-card-title">
+                  <ProductIdentity productKey={product.key as BrandProductKey} />
+                </h3>
                 <p>{product.description}</p>
               </div>
               <div>
