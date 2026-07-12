@@ -682,6 +682,309 @@ li {
   overflow-wrap: anywhere;
 }
 
+.founder-shell {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+.founder-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+  min-height: 76px;
+  padding: 12px 0;
+  background: rgba(6, 17, 30, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+}
+
+.founder-nav {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.founder-nav a,
+.founder-step-nav a,
+.founder-settings-grid a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--text);
+  background: rgba(13, 27, 42, 0.74);
+  font-weight: 800;
+}
+
+.founder-nav a:hover,
+.founder-step-nav a:hover,
+.founder-settings-grid a:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.founder-hero {
+  display: grid;
+  gap: 20px;
+  max-width: 780px;
+  padding: 76px 0 44px;
+}
+
+.founder-hero h1 {
+  font-size: clamp(44px, 8vw, 72px);
+}
+
+.founder-hero p:not(.eyebrow) {
+  max-width: 720px;
+  font-size: clamp(18px, 2vw, 22px);
+}
+
+.founder-home-card,
+.founder-simple-panel,
+.founder-question-card,
+.founder-insight,
+.founder-working-state {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(13, 27, 42, 0.96), rgba(6, 17, 30, 0.92));
+  box-shadow: var(--shadow-soft);
+}
+
+.founder-home-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.82fr);
+  gap: 28px;
+  align-items: stretch;
+  padding: clamp(24px, 5vw, 42px);
+}
+
+.founder-home-card h2,
+.founder-question-card h2,
+.founder-simple-panel h2,
+.founder-insight h2,
+.founder-working-state h2 {
+  font-size: clamp(30px, 4.5vw, 48px);
+}
+
+.founder-next-action {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  border-radius: 20px;
+  padding: 24px;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.founder-next-action span,
+.founder-review-summary span,
+.founder-lender-card span,
+.founder-status-row span,
+.founder-progress-tasks span {
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.founder-next-action strong {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.founder-simple-panel,
+.founder-question-card,
+.founder-insight,
+.founder-working-state {
+  display: grid;
+  gap: 20px;
+  margin-top: 24px;
+  padding: clamp(24px, 5vw, 40px);
+}
+
+.founder-journey-list {
+  display: grid;
+  gap: 14px;
+}
+
+.founder-step-card {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.founder-step-card p,
+.founder-status-row p,
+.founder-lender-card p,
+.founder-review-summary p {
+  margin: 4px 0 0;
+}
+
+.founder-step-card em {
+  justify-self: end;
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.founder-step-number {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #06111e;
+  background: var(--brand);
+  font-weight: 900;
+}
+
+.founder-step-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.founder-step-nav a {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  min-height: 88px;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.founder-step-nav a.active {
+  border-color: rgba(212, 175, 55, 0.72);
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.founder-step-nav span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #06111e;
+  background: var(--brand);
+}
+
+.founder-step-nav small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.founder-current-value {
+  border-left: 4px solid var(--brand);
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.68);
+  color: var(--text);
+  font-size: 18px;
+}
+
+.founder-source-note {
+  margin: 0;
+  font-size: 14px;
+}
+
+.founder-decision-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.founder-status-list {
+  display: grid;
+  gap: 12px;
+}
+
+.founder-status-row,
+.founder-progress-tasks div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.64);
+}
+
+.founder-status-row strong,
+.founder-progress-tasks strong {
+  font-size: 18px;
+}
+
+.founder-details {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.founder-lender-list,
+.founder-review-summary,
+.founder-settings-grid,
+.founder-progress-tasks {
+  display: grid;
+  gap: 14px;
+}
+
+.founder-lender-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.founder-lender-card,
+.founder-review-summary article {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.64);
+}
+
+.founder-lender-card small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.founder-review-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 24px;
+}
+
+.founder-review-summary strong {
+  font-size: 28px;
+}
+
+.founder-settings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.founder-progress-tasks div.complete span {
+  color: var(--green);
+}
+
+.founder-working-state .button-primary {
+  justify-self: start;
+}
+
 .log-list {
   display: grid;
   gap: 10px;
@@ -1195,8 +1498,15 @@ li {
 
   .trust-grid,
   .feature-grid,
-  .metrics-grid {
+  .metrics-grid,
+  .founder-home-card,
+  .founder-lender-list,
+  .founder-review-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .founder-step-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .admin-controls {
@@ -1206,20 +1516,25 @@ li {
 
 @media (max-width: 640px) {
   .site-shell,
-  .site-shell.compact {
+  .site-shell.compact,
+  .founder-shell {
     width: min(100% - 24px, 1180px);
   }
 
   .topbar,
-  .footer {
+  .footer,
+  .founder-topbar {
     align-items: flex-start;
+    display: flex;
     flex-direction: column;
   }
 
-  .nav-links {
+  .nav-links,
+  .founder-nav {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 4px;
+    justify-content: flex-start;
   }
 
   .ecosystem-strip {
@@ -1236,6 +1551,18 @@ li {
     font-size: 42px;
   }
 
+  .founder-hero {
+    padding: 44px 0 28px;
+  }
+
+  .founder-hero h1 {
+    font-size: 42px;
+  }
+
+  .founder-hero p:not(.eyebrow) {
+    font-size: 18px;
+  }
+
   .product-grid,
   .pricing-grid,
   .review-card-grid,
@@ -1248,8 +1575,38 @@ li {
   .atlas-checklist.compact,
   .trust-grid,
   .feature-grid,
-  .metrics-grid {
+  .metrics-grid,
+  .founder-home-card,
+  .founder-step-nav,
+  .founder-lender-list,
+  .founder-review-summary,
+  .founder-settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .founder-home-card,
+  .founder-simple-panel,
+  .founder-question-card,
+  .founder-insight,
+  .founder-working-state {
+    border-radius: 18px;
+    padding: 22px;
+  }
+
+  .founder-step-card {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .founder-step-card em {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .founder-decision-row .button-primary,
+  .founder-decision-row .button-secondary,
+  .founder-next-action .button-primary,
+  .founder-working-state .button-primary {
+    width: 100%;
   }
 
   .review-card-top,

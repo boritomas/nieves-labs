@@ -313,3 +313,60 @@ Low-risk, non-sensitive, non-conflicting fields can be bulk-reviewed after sourc
 - Imported financial model values should be founder-reviewed before lender use.
 - Sensitive values are intentionally excluded from automatic population.
 - The import workflow prepares materials but does not submit lender applications.
+
+## Atlas UX 2.0 summary
+
+Atlas UX 2.0 changes the default presentation layer from an internal dashboard to a founder-first guided funding experience. The backend, storage, readiness logic, financial model, package generator, import workflow, lender tools, founder approval gate, and submission tracking remain intact.
+
+The default `/atlas` route now presents one clear next action and a five-step founder journey:
+
+1. About Your Business
+2. Your Funding Request
+3. Your Documents
+4. Atlas Review
+5. Review and Submit
+
+## Atlas UX 2.0 founder routes
+
+- `/atlas`
+- `/atlas/journey`
+- `/atlas/documents`
+- `/atlas/opportunities`
+- `/atlas/review`
+- `/atlas/track`
+- `/atlas/settings`
+
+The founder navigation is intentionally limited to:
+
+- Home
+- My Application
+- Documents
+- Funding Options
+- Review & Submit
+- Track
+- Settings
+
+## Atlas UX 2.0 advanced/admin route
+
+- `/atlas/admin`
+
+The previous dense dashboard remains available through the advanced route for internal review and debugging. Existing internal Atlas routes remain available for compatibility and detailed editing.
+
+## Atlas UX 2.0 terminology rules
+
+Founder-facing UI uses plain language:
+
+- Capital Office becomes My Funding
+- Requirement Mapping becomes Lender requirements
+- Package Generator becomes Prepare my application / application draft
+- Founder Approval Gate becomes Final review
+- Workflow Stages becomes Your funding journey
+- Evidence Gap Report becomes What is still missing
+
+Internal names may remain in code and advanced/admin documentation.
+
+## Atlas UX 2.0 known limitations
+
+- Guided screens are presentation-layer wrappers around existing Atlas modules; deeper field-by-field editing still uses the preserved advanced routes.
+- Atlas still prepares materials only and does not submit lender applications automatically.
+- Founder review remains mandatory before any lender-facing use.

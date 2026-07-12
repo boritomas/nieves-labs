@@ -31,6 +31,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <Link className="button-secondary" href={`/admin/operations?token=${encodeURIComponent(token)}`}>Operations</Link>
               <Link className="button-secondary" href={`/admin/product-excellence?token=${encodeURIComponent(token)}`}>Product Excellence</Link>
               <Link className="button-secondary" href={`/atlas?token=${encodeURIComponent(token)}`}>Atlas</Link>
+              <Link className="button-secondary" href={`/atlas/admin?token=${encodeURIComponent(token)}`}>Atlas Advanced</Link>
             </div>
           </section>
           <AdminConsole initialToken={token} />

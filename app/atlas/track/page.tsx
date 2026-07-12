@@ -1,13 +1,13 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
-import { AtlasFounderHeader, AtlasFounderHome } from '@/components/AtlasFounderExperience';
+import { AtlasFounderHeader, AtlasFounderTrack } from '@/components/AtlasFounderExperience';
 import { env } from '@/lib/env';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
-  title: 'My Funding | Atlas Capital Office',
+  title: 'Track | Atlas',
 };
 
-export default async function AtlasFounderHomePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+export default async function AtlasTrackPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
   const authorized = Boolean(env.adminToken && token === env.adminToken);
   const data = authorized ? await getAtlasData() : null;
@@ -15,11 +15,7 @@ export default async function AtlasFounderHomePage({ searchParams }: { searchPar
   return (
     <main className="founder-shell">
       <AtlasFounderHeader token={token} />
-      {!authorized || !data ? (
-        <AdminAccessForm title="Atlas Funding Access" />
-      ) : (
-        <AtlasFounderHome data={data} token={token} />
-      )}
+      {!authorized || !data ? <AdminAccessForm title="Atlas Tracking Access" /> : <AtlasFounderTrack data={data} token={token} />}
     </main>
   );
 }
