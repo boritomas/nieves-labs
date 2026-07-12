@@ -201,3 +201,115 @@ If the user attempts to move a package to `Ready` or `Submitted` without all con
 - Add package PDF/DOCX export.
 - Add scenario-based financial projections and DSCR-style repayment analysis.
 - Add review notes and approval history by reviewer.
+
+## Release 1.1 summary
+
+Release 1.1 adds protected automatic document ingestion and profile population through the Atlas Import Center. Atlas can now discover approved project source documents, parse supported document formats, map lender-relevant fields into the Atlas data model, create a founder review queue, flag conflicts and evidence gaps, and generate a new founder-review package draft from imported source material.
+
+Atlas never modifies original files. It also excludes sensitive personal, banking, tax, identification, and bankruptcy case-number data from automatic profile population.
+
+## Release 1.1 route added
+
+- `/atlas/import-center`
+
+This route is protected by the existing admin token pattern.
+
+## Release 1.1 import API
+
+- `GET /api/atlas/import`
+- `POST /api/atlas/import`
+
+Supported actions:
+
+- `scan`
+- `preview`
+- `import`
+- `approve-field`
+- `reject-field`
+- `defer-field`
+- `mark-assumption`
+
+## Release 1.1 source discovery
+
+Atlas scans approved project locations only:
+
+- `docs/`
+- `outputs/`
+- `seed_assets/`
+- `public/`
+- `data/`
+- `.data/`
+- `work/`
+- the workspace-level `outputs/` folder
+
+The scanner excludes build, dependency, git, Vercel, and denylisted sensitive/unrelated paths.
+
+## Release 1.1 supported parsing
+
+Atlas supports:
+
+- DOCX
+- PDF
+- XLSX
+- CSV
+- Markdown
+- TXT
+- JSON
+
+DOCX and XLSX are parsed server-side from ZIP XML content. PDF parsing is a conservative text extraction pass and does not perform OCR.
+
+## Release 1.1 storage updates
+
+Release 1.1 extends the file-backed Atlas storage shape with database-ready equivalents for:
+
+- `atlas_source_documents`
+- `atlas_document_imports`
+- `atlas_extracted_sections`
+- `atlas_imported_fields`
+- `atlas_field_sources`
+- `atlas_field_conflicts`
+- `atlas_field_versions`
+- `atlas_import_runs`
+- `atlas_import_errors`
+- `atlas_founder_review_queue`
+- `atlas_staleness_flags`
+- `atlas_evidence_gaps`
+
+The current implementation remains file-backed through `.data/atlas.json`.
+
+## Release 1.1 source traceability
+
+Imported fields record:
+
+- filename
+- source path
+- file type
+- source section
+- import timestamp
+- original value
+- normalized value
+- classification
+- confidence
+- verification status
+- founder approval status
+
+## Release 1.1 founder review rules
+
+Low-risk, non-sensitive, non-conflicting fields can be bulk-reviewed after source confirmation. The following categories require individual review before lender-facing use:
+
+- funding amounts
+- revenue assumptions
+- use of funds
+- repayment strategy
+- founder biography/background
+- Chapter 7 explanation
+- personal financial information
+- lender-facing claims
+
+## Release 1.1 known limitations
+
+- OCR is not implemented.
+- PDF extraction is conservative and may miss visually embedded text.
+- Imported financial model values should be founder-reviewed before lender use.
+- Sensitive values are intentionally excluded from automatic population.
+- The import workflow prepares materials but does not submit lender applications.

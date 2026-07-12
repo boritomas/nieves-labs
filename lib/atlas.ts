@@ -4,6 +4,28 @@ export type AtlasDocumentCategory = 'legal' | 'financial' | 'founder' | 'product
 export type AtlasTaskStatus = 'not_started' | 'in_progress' | 'complete' | 'blocked';
 export type AtlasWorkflowStageStatus = 'complete' | 'in_progress' | 'blocked' | 'not_started';
 export type AtlasPackageStatus = 'Draft' | 'Founder Review' | 'Ready' | 'Submitted' | 'Archived';
+export type AtlasSourceDocumentClassification =
+  | 'Company profile'
+  | 'Founder profile'
+  | 'Business plan'
+  | 'Loan package'
+  | 'Financial model'
+  | 'Cash-flow forecast'
+  | 'Product portfolio'
+  | 'Market research'
+  | 'Competitive analysis'
+  | 'Risk assessment'
+  | 'Repayment strategy'
+  | 'Due diligence'
+  | 'Product roadmap'
+  | 'Pricing'
+  | 'Legal/corporate'
+  | 'Sensitive founder document'
+  | 'Unknown'
+  | 'Unrelated';
+export type AtlasImportedFieldClassification = 'Verified document value' | 'Founder-provided' | 'Calculated' | 'Planning assumption' | 'AI-derived summary' | 'Unknown' | 'Requires verification';
+export type AtlasVerificationStatus = 'pending_review' | 'approved' | 'rejected' | 'assumption' | 'verified' | 'deferred';
+export type AtlasStalenessStatus = 'Current' | 'Possibly stale' | 'Superseded' | 'Requires founder confirmation';
 export type AtlasApplicationSectionId =
   | 'business_information'
   | 'founder_information'
@@ -215,6 +237,132 @@ export type AtlasPackageVersion = {
   updatedAt: string;
 };
 
+export type AtlasSourceDocument = {
+  id: string;
+  path: string;
+  filename: string;
+  fileType: string;
+  modifiedAt: string;
+  contentHash: string;
+  size: number;
+  classification: AtlasSourceDocumentClassification;
+  relevanceScore: number;
+  status: 'discovered' | 'imported' | 'skipped' | 'duplicate' | 'error';
+  duplicateOf?: string;
+  skipReason?: string;
+};
+
+export type AtlasExtractedSection = {
+  id: string;
+  documentId: string;
+  heading: string;
+  text: string;
+  sourceSection: string;
+  confidence: number;
+};
+
+export type AtlasImportedField = {
+  id: string;
+  fieldPath: string;
+  label: string;
+  sourceDocumentId: string;
+  sourceFilename: string;
+  sourcePath: string;
+  sourceDocumentType: string;
+  sourceSection: string;
+  importTimestamp: string;
+  originalValue: string;
+  normalizedValue: string | number | string[];
+  classification: AtlasImportedFieldClassification;
+  confidence: number;
+  verificationStatus: AtlasVerificationStatus;
+  founderApproved: boolean;
+  conflictStatus: 'none' | 'conflict' | 'stale' | 'sensitive_excluded';
+  sensitive: boolean;
+};
+
+export type AtlasFieldConflict = {
+  id: string;
+  fieldPath: string;
+  label: string;
+  valueA: string;
+  sourceA: string;
+  valueB: string;
+  sourceB: string;
+  documentDates: string[];
+  recommendedResolution: string;
+  founderDecisionRequired: boolean;
+};
+
+export type AtlasFounderReviewItem = {
+  id: string;
+  importedFieldId: string;
+  fieldPath: string;
+  label: string;
+  importedValue: string;
+  source: string;
+  classification: AtlasImportedFieldClassification;
+  confidence: number;
+  conflictStatus: AtlasImportedField['conflictStatus'];
+  recommendedAction: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  status: AtlasVerificationStatus;
+};
+
+export type AtlasStalenessFlag = {
+  id: string;
+  fieldPath: string;
+  value: string;
+  source: string;
+  status: AtlasStalenessStatus;
+  reason: string;
+};
+
+export type AtlasEvidenceGap = {
+  id: string;
+  category: 'Missing fact' | 'Missing document' | 'Conflict' | 'Stale data' | 'Sensitive field' | 'Lender-specific unknown' | 'Founder decision';
+  label: string;
+  detail: string;
+  severity: 'low' | 'medium' | 'high';
+};
+
+export type AtlasImportError = {
+  id: string;
+  path: string;
+  message: string;
+  createdAt: string;
+};
+
+export type AtlasImportRun = {
+  id: string;
+  startedAt: string;
+  completedAt: string;
+  mode: 'scan' | 'preview' | 'import';
+  discoveredCount: number;
+  importedCount: number;
+  skippedCount: number;
+  duplicateCount: number;
+  errorCount: number;
+  fieldsPopulated: number;
+  conflictsFound: number;
+  evidenceGapsFound: number;
+};
+
+export type AtlasImportState = {
+  sourceDocuments: AtlasSourceDocument[];
+  extractedSections: AtlasExtractedSection[];
+  importedFields: AtlasImportedField[];
+  fieldConflicts: AtlasFieldConflict[];
+  fieldVersions: AtlasImportedField[];
+  importRuns: AtlasImportRun[];
+  importErrors: AtlasImportError[];
+  founderReviewQueue: AtlasFounderReviewItem[];
+  stalenessFlags: AtlasStalenessFlag[];
+  evidenceGaps: AtlasEvidenceGap[];
+  lastScanAt: string;
+  lastImportAt: string;
+};
+
 export type AtlasData = {
   companyProfile: AtlasCompanyProfile;
   financialAssumptions: AtlasFinancialAssumptions;
@@ -227,6 +375,7 @@ export type AtlasData = {
   tasks: AtlasTask[];
   applicationSections: AtlasApplicationSection[];
   packageVersions: AtlasPackageVersion[];
+  importState: AtlasImportState;
   readinessScores: AtlasReadinessScores;
 };
 
@@ -469,9 +618,15 @@ export function buildAtlasWorkflowStages(data: AtlasData, token: string): AtlasW
   const requiredDocsComplete = data.documents.filter((document) => document.required).every((document) => document.completed);
   const packageVersion = getLatestAtlasPackage(data);
   const applicationReviewed = data.applicationSections.every((section) => section.reviewed);
+  const importStageStatus: AtlasWorkflowStageStatus = data.importState.lastImportAt
+    ? 'complete'
+    : data.importState.sourceDocuments.length || data.importState.lastScanAt
+      ? 'in_progress'
+      : 'not_started';
 
   return [
     ['readiness-assessment', 'Readiness Assessment', '/atlas/readiness-assessment', assessment.overallReadiness >= 80 ? 'complete' : 'in_progress', 'SBA/CDFI readiness scoring, gaps, and recommendations.'],
+    ['import-center', 'Import Center', '/atlas/import-center', importStageStatus, 'Discover, parse, trace, and founder-review source documents.'],
     ['company-profile', 'Company Profile', '/atlas/company-profile', data.companyProfile.companyName && data.companyProfile.industry ? 'complete' : 'in_progress', 'Reusable master profile for all lender materials.'],
     ['founder-profile', 'Founder Profile', '/atlas/founder-profile', data.companyProfile.founderBackground ? 'complete' : 'in_progress', 'Founder ownership, employment, background, and underwriting context.'],
     ['personal-financial-profile', 'Personal Financial Profile', '/atlas/personal-financial-profile', data.personalFinancialProfile.annualIncome > 0 ? 'complete' : 'in_progress', 'Sensitive founder financial snapshot hidden by default.'],

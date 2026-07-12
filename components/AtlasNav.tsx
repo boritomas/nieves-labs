@@ -4,6 +4,7 @@ const atlasNavItems = [
   ['Executive Dashboard', '/atlas'],
   ['Capital Office', '/atlas/capital-office'],
   ['Readiness', '/atlas/readiness-assessment'],
+  ['Import Center', '/atlas/import-center'],
   ['Company Profile', '/atlas/company-profile'],
   ['Founder Profile', '/atlas/founder-profile'],
   ['Personal Financials', '/atlas/personal-financial-profile'],

@@ -9,6 +9,8 @@ import {
   type AtlasDocument,
   type AtlasFinancialAssumptions,
   type AtlasFundingOpportunity,
+  type AtlasImportState,
+  type AtlasImportedField,
   type AtlasPackageStatus,
   type AtlasPackageVersion,
   type AtlasPersonalFinancialProfile,
@@ -24,6 +26,21 @@ const dataDir = path.join(process.cwd(), '.data');
 const dataFile = path.join(dataDir, 'atlas.json');
 
 const now = new Date().toISOString();
+
+export const emptyAtlasImportState: AtlasImportState = {
+  sourceDocuments: [],
+  extractedSections: [],
+  importedFields: [],
+  fieldConflicts: [],
+  fieldVersions: [],
+  importRuns: [],
+  importErrors: [],
+  founderReviewQueue: [],
+  stalenessFlags: [],
+  evidenceGaps: [],
+  lastScanAt: '',
+  lastImportAt: '',
+};
 
 const seedData: AtlasData = {
   companyProfile: {
@@ -255,6 +272,7 @@ const seedData: AtlasData = {
     updatedAt: now,
   })),
   packageVersions: [],
+  importState: emptyAtlasImportState,
   readinessScores: {
     id: 'readiness_scores',
     capitalReadiness: 0,
@@ -290,6 +308,7 @@ function withScores(data: AtlasData): AtlasData {
       tasks: normalized.tasks,
       applicationSections: normalized.applicationSections,
       packageVersions: normalized.packageVersions,
+      importState: normalized.importState,
     }),
   };
 }
@@ -345,6 +364,20 @@ function normalizeAtlasData(data: AtlasData): AtlasData {
     })),
     applicationSections,
     packageVersions: data.packageVersions || [],
+    importState: {
+      ...emptyAtlasImportState,
+      ...(data.importState || {}),
+      sourceDocuments: data.importState?.sourceDocuments || [],
+      extractedSections: data.importState?.extractedSections || [],
+      importedFields: data.importState?.importedFields || [],
+      fieldConflicts: data.importState?.fieldConflicts || [],
+      fieldVersions: data.importState?.fieldVersions || [],
+      importRuns: data.importState?.importRuns || [],
+      importErrors: data.importState?.importErrors || [],
+      founderReviewQueue: data.importState?.founderReviewQueue || [],
+      stalenessFlags: data.importState?.stalenessFlags || [],
+      evidenceGaps: data.importState?.evidenceGaps || [],
+    },
   };
 }
 
@@ -508,4 +541,142 @@ export async function updateAtlasApplicationSection(id: string, patch: Partial<A
   data.applicationSections = data.applicationSections.map((section) => section.id === id ? { ...section, ...patch, updatedAt: new Date().toISOString() } : section);
   await writeAtlasData(data);
   return data.applicationSections.find((section) => section.id === id);
+}
+
+export async function updateAtlasImportState(patch: Partial<AtlasImportState>) {
+  const data = await getAtlasData();
+  data.importState = {
+    ...emptyAtlasImportState,
+    ...data.importState,
+    ...patch,
+    sourceDocuments: patch.sourceDocuments || data.importState.sourceDocuments || [],
+    extractedSections: patch.extractedSections || data.importState.extractedSections || [],
+    importedFields: patch.importedFields || data.importState.importedFields || [],
+    fieldConflicts: patch.fieldConflicts || data.importState.fieldConflicts || [],
+    fieldVersions: patch.fieldVersions || data.importState.fieldVersions || [],
+    importRuns: patch.importRuns || data.importState.importRuns || [],
+    importErrors: patch.importErrors || data.importState.importErrors || [],
+    founderReviewQueue: patch.founderReviewQueue || data.importState.founderReviewQueue || [],
+    stalenessFlags: patch.stalenessFlags || data.importState.stalenessFlags || [],
+    evidenceGaps: patch.evidenceGaps || data.importState.evidenceGaps || [],
+  };
+  await writeAtlasData(data);
+  return data.importState;
+}
+
+export async function saveAtlasImportResult(importState: AtlasImportState, shouldApply: boolean) {
+  const data = await getAtlasData();
+  const previousFields = data.importState.importedFields || [];
+  data.importState = {
+    ...emptyAtlasImportState,
+    ...importState,
+    fieldVersions: [...previousFields, ...(importState.importedFields || [])].slice(-200),
+  };
+
+  if (shouldApply) {
+    applyImportedFields(data, importState.importedFields);
+    data.importState.lastImportAt = new Date().toISOString();
+    const generated = generateAtlasPackage(data);
+    const latestVersion = data.packageVersions.reduce((max, item) => Math.max(max, item.versionNumber), 0);
+    data.packageVersions.push({
+      id: randomUUID(),
+      packageName: 'Draft generated from imported source documents',
+      targetLender: data.fundingOpportunities.find((item) => item.status !== 'declined')?.lenderName || 'Founder-selected lender',
+      fundingType: data.companyProfile.preferredFundingTypes[0] || 'SBA Microloan',
+      fundingAmount: data.financialAssumptions.loanAmount,
+      versionNumber: latestVersion + 1,
+      status: 'Founder Review',
+      notes: 'Generated after Atlas Release 1.1 document import. Founder approval is required before external use.',
+      founderApprovals: atlasFounderApprovalKeys.reduce<Record<string, boolean>>((acc, key) => {
+        acc[key] = false;
+        return acc;
+      }, {}),
+      generatedMarkdown: generated.markdown,
+      generatedHtml: generated.html,
+      createdAt: data.importState.lastImportAt,
+      updatedAt: data.importState.lastImportAt,
+    });
+  }
+
+  await writeAtlasData(data);
+  return withScores(data);
+}
+
+function applyImportedFields(data: AtlasData, fields: AtlasImportedField[]) {
+  const safeFields = fields.filter((field) => !field.sensitive && field.conflictStatus === 'none' && field.confidence >= 68);
+  for (const field of safeFields) {
+    const value = field.normalizedValue;
+    switch (field.fieldPath) {
+      case 'companyProfile.companyName':
+        data.companyProfile.companyName = String(value);
+        break;
+      case 'companyProfile.productName':
+        data.companyProfile.productName = String(value);
+        break;
+      case 'companyProfile.businessStage':
+        data.companyProfile.businessStage = String(value);
+        break;
+      case 'companyProfile.revenueStage':
+        data.companyProfile.revenueStage = String(value);
+        break;
+      case 'companyProfile.fundingTargetMin':
+        data.companyProfile.fundingTargetMin = Number(value) || data.companyProfile.fundingTargetMin;
+        break;
+      case 'companyProfile.fundingTargetMax':
+        data.companyProfile.fundingTargetMax = Number(value) || data.companyProfile.fundingTargetMax;
+        break;
+      case 'companyProfile.preferredFundingTypes':
+        data.companyProfile.preferredFundingTypes = Array.isArray(value) ? value.map(String) : String(value).split('/').map((item) => item.trim()).filter(Boolean);
+        break;
+      case 'companyProfile.firstNinetyDayMrrEstimate':
+        data.companyProfile.firstNinetyDayMrrEstimate = String(value);
+        break;
+      case 'companyProfile.sixMonthMrrTarget':
+        data.companyProfile.sixMonthMrrTarget = String(value);
+        break;
+      case 'companyProfile.primaryUseOfFunds':
+        data.companyProfile.primaryUseOfFunds = Array.isArray(value) ? value.map(String) : String(value).split(',').map((item) => item.trim()).filter(Boolean);
+        data.companyProfile.useOfFunds = `Primary use of funds: ${data.companyProfile.primaryUseOfFunds.join(', ')}.`;
+        break;
+      case 'companyProfile.revenueAssumptions':
+        data.companyProfile.revenueAssumptions = String(value);
+        break;
+      case 'companyProfile.repaymentStrategy':
+        data.companyProfile.repaymentStrategy = String(value);
+        break;
+      case 'companyProfile.riskMitigation':
+        data.companyProfile.riskMitigation = String(value);
+        break;
+      case 'companyProfile.chapterSevenExplanation':
+        data.companyProfile.chapterSevenExplanation = String(value);
+        break;
+      case 'financialAssumptions.loanAmount':
+        data.financialAssumptions.loanAmount = Number(value) || data.financialAssumptions.loanAmount;
+        data.useOfFundsPlan.selectedAmount = data.financialAssumptions.loanAmount;
+        break;
+      case 'financialAssumptions.startingMrr':
+        data.financialAssumptions.startingMrr = Number(value) || data.financialAssumptions.startingMrr;
+        data.companyProfile.currentMrr = data.financialAssumptions.startingMrr;
+        break;
+      case 'financialAssumptions.averageSubscriptionPrice':
+        data.financialAssumptions.averageSubscriptionPrice = Number(value) || data.financialAssumptions.averageSubscriptionPrice;
+        break;
+      default:
+        break;
+    }
+  }
+
+  const completedDocumentIds = new Set(data.documents.filter((document) => document.completed).map((document) => document.id));
+  for (const field of safeFields) {
+    if (field.fieldPath.startsWith('documents.')) {
+      completedDocumentIds.add(String(field.normalizedValue));
+    }
+  }
+  data.documents = data.documents.map((document) => completedDocumentIds.has(document.id)
+    ? { ...document, completed: true, notes: document.notes.includes('Imported evidence') ? document.notes : `${document.notes} Imported evidence reviewed in Atlas Import Center.`, updatedAt: new Date().toISOString() }
+    : document);
+  data.companyProfile.versionHistory = [
+    ...(data.companyProfile.versionHistory || []),
+    `Imported source documents through Atlas Release 1.1 on ${new Date().toLocaleString('en-US')}.`,
+  ].slice(-12);
 }

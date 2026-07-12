@@ -47,6 +47,7 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
                 <Link className="button-secondary" href={`/atlas/document-vault?token=${encodeURIComponent(token)}`}>Review Documents</Link>
                 <Link className="button-secondary" href={`/atlas/application-builder?token=${encodeURIComponent(token)}`}>Build Application</Link>
                 <Link className="button-secondary" href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Generate Package</Link>
+                <Link className="button-secondary" href={`/atlas/import-center?token=${encodeURIComponent(token)}`}>Open Import Center</Link>
               </div>
             </div>
             <div className="panel">
@@ -72,6 +73,17 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
           </section>
 
           <section className="two-column">
+            <div className="panel">
+              <p className="eyebrow">Document ingestion</p>
+              <h2>{data.importState.sourceDocuments.length} source files tracked</h2>
+              <p>Last scan: {data.importState.lastScanAt ? new Date(data.importState.lastScanAt).toLocaleString() : 'Not yet'}. Last import: {data.importState.lastImportAt ? new Date(data.importState.lastImportAt).toLocaleString() : 'Not yet'}.</p>
+              <div className="status-list">
+                <span className="status-pill ready">{data.importState.importedFields.length} fields mapped</span>
+                <span className={`status-pill ${data.importState.fieldConflicts.length ? 'missing' : 'ready'}`}>{data.importState.fieldConflicts.length} conflicts</span>
+                <span className={`status-pill ${data.importState.evidenceGaps.length ? 'missing' : 'ready'}`}>{data.importState.evidenceGaps.length} evidence gaps</span>
+              </div>
+              <Link className="button-secondary" href={`/atlas/import-center?token=${encodeURIComponent(token)}`}>Review Import Center</Link>
+            </div>
             <div className="panel">
               <p className="eyebrow">Required documents</p>
               <h2>{data.documents.filter((item) => item.completed).length} completed / {data.documents.length} total</h2>

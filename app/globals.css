@@ -676,6 +676,12 @@ li {
   overflow-x: auto;
 }
 
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 .log-list {
   display: grid;
   gap: 10px;
