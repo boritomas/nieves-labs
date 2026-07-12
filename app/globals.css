@@ -813,6 +813,66 @@ li {
   font-weight: 800;
 }
 
+.atlas-workflow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.atlas-workflow-step {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 116px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.atlas-workflow-step span:first-child {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--brand-strong);
+  font-weight: 900;
+}
+
+.atlas-workflow-step strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.atlas-workflow-step small,
+.atlas-list {
+  color: var(--muted);
+}
+
+.atlas-workflow-step.complete {
+  border-color: rgba(52, 211, 153, 0.42);
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.atlas-workflow-step.in_progress {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 18px 52px rgba(212, 175, 55, 0.08);
+}
+
+.atlas-workflow-step.blocked {
+  border-color: rgba(251, 113, 133, 0.42);
+  background: rgba(251, 113, 133, 0.08);
+}
+
+.atlas-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
 .atlas-stack {
   display: grid;
   gap: 16px;
@@ -876,10 +936,54 @@ li {
   background: rgba(52, 211, 153, 0.08);
 }
 
+.atlas-check-row input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  margin-top: 3px;
+  accent-color: var(--brand);
+}
+
 .atlas-check-row p,
 .atlas-check-row small {
   margin: 4px 0 0;
   color: var(--muted);
+}
+
+.atlas-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.atlas-toggle button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.74);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.atlas-toggle button.active {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.14);
+  color: var(--text);
+}
+
+.atlas-choice-row,
+.atlas-use-row {
+  display: grid;
+  gap: 12px;
+}
+
+.atlas-use-row {
+  grid-template-columns: minmax(0, 1.2fr) minmax(120px, 0.6fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.metrics-grid.compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .atlas-risk-card,
@@ -1070,11 +1174,16 @@ li {
   .product-grid,
   .pricing-grid,
   .review-card-grid,
+  .atlas-workflow,
   .atlas-application-grid,
   .atlas-review-list,
   .review-edit-grid,
   .atlas-form-grid,
   .atlas-checklist.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas-use-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1124,10 +1233,12 @@ li {
   .product-grid,
   .pricing-grid,
   .review-card-grid,
+  .atlas-workflow,
   .atlas-application-grid,
   .atlas-review-list,
   .review-edit-grid,
   .atlas-form-grid,
+  .atlas-use-row,
   .atlas-checklist.compact,
   .trust-grid,
   .feature-grid,
@@ -1147,6 +1258,10 @@ li {
   }
 
   .atlas-task-row {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-grid.compact {
     grid-template-columns: 1fr;
   }
 }

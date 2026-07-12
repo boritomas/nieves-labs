@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getAtlasData, updateAtlasFinancialAssumptions } from '@/lib/atlas-store';
+import {
+  getAtlasData,
+  updateAtlasChapterSevenWorkflow,
+  updateAtlasCompanyProfile,
+  updateAtlasFinancialAssumptions,
+  updateAtlasPersonalFinancialProfile,
+  updateAtlasUseOfFundsPlan,
+  upsertAtlasPackageVersion,
+} from '@/lib/atlas-store';
 import { env } from '@/lib/env';
 
 function authorized(request: Request) {
@@ -27,6 +35,30 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ assumptions });
   }
 
+  if (body.type === 'company_profile') {
+    const profile = await updateAtlasCompanyProfile(body.patch || {});
+    return NextResponse.json({ profile });
+  }
+
+  if (body.type === 'personal_financial_profile') {
+    const profile = await updateAtlasPersonalFinancialProfile(body.patch || {});
+    return NextResponse.json({ profile });
+  }
+
+  if (body.type === 'chapter_7_workflow') {
+    const workflow = await updateAtlasChapterSevenWorkflow(body.patch || {});
+    return NextResponse.json({ workflow });
+  }
+
+  if (body.type === 'use_of_funds_plan') {
+    const plan = await updateAtlasUseOfFundsPlan(body.patch || {});
+    return NextResponse.json({ plan });
+  }
+
+  if (body.type === 'package_version') {
+    const packageVersion = await upsertAtlasPackageVersion(body.patch || {});
+    return NextResponse.json({ packageVersion });
+  }
+
   return NextResponse.json({ error: 'Unsupported Atlas update' }, { status: 400 });
 }
-

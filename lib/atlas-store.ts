@@ -5,12 +5,19 @@ import {
   atlasApplicationSectionIds,
   type AtlasData,
   type AtlasApplicationSection,
+  type AtlasChapterSevenWorkflow,
   type AtlasDocument,
   type AtlasFinancialAssumptions,
   type AtlasFundingOpportunity,
+  type AtlasPackageStatus,
+  type AtlasPackageVersion,
+  type AtlasPersonalFinancialProfile,
   type AtlasTask,
+  type AtlasUseOfFundsPlan,
   calculateReadinessScores,
+  generateAtlasPackage,
   getAtlasApplicationSectionTitle,
+  atlasFounderApprovalKeys,
 } from './atlas';
 
 const dataDir = path.join(process.cwd(), '.data');
@@ -22,6 +29,14 @@ const seedData: AtlasData = {
   companyProfile: {
     id: 'atlas_company_profile',
     companyName: 'Nieves Labs',
+    ein: '',
+    state: 'Texas',
+    industry: 'AI software and automation',
+    timeInBusiness: 'Less than 2 years',
+    currentRevenue: 0,
+    currentMrr: 2500,
+    customers: 0,
+    businessStage: 'pre-launch / near-launch',
     productName: 'Nieves AI Platform',
     moduleName: 'Atlas Capital Office',
     fundingTargetMin: 25000,
@@ -49,6 +64,15 @@ const seedData: AtlasData = {
     founderBackground: 'Tomas Nieves is building Nieves Labs as a practical AI products company focused on real workflows, clear deliverables, and operations-first implementation.',
     riskMitigation: 'The capital request remains conservative, tied to specific production and launch activities, and supported by a recurring revenue model, professional operating background, and clear business plan.',
     chapterSevenExplanation: 'A recent Chapter 7 bankruptcy may affect underwriting. Atlas keeps this risk explicit so the package can address it directly with a conservative request, transparent explanation, stable professional background, launch traction, and disciplined fund-use plan.',
+    founderName: 'Tomas Nieves',
+    ownershipPercent: 100,
+    founderEmployment: 'Founder / operator',
+    personalCreditRange: 'To be confirmed by founder',
+    bankruptcyStatus: 'Recent Chapter 7 disclosed for lender review',
+    existingDebt: 0,
+    stableIncome: 'Professional background and founder operating income to be documented.',
+    timeline: 'Target lender outreach after package and documents are founder-reviewed.',
+    versionHistory: ['Release 1.0 master profile seeded for SBA Microloan / CDFI preparation.'],
   },
   financialAssumptions: {
     id: 'atlas_financial_assumptions',
@@ -64,6 +88,42 @@ const seedData: AtlasData = {
     loanTermMonths: 72,
     estimatedInterestRate: 10.5,
     startingCashBalance: 3000,
+  },
+  personalFinancialProfile: {
+    id: 'atlas_personal_financial_profile',
+    assets: 0,
+    liabilities: 0,
+    annualIncome: 0,
+    monthlyExpenses: 0,
+    debtObligations: 0,
+    valuesHidden: true,
+    updatedAt: now,
+  },
+  chapterSevenWorkflow: {
+    id: 'atlas_chapter_7_workflow',
+    filingDate: '',
+    dischargeDate: '',
+    status: 'Disclosed; final dates and supporting documents pending founder confirmation.',
+    explanation: 'A recent Chapter 7 bankruptcy is disclosed directly so underwriters can evaluate the request with full context. The funding request remains conservative and tied to business readiness, launch, compliance, and working-capital needs.',
+    supportingDocuments: ['Discharge documentation', 'Founder explanation letter', 'Updated personal financial statement'],
+    founderApproved: false,
+    updatedAt: now,
+  },
+  useOfFundsPlan: {
+    id: 'atlas_use_of_funds_plan',
+    selectedAmount: 35000,
+    customAmount: 35000,
+    items: [
+      { id: 'product-development', category: 'Product Development', amount: 8500, notes: 'Production hardening and launch-ready product workflow completion.' },
+      { id: 'cloud-costs', category: 'Cloud Costs', amount: 3500, notes: 'Hosting, storage, observability, and deployment infrastructure.' },
+      { id: 'ai-api-costs', category: 'AI/API Costs', amount: 4500, notes: 'OpenAI/API usage for product validation and fulfillment workflows.' },
+      { id: 'app-store-release', category: 'App Store Release', amount: 2500, notes: 'Mobile build, submission, compliance, and release preparation.' },
+      { id: 'marketing', category: 'Marketing', amount: 6000, notes: 'Launch campaigns, content, local outreach, and customer acquisition testing.' },
+      { id: 'legal', category: 'Legal', amount: 2500, notes: 'Legal, accounting, administrative, and compliance support.' },
+      { id: 'contractors', category: 'Contractors', amount: 5500, notes: 'Specialized contractor support for engineering, creative, and operations.' },
+      { id: 'working-capital', category: 'Working Capital', amount: 2000, notes: 'Short-term operating cushion for launch period.' },
+    ],
+    updatedAt: now,
   },
   fundingOpportunities: [
     {
@@ -194,6 +254,7 @@ const seedData: AtlasData = {
     notes: '',
     updatedAt: now,
   })),
+  packageVersions: [],
   readinessScores: {
     id: 'readiness_scores',
     capitalReadiness: 0,
@@ -220,11 +281,15 @@ function withScores(data: AtlasData): AtlasData {
     readinessScores: calculateReadinessScores({
       companyProfile: normalized.companyProfile,
       financialAssumptions: normalized.financialAssumptions,
+      personalFinancialProfile: normalized.personalFinancialProfile,
+      chapterSevenWorkflow: normalized.chapterSevenWorkflow,
+      useOfFundsPlan: normalized.useOfFundsPlan,
       fundingOpportunities: normalized.fundingOpportunities,
       documents: normalized.documents,
       risks: normalized.risks,
       tasks: normalized.tasks,
       applicationSections: normalized.applicationSections,
+      packageVersions: normalized.packageVersions,
     }),
   };
 }
@@ -245,7 +310,26 @@ function normalizeAtlasData(data: AtlasData): AtlasData {
   return {
     ...seedData,
     ...data,
-    fundingOpportunities: data.fundingOpportunities.map((opportunity) => ({
+    companyProfile: {
+      ...seedData.companyProfile,
+      ...data.companyProfile,
+      versionHistory: data.companyProfile?.versionHistory?.length ? data.companyProfile.versionHistory : seedData.companyProfile.versionHistory,
+    },
+    personalFinancialProfile: {
+      ...seedData.personalFinancialProfile,
+      ...data.personalFinancialProfile,
+    },
+    chapterSevenWorkflow: {
+      ...seedData.chapterSevenWorkflow,
+      ...data.chapterSevenWorkflow,
+      supportingDocuments: data.chapterSevenWorkflow?.supportingDocuments?.length ? data.chapterSevenWorkflow.supportingDocuments : seedData.chapterSevenWorkflow.supportingDocuments,
+    },
+    useOfFundsPlan: {
+      ...seedData.useOfFundsPlan,
+      ...data.useOfFundsPlan,
+      items: data.useOfFundsPlan?.items?.length ? data.useOfFundsPlan.items : seedData.useOfFundsPlan.items,
+    },
+    fundingOpportunities: (data.fundingOpportunities || seedData.fundingOpportunities).map((opportunity) => ({
       ...opportunity,
       lenderName: opportunity.lenderName || opportunity.fundingSource,
       website: opportunity.website || '',
@@ -260,6 +344,7 @@ function normalizeAtlasData(data: AtlasData): AtlasData {
       statusNotes: opportunity.statusNotes || '',
     })),
     applicationSections,
+    packageVersions: data.packageVersions || [],
   };
 }
 
@@ -282,6 +367,81 @@ export async function updateAtlasFinancialAssumptions(patch: Partial<AtlasFinanc
   data.financialAssumptions = { ...data.financialAssumptions, ...patch };
   await writeAtlasData(data);
   return data.financialAssumptions;
+}
+
+export async function updateAtlasCompanyProfile(patch: Partial<AtlasData['companyProfile']>) {
+  const data = await getAtlasData();
+  data.companyProfile = {
+    ...data.companyProfile,
+    ...patch,
+    versionHistory: [
+      ...(data.companyProfile.versionHistory || []),
+      `Updated ${new Date().toLocaleString('en-US')} through Atlas Release 1.0.`,
+    ].slice(-12),
+  };
+  await writeAtlasData(data);
+  return data.companyProfile;
+}
+
+export async function updateAtlasPersonalFinancialProfile(patch: Partial<AtlasPersonalFinancialProfile>) {
+  const data = await getAtlasData();
+  data.personalFinancialProfile = { ...data.personalFinancialProfile, ...patch, updatedAt: new Date().toISOString() };
+  await writeAtlasData(data);
+  return data.personalFinancialProfile;
+}
+
+export async function updateAtlasChapterSevenWorkflow(patch: Partial<AtlasChapterSevenWorkflow>) {
+  const data = await getAtlasData();
+  data.chapterSevenWorkflow = { ...data.chapterSevenWorkflow, ...patch, updatedAt: new Date().toISOString() };
+  await writeAtlasData(data);
+  return data.chapterSevenWorkflow;
+}
+
+export async function updateAtlasUseOfFundsPlan(patch: Partial<AtlasUseOfFundsPlan>) {
+  const data = await getAtlasData();
+  data.useOfFundsPlan = { ...data.useOfFundsPlan, ...patch, updatedAt: new Date().toISOString() };
+  await writeAtlasData(data);
+  return data.useOfFundsPlan;
+}
+
+export async function upsertAtlasPackageVersion(input: Partial<AtlasPackageVersion>) {
+  const data = await getAtlasData();
+  const timestamp = new Date().toISOString();
+  const latestVersion = data.packageVersions.reduce((max, item) => Math.max(max, item.versionNumber), 0);
+  const existingIndex = input.id ? data.packageVersions.findIndex((item) => item.id === input.id) : -1;
+  const generated = generateAtlasPackage(data);
+  const approvals = atlasFounderApprovalKeys.reduce<Record<string, boolean>>((acc, key) => {
+    acc[key] = Boolean(input.founderApprovals?.[key]);
+    return acc;
+  }, {});
+  const allApproved = Object.values(approvals).every(Boolean);
+  const requestedStatus: AtlasPackageStatus = input.status || 'Draft';
+  const gatedStatus = ['Ready', 'Submitted'].includes(requestedStatus) && !allApproved ? 'Founder Review' : requestedStatus;
+  const activeLender = data.fundingOpportunities.find((item) => item.status !== 'declined');
+  const packageVersion: AtlasPackageVersion = {
+    id: input.id || randomUUID(),
+    packageName: input.packageName || `${data.companyProfile.companyName} SBA/CDFI Capital Package`,
+    targetLender: input.targetLender || activeLender?.lenderName || activeLender?.fundingSource || 'Target lender TBD',
+    fundingType: input.fundingType || activeLender?.type || data.companyProfile.preferredFundingTypes[0] || 'SBA Microloan',
+    fundingAmount: Number(input.fundingAmount) || data.financialAssumptions.loanAmount,
+    versionNumber: existingIndex >= 0 ? data.packageVersions[existingIndex].versionNumber : latestVersion + 1,
+    status: gatedStatus,
+    notes: input.notes || '',
+    founderApprovals: approvals,
+    generatedMarkdown: generated.markdown,
+    generatedHtml: generated.html,
+    createdAt: existingIndex >= 0 ? data.packageVersions[existingIndex].createdAt : timestamp,
+    updatedAt: timestamp,
+  };
+
+  if (existingIndex >= 0) {
+    data.packageVersions[existingIndex] = packageVersion;
+  } else {
+    data.packageVersions.push(packageVersion);
+  }
+
+  await writeAtlasData(data);
+  return packageVersion;
 }
 
 export async function upsertAtlasFundingOpportunity(input: Partial<AtlasFundingOpportunity> & Pick<AtlasFundingOpportunity, 'fundingSource' | 'type' | 'targetAmount' | 'status'>) {

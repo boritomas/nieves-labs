@@ -1,0 +1,33 @@
+import AdminAccessForm from '@/components/AdminAccessForm';
+import { AtlasChapterSevenForm } from '@/components/AtlasProfileForm';
+import AtlasWorkflowProgress from '@/components/AtlasWorkflowProgress';
+import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
+import { buildAtlasWorkflowStages, generateChapterSevenExplanations } from '@/lib/atlas';
+import { getAtlasData } from '@/lib/atlas-store';
+import { env } from '@/lib/env';
+
+export const metadata = { title: 'Chapter 7 Workflow | Atlas' };
+
+export default async function ChapterSevenPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  const { token = '' } = await searchParams;
+  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const data = authorized ? await getAtlasData() : null;
+  const explanations = data ? generateChapterSevenExplanations(data) : null;
+  return (
+    <main className="site-shell">
+      <AtlasHeader token={token} />
+      {!authorized || !data || !explanations ? <AdminAccessForm title="Atlas Chapter 7 Access" /> : (
+        <>
+          <AtlasHero token={token} title="Chapter 7 Workflow" subtitle="Dedicated explanation, supporting-document, and founder-approval workflow for lender underwriting review." />
+          <AtlasWorkflowProgress stages={buildAtlasWorkflowStages(data, token)} />
+          <AtlasChapterSevenForm initialWorkflow={data.chapterSevenWorkflow} token={token} />
+          <section className="review-card-grid">
+            <article className="panel"><p className="eyebrow">Short explanation</p><p>{explanations.short}</p></article>
+            <article className="panel"><p className="eyebrow">Standard explanation</p><p>{explanations.standard}</p></article>
+            <article className="panel"><p className="eyebrow">Detailed lender letter</p><pre className="atlas-preview">{explanations.detailed}</pre></article>
+          </section>
+        </>
+      )}
+    </main>
+  );
+}

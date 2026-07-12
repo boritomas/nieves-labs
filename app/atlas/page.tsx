@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import AdminAccessForm from '@/components/AdminAccessForm';
 import AtlasReadinessBreakdown from '@/components/AtlasReadinessBreakdown';
+import AtlasWorkflowProgress from '@/components/AtlasWorkflowProgress';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
 import { env } from '@/lib/env';
 import { getAtlasData } from '@/lib/atlas-store';
+import { buildAtlasWorkflowStages, getLatestAtlasPackage, atlasFounderApprovalKeys } from '@/lib/atlas';
 
 export const metadata = {
   title: 'Atlas Capital Office | Nieves Labs',
@@ -13,6 +15,7 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
   const { token = '' } = await searchParams;
   const authorized = Boolean(env.adminToken && token === env.adminToken);
   const data = authorized ? await getAtlasData() : null;
+  const latestPackage = data ? getLatestAtlasPackage(data) : null;
 
   return (
     <main className="site-shell">
@@ -22,6 +25,7 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
       ) : (
         <>
           <AtlasHero token={token} title="Atlas Capital Office" subtitle="Internal executive and funding workspace for Nieves Labs capital readiness, lender preparation, and due diligence." />
+          <AtlasWorkflowProgress stages={buildAtlasWorkflowStages(data, token)} />
           <section className="metrics-grid">
             <Metric label="Capital readiness" value={`${data.readinessScores.capitalReadiness}%`} />
             <Metric label="Product readiness" value={`${data.readinessScores.productReadiness}%`} />
@@ -42,8 +46,32 @@ export default async function AtlasDashboardPage({ searchParams }: { searchParam
                 <Link className="button-primary" href={`/atlas/sba-loan-package?token=${encodeURIComponent(token)}`}>Open SBA Package</Link>
                 <Link className="button-secondary" href={`/atlas/document-vault?token=${encodeURIComponent(token)}`}>Review Documents</Link>
                 <Link className="button-secondary" href={`/atlas/application-builder?token=${encodeURIComponent(token)}`}>Build Application</Link>
+                <Link className="button-secondary" href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Generate Package</Link>
               </div>
             </div>
+            <div className="panel">
+              <p className="eyebrow">Latest package</p>
+              {latestPackage ? (
+                <>
+                  <h2>{latestPackage.packageName}</h2>
+                  <p>Version {latestPackage.versionNumber} • {latestPackage.status} • Updated {new Date(latestPackage.updatedAt).toLocaleDateString()}</p>
+                  <div className="status-list">
+                    <span className="status-pill ready">Readiness {data.readinessScores.overallReadiness}%</span>
+                    <span className="status-pill missing">{atlasFounderApprovalKeys.filter((key) => !latestPackage.founderApprovals[key]).length} approvals missing</span>
+                  </div>
+                  <p><strong>Next recommended action:</strong> {latestPackage.status === 'Draft' ? 'Complete founder approvals and move to Founder Review.' : latestPackage.status === 'Founder Review' ? 'Confirm all approval boxes before marking Ready.' : 'Submit manually through the chosen lender portal.'}</p>
+                </>
+              ) : (
+                <>
+                  <h2>No package version yet</h2>
+                  <p>Create the first lender package from the Package Generator.</p>
+                  <Link className="button-primary" href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Open Package Generator</Link>
+                </>
+              )}
+            </div>
+          </section>
+
+          <section className="two-column">
             <div className="panel">
               <p className="eyebrow">Required documents</p>
               <h2>{data.documents.filter((item) => item.completed).length} completed / {data.documents.length} total</h2>

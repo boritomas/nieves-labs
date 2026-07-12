@@ -2,6 +2,8 @@ export type AtlasFundingType = 'SBA Microloan' | 'CDFI' | 'Grant' | 'Bank Loan' 
 export type AtlasFundingStatus = 'researching' | 'targeted' | 'preparing' | 'submitted' | 'follow_up' | 'approved' | 'declined';
 export type AtlasDocumentCategory = 'legal' | 'financial' | 'founder' | 'product' | 'market';
 export type AtlasTaskStatus = 'not_started' | 'in_progress' | 'complete' | 'blocked';
+export type AtlasWorkflowStageStatus = 'complete' | 'in_progress' | 'blocked' | 'not_started';
+export type AtlasPackageStatus = 'Draft' | 'Founder Review' | 'Ready' | 'Submitted' | 'Archived';
 export type AtlasApplicationSectionId =
   | 'business_information'
   | 'founder_information'
@@ -17,6 +19,14 @@ export type AtlasApplicationSectionId =
 export type AtlasCompanyProfile = {
   id: string;
   companyName: string;
+  ein: string;
+  state: string;
+  industry: string;
+  timeInBusiness: string;
+  currentRevenue: number;
+  currentMrr: number;
+  customers: number;
+  businessStage: string;
   productName: string;
   moduleName: string;
   fundingTargetMin: number;
@@ -36,6 +46,15 @@ export type AtlasCompanyProfile = {
   founderBackground: string;
   riskMitigation: string;
   chapterSevenExplanation: string;
+  founderName: string;
+  ownershipPercent: number;
+  founderEmployment: string;
+  personalCreditRange: string;
+  bankruptcyStatus: string;
+  existingDebt: number;
+  stableIncome: string;
+  timeline: string;
+  versionHistory: string[];
 };
 
 export type AtlasFinancialAssumptions = {
@@ -52,6 +71,43 @@ export type AtlasFinancialAssumptions = {
   loanTermMonths: number;
   estimatedInterestRate: number;
   startingCashBalance: number;
+};
+
+export type AtlasPersonalFinancialProfile = {
+  id: string;
+  assets: number;
+  liabilities: number;
+  annualIncome: number;
+  monthlyExpenses: number;
+  debtObligations: number;
+  valuesHidden: boolean;
+  updatedAt: string;
+};
+
+export type AtlasChapterSevenWorkflow = {
+  id: string;
+  filingDate: string;
+  dischargeDate: string;
+  status: string;
+  explanation: string;
+  supportingDocuments: string[];
+  founderApproved: boolean;
+  updatedAt: string;
+};
+
+export type AtlasUseOfFundsItem = {
+  id: string;
+  category: 'Product Development' | 'Cloud Costs' | 'AI/API Costs' | 'App Store Release' | 'Marketing' | 'Legal' | 'Contractors' | 'Working Capital' | 'Reserve';
+  amount: number;
+  notes: string;
+};
+
+export type AtlasUseOfFundsPlan = {
+  id: string;
+  selectedAmount: number;
+  customAmount: number;
+  items: AtlasUseOfFundsItem[];
+  updatedAt: string;
 };
 
 export type AtlasFundingOpportunity = {
@@ -135,14 +191,42 @@ export type AtlasReadinessScores = {
   updatedAt: string;
 };
 
+export type AtlasWorkflowStage = {
+  id: string;
+  title: string;
+  href: string;
+  status: AtlasWorkflowStageStatus;
+  description: string;
+};
+
+export type AtlasPackageVersion = {
+  id: string;
+  packageName: string;
+  targetLender: string;
+  fundingType: string;
+  fundingAmount: number;
+  versionNumber: number;
+  status: AtlasPackageStatus;
+  notes: string;
+  founderApprovals: Record<string, boolean>;
+  generatedMarkdown: string;
+  generatedHtml: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type AtlasData = {
   companyProfile: AtlasCompanyProfile;
   financialAssumptions: AtlasFinancialAssumptions;
+  personalFinancialProfile: AtlasPersonalFinancialProfile;
+  chapterSevenWorkflow: AtlasChapterSevenWorkflow;
+  useOfFundsPlan: AtlasUseOfFundsPlan;
   fundingOpportunities: AtlasFundingOpportunity[];
   documents: AtlasDocument[];
   risks: AtlasRisk[];
   tasks: AtlasTask[];
   applicationSections: AtlasApplicationSection[];
+  packageVersions: AtlasPackageVersion[];
   readinessScores: AtlasReadinessScores;
 };
 
@@ -165,6 +249,16 @@ export type AtlasFinancialForecast = {
 export const atlasFundingTypes: AtlasFundingType[] = ['SBA Microloan', 'CDFI', 'Grant', 'Bank Loan', 'Investor', 'Accelerator'];
 export const atlasFundingStatuses: AtlasFundingStatus[] = ['researching', 'targeted', 'preparing', 'submitted', 'follow_up', 'approved', 'declined'];
 export const atlasTaskStatuses: AtlasTaskStatus[] = ['not_started', 'in_progress', 'complete', 'blocked'];
+export const atlasPackageStatuses: AtlasPackageStatus[] = ['Draft', 'Founder Review', 'Ready', 'Submitted', 'Archived'];
+export const atlasFounderApprovalKeys = [
+  'Funding amount reviewed',
+  'Use of funds reviewed',
+  'Revenue assumptions reviewed',
+  'Repayment strategy reviewed',
+  'Chapter 7 explanation reviewed',
+  'Required documents confirmed',
+  'I understand Atlas prepares documents only and does NOT submit applications.',
+] as const;
 export const atlasApplicationSectionIds: AtlasApplicationSectionId[] = [
   'business_information',
   'founder_information',
@@ -224,6 +318,75 @@ export function calculateAtlasForecast(assumptions: AtlasFinancialAssumptions): 
   };
 }
 
+export function calculatePersonalFinancialSummary(profile: AtlasPersonalFinancialProfile) {
+  const netWorth = profile.assets - profile.liabilities;
+  const monthlyIncome = profile.annualIncome / 12;
+  const debtToIncome = monthlyIncome > 0 ? Math.round(((profile.monthlyExpenses + profile.debtObligations) / monthlyIncome) * 100) : 0;
+  return {
+    totalAssets: Math.round(profile.assets),
+    totalLiabilities: Math.round(profile.liabilities),
+    netWorth: Math.round(netWorth),
+    debtToIncome,
+  };
+}
+
+export function calculateUseOfFundsTotal(plan: AtlasUseOfFundsPlan) {
+  return plan.items.reduce((total, item) => total + Number(item.amount || 0), 0);
+}
+
+export function calculateAtlasReadinessAssessment(data: AtlasData) {
+  const requiredDocuments = data.documents.filter((document) => document.required);
+  const completedRequiredDocuments = requiredDocuments.filter((document) => document.completed);
+  const documentationScore = requiredDocuments.length ? Math.round((completedRequiredDocuments.length / requiredDocuments.length) * 100) : 0;
+  const financialInputs = [
+    data.financialAssumptions.startingMrr,
+    data.financialAssumptions.loanAmount,
+    data.financialAssumptions.loanTermMonths,
+    data.financialAssumptions.estimatedInterestRate,
+    data.personalFinancialProfile.annualIncome,
+    data.personalFinancialProfile.assets,
+  ];
+  const financialScore = Math.round((financialInputs.filter((value) => Number(value) > 0).length / financialInputs.length) * 100);
+  const businessInputs = [
+    data.companyProfile.companyName,
+    data.companyProfile.state,
+    data.companyProfile.industry,
+    data.companyProfile.businessStage,
+    data.companyProfile.revenueStage,
+    data.companyProfile.businessSummary,
+  ];
+  const businessScore = Math.round((businessInputs.filter((value) => String(value || '').trim()).length / businessInputs.length) * 100);
+  const chapter7Penalty = data.chapterSevenWorkflow.founderApproved ? 10 : 24;
+  const debtPenalty = data.personalFinancialProfile.debtObligations > 0 ? 8 : 0;
+  const riskScore = Math.max(0, 100 - chapter7Penalty - debtPenalty - data.risks.filter((risk) => risk.status !== 'complete').length * 8);
+  const sbaReadiness = Math.round((documentationScore * 0.35) + (financialScore * 0.25) + (businessScore * 0.25) + (riskScore * 0.15));
+  const cdfiReadiness = Math.round((documentationScore * 0.25) + (financialScore * 0.2) + (businessScore * 0.3) + (riskScore * 0.25));
+  const overallReadiness = Math.round((sbaReadiness + cdfiReadiness + documentationScore + financialScore + businessScore + riskScore) / 6);
+  const missingItems = [
+    ...requiredDocuments.filter((document) => !document.completed).map((document) => document.name),
+    ...businessInputs.map((value, index) => String(value || '').trim() ? '' : ['Company name', 'State', 'Industry', 'Business stage', 'Revenue stage', 'Business summary'][index]).filter(Boolean),
+    data.chapterSevenWorkflow.founderApproved ? '' : 'Founder-approved Chapter 7 explanation',
+  ].filter(Boolean) as string[];
+  const recommendations = [
+    documentationScore < 85 ? 'Complete the required document vault before lender submission.' : 'Document package is close to lender-ready.',
+    financialScore < 85 ? 'Finish personal and business financial assumptions before lender outreach.' : 'Financial assumptions are ready for founder review.',
+    data.chapterSevenWorkflow.founderApproved ? 'Use the approved Chapter 7 explanation consistently across lender materials.' : 'Review and approve Chapter 7 language before any application is submitted.',
+    'Do not state or imply loan approval is guaranteed; present this as a disciplined preparation package.',
+  ];
+
+  return {
+    overallReadiness,
+    sbaReadiness,
+    cdfiReadiness,
+    documentationScore,
+    financialScore,
+    businessScore,
+    riskScore,
+    recommendations,
+    missingItems,
+  };
+}
+
 export function calculateReadinessScores(data: Omit<AtlasData, 'readinessScores'>): AtlasReadinessScores {
   const requiredDocuments = data.documents.filter((document) => document.required);
   const completedRequiredDocuments = requiredDocuments.filter((document) => document.completed);
@@ -273,7 +436,10 @@ export function calculateReadinessScores(data: Omit<AtlasData, 'readinessScores'
   };
 
   const documentationReadiness = requiredDocumentsScore;
-  const capitalReadiness = Math.round((fundingTrackerScore * 0.35) + (requiredDocumentsScore * 0.25) + (financialAssumptionsScore * 0.2) + (riskMitigationScore * 0.2));
+  const personalFinancialScore = data.personalFinancialProfile.assets > 0 || data.personalFinancialProfile.annualIncome > 0 ? 100 : 50;
+  const chapterSevenScore = data.chapterSevenWorkflow.founderApproved ? 100 : 60;
+  const useOfFundsScore = calculateUseOfFundsTotal(data.useOfFundsPlan) === data.useOfFundsPlan.selectedAmount ? 100 : 70;
+  const capitalReadiness = Math.round((fundingTrackerScore * 0.25) + (requiredDocumentsScore * 0.2) + (financialAssumptionsScore * 0.15) + (riskMitigationScore * 0.15) + (personalFinancialScore * 0.1) + (chapterSevenScore * 0.1) + (useOfFundsScore * 0.05));
   const applicationReadiness = Math.round((applicationSectionsScore * 0.5) + (requiredDocumentsScore * 0.25) + (dueDiligenceTasksScore * 0.25));
 
   const productSignals = [
@@ -294,6 +460,86 @@ export function calculateReadinessScores(data: Omit<AtlasData, 'readinessScores'
     breakdown,
     updatedAt: new Date().toISOString(),
   };
+}
+
+export function buildAtlasWorkflowStages(data: AtlasData, token: string): AtlasWorkflowStage[] {
+  const query = `?token=${encodeURIComponent(token)}`;
+  const assessment = calculateAtlasReadinessAssessment(data);
+  const hasSelectedLender = data.fundingOpportunities.some((opportunity) => ['targeted', 'preparing', 'submitted', 'follow_up', 'approved'].includes(opportunity.status));
+  const requiredDocsComplete = data.documents.filter((document) => document.required).every((document) => document.completed);
+  const packageVersion = getLatestAtlasPackage(data);
+  const applicationReviewed = data.applicationSections.every((section) => section.reviewed);
+
+  return [
+    ['readiness-assessment', 'Readiness Assessment', '/atlas/readiness-assessment', assessment.overallReadiness >= 80 ? 'complete' : 'in_progress', 'SBA/CDFI readiness scoring, gaps, and recommendations.'],
+    ['company-profile', 'Company Profile', '/atlas/company-profile', data.companyProfile.companyName && data.companyProfile.industry ? 'complete' : 'in_progress', 'Reusable master profile for all lender materials.'],
+    ['founder-profile', 'Founder Profile', '/atlas/founder-profile', data.companyProfile.founderBackground ? 'complete' : 'in_progress', 'Founder ownership, employment, background, and underwriting context.'],
+    ['personal-financial-profile', 'Personal Financial Profile', '/atlas/personal-financial-profile', data.personalFinancialProfile.annualIncome > 0 ? 'complete' : 'in_progress', 'Sensitive founder financial snapshot hidden by default.'],
+    ['business-financial-profile', 'Business Financial Profile', '/atlas/business-financial-profile', data.financialAssumptions.loanAmount > 0 ? 'complete' : 'in_progress', 'Business assumptions, repayment model, and cash-flow forecast.'],
+    ['document-vault', 'Document Vault', '/atlas/document-vault', requiredDocsComplete ? 'complete' : 'in_progress', 'Required documents and upload placeholders.'],
+    ['lender-research', 'Lender Research', '/atlas/lender-research', data.fundingOpportunities.length >= 3 ? 'complete' : 'in_progress', 'SBA, CDFI, grant, and lender opportunities.'],
+    ['lender-comparison', 'Lender Comparison', '/atlas/lender-comparison', hasSelectedLender ? 'complete' : 'in_progress', 'Compare fit, amount, requirements, and follow-up timing.'],
+    ['requirement-mapping', 'Requirement Mapping', '/atlas/requirement-mapping', requiredDocsComplete && hasSelectedLender ? 'complete' : 'in_progress', 'Map lender requirements to available documents.'],
+    ['application-builder', 'Application Builder', '/atlas/application-builder', applicationReviewed ? 'complete' : 'in_progress', 'Guided application content and missing-field review.'],
+    ['package-generator', 'Package Generator', '/atlas/package-generator', packageVersion ? 'complete' : 'not_started', 'Lender-ready package preview and copy/download tools.'],
+    ['founder-review', 'Founder Review', '/atlas/founder-review', packageVersion?.status === 'Ready' || packageVersion?.status === 'Submitted' ? 'complete' : 'in_progress', 'Manual founder approval before any submission.'],
+    ['manual-submission', 'Manual Submission', '/atlas/manual-submission', packageVersion?.status === 'Submitted' ? 'complete' : 'not_started', 'Submission checklist and no-auto-submit gate.'],
+    ['follow-up-tracker', 'Follow-up Tracker', '/atlas/follow-up-tracker', data.fundingOpportunities.some((opportunity) => opportunity.nextFollowUpDate) ? 'in_progress' : 'not_started', 'Lender follow-up dates, notes, and next actions.'],
+  ].map(([id, title, href, status, description]) => ({
+    id: String(id),
+    title: String(title),
+    href: `${href}${query}`,
+    status: status as AtlasWorkflowStageStatus,
+    description: String(description),
+  }));
+}
+
+export function getLatestAtlasPackage(data: AtlasData) {
+  return [...(data.packageVersions || [])].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+}
+
+export function generateAtlasPackage(data: AtlasData) {
+  const profile = data.companyProfile;
+  const assumptions = data.financialAssumptions;
+  const personal = calculatePersonalFinancialSummary(data.personalFinancialProfile);
+  const assessment = calculateAtlasReadinessAssessment(data);
+  const useOfFundsTotal = calculateUseOfFundsTotal(data.useOfFundsPlan);
+  const requiredDocs = data.documents.filter((document) => document.required);
+  const activeLenders = data.fundingOpportunities.filter((opportunity) => opportunity.status !== 'declined');
+  const sections = [
+    ['Cover Page', `# ${profile.companyName} Capital Package\n\n**Prepared for:** SBA Microloan / CDFI lender review\n**Prepared by:** ${profile.founderName}\n**Requested range:** ${money(profile.fundingTargetMin)} to ${money(profile.fundingTargetMax)}\n**Atlas note:** Founder must review and submit manually.`],
+    ['Executive Summary', profile.businessSummary],
+    ['Business Overview', `${profile.companyName} operates in ${profile.industry || 'the practical AI products market'} from ${profile.state || 'its registered state'}. Current stage: ${profile.businessStage || profile.revenueStage}.`],
+    ['Founder Background', profile.founderBackground],
+    ['Funding Request', `${profile.fundingRequest}\n\nModeled request: ${money(assumptions.loanAmount)}. Minimum viable amount: ${money(profile.fundingTargetMin)}.`],
+    ['Use of Funds', `${profile.useOfFunds}\n\nPlanned total: ${money(useOfFundsTotal)} against selected amount ${money(data.useOfFundsPlan.selectedAmount)}.`],
+    ['Revenue Assumptions', `${profile.revenueAssumptions}\n\nStarting MRR: ${money(assumptions.startingMrr)}. Monthly customer growth: ${assumptions.monthlyCustomerGrowth}. Average subscription price: ${money(assumptions.averageSubscriptionPrice)}.`],
+    ['Repayment Strategy', profile.repaymentStrategy],
+    ['Risk Mitigation', profile.riskMitigation],
+    ['Chapter 7 Explanation', generateChapterSevenExplanations(data).standard],
+    ['Required Documents Checklist', requiredDocs.map((document) => `- ${document.completed ? '[x]' : '[ ]'} ${document.name}`).join('\n')],
+    ['Due Diligence Status', data.tasks.map((task) => `- ${task.status.replaceAll('_', ' ')}: ${task.title}`).join('\n')],
+    ['Lender Follow-Up Plan', activeLenders.map((lender) => `- ${lender.lenderName || lender.fundingSource}: ${lender.nextAction || 'Confirm next action'} (follow-up: ${lender.nextFollowUpDate || 'TBD'})`).join('\n')],
+    ['Readiness Snapshot', `Overall readiness: ${assessment.overallReadiness}%\nSBA readiness: ${assessment.sbaReadiness}%\nCDFI readiness: ${assessment.cdfiReadiness}%\nPersonal net worth snapshot: ${money(personal.netWorth)}. Sensitive values are hidden by default in Atlas UI.`],
+  ];
+  const markdown = sections.map(([title, body]) => `## ${title}\n\n${body}`).join('\n\n');
+  const html = sections.map(([title, body]) => `<section><h2>${escapeHtml(title)}</h2><p>${escapeHtml(body).replace(/\n/g, '<br />')}</p></section>`).join('\n');
+
+  return { sections, markdown, html };
+}
+
+export function generateChapterSevenExplanations(data: AtlasData) {
+  const workflow = data.chapterSevenWorkflow;
+  const base = workflow.explanation || data.companyProfile.chapterSevenExplanation;
+  return {
+    short: `A prior Chapter 7 is disclosed transparently and addressed through a conservative request, disciplined fund use, and current business planning.`,
+    standard: `${base} The request remains conservative and tied to specific business uses. Supporting documents and founder review are required before any lender submission.`,
+    detailed: `To the lender reviewing this package:\n\n${base}\n\nFiling date: ${workflow.filingDate || 'to be confirmed'}. Discharge date: ${workflow.dischargeDate || 'to be confirmed'}. Current status: ${workflow.status || 'to be confirmed'}.\n\nNieves Labs is addressing this underwriting concern directly through a conservative funding request, recurring revenue model, documented use of funds, and founder review before submission. This letter is prepared for founder approval and should be reviewed before use.`,
+  };
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char] || char));
 }
 
 export type AtlasApplicationBuilderSection = {
