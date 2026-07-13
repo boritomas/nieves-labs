@@ -395,6 +395,24 @@ It creates a private Supabase storage bucket:
 
 - `atlas-private-documents`
 
+## Protected Statement Ingestion
+
+Atlas includes a protected server-side statement-ingestion endpoint:
+
+- `GET /api/atlas/statement-ingestion`
+- `GET /api/atlas/statement-ingestion?smoke=1`
+- `POST /api/atlas/statement-ingestion`
+
+The route requires `ADMIN_TOKEN` or `ATLAS_DIAGNOSTICS_TOKEN`. It uploads statement files to the private `atlas-private-documents` bucket, records document and bank-statement metadata, parses supported CSV/OFX/QFX transaction exports, creates statement summaries, classifies transactions for founder review, and records audit events. PDF statements are accepted as sensitive documents in the storage model, but full OCR-grade PDF extraction remains a Release 1.1/1.2 parser-hardening item.
+
+Supported transaction ingestion formats:
+
+- CSV
+- OFX
+- QFX
+
+The endpoint does not make final tax, accounting, lender, or underwriting determinations. Ambiguous classifications are marked for founder review.
+
 It also creates durable tables for:
 
 - profiles, companies, founders, ownership
@@ -434,7 +452,7 @@ Rollback path:
 
 ## Atlas Funding OS v1 remaining limitations
 
-- Manual bank-statement upload metadata and parsing support are now modeled, but real bank OCR/OFX/QFX parsing requires founder-provided source files and additional parser QA.
+- Bank-statement CSV/OFX/QFX ingestion is available through the protected server-side ingestion route. OCR-grade PDF parsing and bank-provider connections require founder authorization and additional parser QA.
 - Plaid or live bank OAuth is intentionally not implemented in this mission.
 - Official state registry checks may require portal access or manual founder verification.
 - Lender rules that are not published in official sources remain marked for lender confirmation.
