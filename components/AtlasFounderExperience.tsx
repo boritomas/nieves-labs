@@ -31,6 +31,7 @@ export function AtlasFounderHeader({ token }: { token: string }) {
       <nav className="founder-nav" aria-label="Atlas founder navigation">
         <Link href={`/atlas?token=${encodeURIComponent(token)}`}>Home</Link>
         <Link href={`/atlas/journey?token=${encodeURIComponent(token)}`}>My Application</Link>
+        <Link href={`/atlas/founder-intake?token=${encodeURIComponent(token)}`}>Founder Intake</Link>
         <Link href={`/atlas/documents?token=${encodeURIComponent(token)}`}>Documents</Link>
         <Link href={`/atlas/opportunities?token=${encodeURIComponent(token)}`}>Funding Options</Link>
         <Link href={`/atlas/review?token=${encodeURIComponent(token)}`}>Review &amp; Submit</Link>
@@ -208,6 +209,148 @@ export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token:
           </div>
         </details>
       </section>
+      <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
+    </>
+  );
+}
+
+export function AtlasFounderIntake({ data, token }: { data: AtlasData; token: string }) {
+  const readiness = generateAtlasBusinessReadinessReport(data);
+  const useOfFundsReady = calculateUseOfFundsTotal(data.useOfFundsPlan) === data.useOfFundsPlan.selectedAmount;
+  const verifiedDocuments = data.documents.filter((document) => document.completed);
+  const missingDocuments = data.documents.filter((document) => document.required && !document.completed);
+  const sections = [
+    {
+      title: 'Business identity',
+      completed: [
+        valueLine('Business name', data.companyProfile.legalBusinessName || data.companyProfile.companyName),
+        valueLine('State', data.companyProfile.stateOfFormation || data.companyProfile.state),
+        valueLine('Industry', data.companyProfile.industry),
+        valueLine('Website', data.companyProfile.website),
+        valueLine('EIN evidence', data.companyProfile.einVerificationStatus === 'verified_document_received' ? `Verified source received (${data.companyProfile.einMasked || 'masked'})` : ''),
+      ],
+      missing: [
+        missingLine('Entity type', data.companyProfile.entityType && !/requires/i.test(data.companyProfile.entityType)),
+        missingLine('Formation date', data.companyProfile.formationDate),
+        missingLine('Business start date', data.companyProfile.businessStartDate),
+        missingLine('Business phone', data.companyProfile.businessPhone),
+        missingLine('NAICS code', data.companyProfile.naicsCode && !/requires/i.test(data.companyProfile.naicsCode)),
+      ],
+    },
+    {
+      title: 'Founder identity',
+      completed: [
+        valueLine('Founder', data.companyProfile.founderName),
+        valueLine('Role', data.companyProfile.founderEmployment),
+        valueLine('Founder background', data.companyProfile.founderBackground),
+      ],
+      missing: [
+        'Founder-only identity fields: SSN, date of birth, driver license/state ID, and credit authorization must be entered only by Tomas on official lender screens.',
+      ],
+    },
+    {
+      title: 'Ownership',
+      completed: [
+        valueLine('Ownership percentage', `${data.companyProfile.ownershipPercent}%`),
+      ],
+      missing: [
+        missingLine('Operating agreement evidence', data.documents.some((document) => document.id === 'operating-agreement' && document.completed)),
+      ],
+    },
+    {
+      title: 'Funding request',
+      completed: [
+        valueLine('Requested amount', money(data.financialAssumptions.loanAmount)),
+        valueLine('Preferred funding', data.companyProfile.preferredFundingTypes.join(' / ')),
+      ],
+      missing: useOfFundsReady ? [] : ['Use-of-funds line items must total the requested amount exactly.'],
+    },
+    {
+      title: 'Business financials',
+      completed: [
+        valueLine('Starting MRR assumption', money(data.financialAssumptions.startingMrr)),
+        valueLine('Average subscription price', money(data.financialAssumptions.averageSubscriptionPrice)),
+        valueLine('Loan term', `${data.financialAssumptions.loanTermMonths} months`),
+      ],
+      missing: [
+        'Revenue projections remain planning assumptions until founder and lender review.',
+        missingLine('Bank statements', data.documents.some((document) => document.id === 'bank-statements' && document.completed)),
+      ],
+    },
+    {
+      title: 'Personal financial statement',
+      completed: data.personalFinancialProfile.assets || data.personalFinancialProfile.annualIncome
+        ? ['Personal financial values are present and hidden by default.']
+        : [],
+      missing: [
+        'Founder must confirm assets, liabilities, income, contingent liabilities, and debt obligations directly in Atlas before lender use.',
+      ],
+    },
+    {
+      title: 'Credit and legal disclosures',
+      completed: [
+        valueLine('Bankruptcy disclosure status', data.companyProfile.bankruptcyStatus),
+      ],
+      missing: [
+        data.chapterSevenWorkflow.founderApproved ? '' : 'Founder approval is required for Chapter 7 explanation language.',
+        'Credit authorization and personal guarantee language must be accepted only by Tomas on lender-controlled screens.',
+      ].filter(Boolean),
+    },
+    {
+      title: 'Documents',
+      completed: verifiedDocuments.map((document) => `${document.name}: verified or marked available`),
+      missing: missingDocuments.map((document) => `${document.name}: missing or awaiting founder upload`),
+    },
+    {
+      title: 'Authorization',
+      completed: [
+        'Atlas may prepare packages, populate non-sensitive confirmed fields, save drafts, and track status.',
+      ],
+      missing: [
+        'Atlas may not sign, certify, authorize credit, accept guarantees, bypass security, or submit without explicit final founder approval.',
+      ],
+    },
+  ];
+
+  return (
+    <>
+      <AtlasFounderHero
+        title="Founder intake"
+        subtitle="Atlas reuses approved information and shows only missing, sensitive, conflicting, or founder-only items before lender submission."
+      />
+      <AtlasFounderStepNav data={data} token={token} active="business" />
+      <section className="founder-home-card">
+        <div>
+          <p className="eyebrow">Atlas already completed</p>
+          <h2>{readiness.completed.length} readiness items are populated or verified.</h2>
+          <p>Verified evidence is reused across the application package. Sensitive identity values stay founder-only and are never requested in chat.</p>
+        </div>
+        <div className="founder-next-action">
+          <span>Next best action</span>
+          <strong>{readiness.founderActions[0] || 'Review lender package'}</strong>
+          <p>{missingDocuments.length ? `${missingDocuments.length} required document items still need attention.` : 'Required document checklist is currently clear.'}</p>
+          <Link className="button-primary" href={`/atlas/documents?token=${encodeURIComponent(token)}`}>Review documents</Link>
+        </div>
+      </section>
+      <section className="founder-simple-panel">
+        <p className="eyebrow">Missing-only intake</p>
+        <h2>One source of truth for lender applications</h2>
+        <div className="founder-status-list">
+          {sections.map((section) => {
+            const missing = section.missing.filter(Boolean);
+            const completed = section.completed.filter(Boolean);
+            return (
+              <div className="founder-status-row" key={section.title}>
+                <span>{missing.length ? 'Needs review' : 'Ready'}</span>
+                <strong>{section.title}</strong>
+                <p>{completed.length ? `Completed: ${completed.slice(0, 3).join(' • ')}` : 'No completed values yet.'}</p>
+                {missing.length > 0 && <small>Still needed: {missing.join(' • ')}</small>}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+      <BusinessReadinessPanel data={data} />
       <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
   );
@@ -561,6 +704,15 @@ function SummaryItem({ label, value, status }: { label: string; value: string; s
 
 function friendlyStatus(status: string) {
   return status.replaceAll('_', ' ');
+}
+
+function valueLine(label: string, value: string | number | boolean) {
+  const rendered = String(value || '').trim();
+  return rendered ? `${label}: ${rendered}` : '';
+}
+
+function missingLine(label: string, value: string | number | boolean) {
+  return value && String(value).trim() ? '' : `${label} requires founder or source verification.`;
 }
 
 function money(value: number) {

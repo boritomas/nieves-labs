@@ -413,6 +413,38 @@ Supported transaction ingestion formats:
 
 The endpoint does not make final tax, accounting, lender, or underwriting determinations. Ambiguous classifications are marked for founder review.
 
+## Atlas Funding OS v1.2 EIN evidence and founder intake
+
+Atlas includes a protected EIN evidence endpoint:
+
+- `GET /api/atlas/ein-ingestion`
+- `POST /api/atlas/ein-ingestion`
+
+The route requires `ADMIN_TOKEN` or `ATLAS_DIAGNOSTICS_TOKEN`. It records only safe EIN confirmation metadata:
+
+- source filename
+- source SHA-256 hash
+- source file size
+- IRS notice type/date when known
+- masked EIN display value only
+- verification timestamp
+
+It never stores a full EIN in source control, URLs, logs, analytics, screenshots, or client-visible payloads. The source PDF must stay in private document storage or a founder-approved local/private vault. The helper script `scripts/ingest-atlas-ein.mjs` can compute the local file hash and call the protected endpoint without printing secrets or the full EIN.
+
+Atlas also includes a protected founder intake route:
+
+- `/atlas/founder-intake`
+
+This route preserves the five-step founder experience while adding a missing-only intake review. It shows:
+
+- values Atlas already has
+- documents already verified
+- missing or conflicting fields
+- founder-only identity/credit/certification checkpoints
+- explicit limits on what Atlas/Codex may not do
+
+Founder-only fields such as SSN, date of birth, driver license/state ID, credit authorization, personal guarantee acceptance, legal certifications, e-signatures, and final submission approval must be completed by Tomas directly in the official lender or government-controlled workflow.
+
 It also creates durable tables for:
 
 - profiles, companies, founders, ownership

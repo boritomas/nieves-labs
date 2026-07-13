@@ -41,7 +41,28 @@ export type AtlasApplicationSectionId =
 export type AtlasCompanyProfile = {
   id: string;
   companyName: string;
+  legalBusinessName: string;
+  dba: string;
+  entityType: string;
+  stateOfFormation: string;
+  formationDate: string;
+  businessStartDate: string;
   ein: string;
+  einMasked: string;
+  einVerificationStatus: 'missing' | 'verified_document_received' | 'requires_founder_review';
+  einNoticeType: string;
+  einNoticeDate: string;
+  einSourceDocumentName: string;
+  einSourceDocumentHash: string;
+  einSourceDocumentSize: number;
+  einVerifiedAt: string;
+  nameControl: string;
+  businessAddress: string;
+  mailingAddress: string;
+  naicsCode: string;
+  businessEmail: string;
+  businessPhone: string;
+  website: string;
   state: string;
   industry: string;
   timeInBusiness: string;
@@ -509,7 +530,8 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
   const completedRequiredDocs = requiredDocs.filter((document) => document.completed);
   const hasFormation = documents.some((document) => document.id === 'formation-documents' && document.completed);
   const hasOperatingAgreement = documents.some((document) => document.id === 'operating-agreement' && document.completed);
-  const hasEinDocument = documents.some((document) => document.id === 'ein' && document.completed);
+  const hasEinDocument = documents.some((document) => document.id === 'ein' && document.completed)
+    || data.companyProfile.einVerificationStatus === 'verified_document_received';
   const hasBankStatements = documents.some((document) => document.id === 'bank-statements' && document.completed);
   const useOfFundsTotal = calculateUseOfFundsTotal(data.useOfFundsPlan);
   const completed: string[] = [];
@@ -535,7 +557,7 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
   }
 
   if (hasEinDocument) {
-    completed.push('Located EIN confirmation documentation and kept EIN values masked.');
+    completed.push(`Located EIN confirmation documentation${data.companyProfile.einMasked ? ` (${data.companyProfile.einMasked})` : ''} and kept EIN values masked.`);
   } else {
     founderActions.push('Upload the EIN confirmation letter. EIN confirmation document missing.');
   }
@@ -566,7 +588,9 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
   const entityStatus: AtlasBusinessReadinessStatus = hasFormation && data.companyProfile.companyName
     ? hasOperatingAgreement ? 'Mostly ready' : 'Needs attention'
     : 'Missing';
-  const einStatus: AtlasBusinessReadinessStatus = hasEinDocument ? 'Mostly ready' : 'Missing';
+  const einStatus: AtlasBusinessReadinessStatus = hasEinDocument
+    ? data.companyProfile.einVerificationStatus === 'verified_document_received' ? 'Ready' : 'Mostly ready'
+    : 'Missing';
   const bankingStatus: AtlasBusinessReadinessStatus = hasBankStatements ? 'Needs attention' : 'Missing';
   const consistencyStatus: AtlasBusinessReadinessStatus = conflicts.length ? 'Needs attention' : 'Mostly ready';
 
