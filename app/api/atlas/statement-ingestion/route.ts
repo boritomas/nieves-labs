@@ -269,10 +269,13 @@ async function runSmoke() {
   await supabaseRequest(`/rest/v1/atlas_bank_statements?id=eq.${result.statementId}`, { method: 'DELETE' }).catch(() => undefined);
   await supabaseRequest(`/rest/v1/atlas_documents?id=eq.${result.documentId}`, { method: 'DELETE' }).catch(() => undefined);
   await deletePrivateObjects([result.objectPath]);
+  const cleanupRemaining = await countSmokeArtifacts(result, transactionIds);
 
   return {
     ...result,
     cleanupAttempted: true,
+    cleanupVerified: cleanupRemaining === 0,
+    cleanupRemaining,
   };
 }
 
@@ -282,6 +285,19 @@ async function transactionIdsForStatement(statementId: string) {
     { method: 'GET' },
   ).catch(() => []);
   return rows.map((row) => row.id);
+}
+
+async function countSmokeArtifacts(result: Awaited<ReturnType<typeof ingestStatementFile>>, transactionIds: string[]) {
+  const [documents, statements, summaries, transactions, classifications] = await Promise.all([
+    supabaseRequest<Array<{ id: string }>>(`/rest/v1/atlas_documents?id=eq.${result.documentId}&select=id`, { method: 'GET' }).catch(() => []),
+    supabaseRequest<Array<{ id: string }>>(`/rest/v1/atlas_bank_statements?id=eq.${result.statementId}&select=id`, { method: 'GET' }).catch(() => []),
+    supabaseRequest<Array<{ id: string }>>(`/rest/v1/atlas_statement_summaries?id=eq.${result.summaryId}&select=id`, { method: 'GET' }).catch(() => []),
+    supabaseRequest<Array<{ id: string }>>(`/rest/v1/atlas_transactions?statement_id=eq.${result.statementId}&select=id`, { method: 'GET' }).catch(() => []),
+    transactionIds.length
+      ? supabaseRequest<Array<{ id: string }>>(`/rest/v1/atlas_transaction_classifications?transaction_id=in.(${transactionIds.join(',')})&select=id`, { method: 'GET' }).catch(() => [])
+      : Promise.resolve([]),
+  ]);
+  return documents.length + statements.length + summaries.length + transactions.length + classifications.length;
 }
 
 export async function GET(request: Request) {
