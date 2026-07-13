@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { calculateAtlasForecast, type AtlasFinancialAssumptions } from '@/lib/atlas';
+import { atlasPath, calculateAtlasForecast, type AtlasFinancialAssumptions } from '@/lib/atlas';
 
 const fields: Array<[keyof AtlasFinancialAssumptions, string, string]> = [
   ['startingMrr', 'Starting MRR', '$'],
@@ -29,7 +29,7 @@ export default function AtlasFinancialModel({ initialAssumptions, token }: { ini
 
   async function save() {
     setSaveState('Saving...');
-    const response = await fetch(`/api/atlas?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'financial_assumptions', patch: assumptions }),
@@ -113,4 +113,3 @@ function Metric({ label, value }: { label: string; value: string }) {
 function money(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 }
-

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import AdminAccessForm from '@/components/AdminAccessForm';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
-import { buildAtlasApplicationSections, calculateAtlasForecast } from '@/lib/atlas';
-import { env } from '@/lib/env';
+import { atlasPath, buildAtlasApplicationSections, calculateAtlasForecast } from '@/lib/atlas';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
@@ -11,9 +11,12 @@ export const metadata = {
 
 export default async function FounderReviewPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/founder-review');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
-  const sections = data ? buildAtlasApplicationSections(data, token) : [];
+  const sections = data ? buildAtlasApplicationSections(data, atlasToken) : [];
   const forecast = data ? calculateAtlasForecast(data.financialAssumptions) : null;
   const selectedLender = data?.fundingOpportunities.find((opportunity) => ['preparing', 'submitted', 'follow_up', 'approved'].includes(opportunity.status)) || data?.fundingOpportunities[0];
 
@@ -29,19 +32,19 @@ export default async function FounderReviewPage({ searchParams }: { searchParams
 
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data ? (
         <AdminAccessForm title="Atlas Founder Review Access" />
       ) : (
         <>
-          <AtlasHero token={token} title="Founder Review" subtitle="Final founder-facing checklist before any SBA, CDFI, grant, or lender materials are submitted manually." />
+          <AtlasHero token={atlasToken} title="Founder Review" subtitle="Final founder-facing checklist before any SBA, CDFI, grant, or lender materials are submitted manually." />
           <section className="panel consultation-panel">
             <p className="eyebrow">Manual submission required</p>
             <h2>Atlas prepares materials. It does not submit applications.</h2>
             <p>Tomas Nieves must review, edit, approve, and submit any lender or grant application manually. No Atlas workflow should be treated as automatic lender submission or legal/financial advice.</p>
             <div className="hero-actions">
-              <Link className="button-primary" href={`/atlas/application-builder?token=${encodeURIComponent(token)}`}>Review Application Builder</Link>
-              <Link className="button-secondary" href={`/atlas/funding-tracker?token=${encodeURIComponent(token)}`}>Select Lender</Link>
+              <Link className="button-primary" href={atlasPath('/atlas/application-builder', atlasToken)}>Review Application Builder</Link>
+              <Link className="button-secondary" href={atlasPath('/atlas/funding-tracker', atlasToken)}>Select Lender</Link>
             </div>
           </section>
           <section className="atlas-review-list">
@@ -76,4 +79,3 @@ export default async function FounderReviewPage({ searchParams }: { searchParams
 function money(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 }
-

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import {
+  atlasPath,
   atlasFounderApprovalKeys,
   atlasPackageStatuses,
   generateAtlasPackage,
@@ -29,7 +30,7 @@ export default function AtlasPackageGenerator({ initialData, token }: { initialD
   const statusBlocked = ['Ready', 'Submitted'].includes(String(draft.status)) && !allApproved;
 
   async function save() {
-    const response = await fetch(`/api/atlas?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'package_version', patch: draft }),

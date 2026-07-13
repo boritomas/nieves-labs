@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { buildAtlasFundingCampaignOS, type AtlasData, type AtlasLenderPlaybookEntry } from '@/lib/atlas';
+import { atlasPath, buildAtlasFundingCampaignOS, type AtlasData, type AtlasLenderPlaybookEntry } from '@/lib/atlas';
 
 export default function AtlasFundingCampaignOS({ data, token }: { data: AtlasData; token: string }) {
   const campaign = buildAtlasFundingCampaignOS(data);
@@ -23,8 +23,8 @@ export default function AtlasFundingCampaignOS({ data, token }: { data: AtlasDat
             <li><strong>Evidence:</strong> {campaign.currentApplication.evidence}</li>
           </ul>
           <div className="hero-actions">
-            <Link className="button-primary" href={`/atlas/follow-up-tracker?token=${encodeURIComponent(token)}`}>Open follow-up tracker</Link>
-            <Link className="button-secondary" href={`/atlas/funding-tracker?token=${encodeURIComponent(token)}`}>Review lender records</Link>
+            <Link className="button-primary" href={atlasPath('/atlas/follow-up-tracker', token)}>Open follow-up tracker</Link>
+            <Link className="button-secondary" href={atlasPath('/atlas/funding-tracker', token)}>Review lender records</Link>
           </div>
         </div>
         <div className="panel">
@@ -62,6 +62,33 @@ export default function AtlasFundingCampaignOS({ data, token }: { data: AtlasDat
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Campaign memory</p>
+        <h2>Resume from the last clean checkpoint</h2>
+        <div className="metrics-grid compact">
+          <div className="metric-card">
+            <span>Stage</span>
+            <strong>{data.campaignState.currentStage}</strong>
+            <p>{data.campaignState.lastSuccessfulCheckpoint}</p>
+          </div>
+          <div className="metric-card">
+            <span>Founder time</span>
+            <strong>{Math.round(data.campaignState.founderTimeMinutes / 60)} hrs</strong>
+            <p>{data.campaignState.interruptions} interruptions captured so the next campaign does not repeat them.</p>
+          </div>
+          <div className="metric-card">
+            <span>Reuse rate</span>
+            <strong>{data.campaignState.reusableFieldsAutofilledPercent}%</strong>
+            <p>{data.campaignState.fieldsCompleted} fields completed; {data.campaignState.fieldsMissing} still require review or lender confirmation.</p>
+          </div>
+          <div className="metric-card">
+            <span>Next retry rule</span>
+            <strong>{data.campaignState.decisionStatus.replaceAll('_', ' ')}</strong>
+            <p>{data.campaignState.nextRetry}</p>
+          </div>
         </div>
       </section>
 

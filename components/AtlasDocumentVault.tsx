@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { AtlasDocument } from '@/lib/atlas';
+import { atlasPath, type AtlasDocument } from '@/lib/atlas';
 
 export default function AtlasDocumentVault({ initialDocuments, token }: { initialDocuments: AtlasDocument[]; token: string }) {
   const [documents, setDocuments] = useState(initialDocuments);
@@ -18,7 +18,7 @@ export default function AtlasDocumentVault({ initialDocuments, token }: { initia
     setSavingId(document.id);
     const nextCompleted = !document.completed;
     setDocuments((items) => items.map((item) => item.id === document.id ? { ...item, completed: nextCompleted } : item));
-    const response = await fetch(`/api/atlas/documents?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas/documents', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: document.id, patch: { completed: nextCompleted } }),
@@ -62,4 +62,3 @@ export default function AtlasDocumentVault({ initialDocuments, token }: { initia
 function categoryLabel(value: string) {
   return value.split('_').map((word) => word[0].toUpperCase() + word.slice(1)).join(' ');
 }
-

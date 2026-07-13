@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { AtlasChapterSevenWorkflow, AtlasCompanyProfile, AtlasPersonalFinancialProfile, AtlasUseOfFundsPlan } from '@/lib/atlas';
+import { atlasPath, type AtlasChapterSevenWorkflow, type AtlasCompanyProfile, type AtlasPersonalFinancialProfile, type AtlasUseOfFundsPlan } from '@/lib/atlas';
 
 type Field = {
   key: string;
@@ -15,7 +15,7 @@ export function AtlasCompanyProfileForm({ fields, initialProfile, token, title }
 
   async function save() {
     const patch = Object.fromEntries(fields.map((field) => [field.key, profile[field.key]]));
-    const response = await fetch(`/api/atlas?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'company_profile', patch }),
@@ -61,7 +61,7 @@ export function AtlasPersonalFinancialForm({ initialProfile, token }: { initialP
   const dti = monthlyIncome > 0 ? Math.round(((profile.monthlyExpenses + profile.debtObligations) / monthlyIncome) * 100) : 0;
 
   async function save() {
-    const response = await fetch(`/api/atlas?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'personal_financial_profile', patch: profile }),
@@ -114,7 +114,7 @@ export function AtlasChapterSevenForm({ initialWorkflow, token }: { initialWorkf
   const [message, setMessage] = useState('');
 
   async function save() {
-    const response = await fetch(`/api/atlas?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'chapter_7_workflow', patch: workflow }),
@@ -160,7 +160,7 @@ export function AtlasUseOfFundsForm({ initialPlan, token }: { initialPlan: Atlas
   const target = plan.selectedAmount === 0 ? plan.customAmount : plan.selectedAmount;
 
   async function save() {
-    const response = await fetch(`/api/atlas?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'use_of_funds_plan', patch: { ...plan, selectedAmount: target } }),

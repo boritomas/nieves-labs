@@ -3,23 +3,26 @@ import AtlasWorkflowProgress from '@/components/AtlasWorkflowProgress';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
 import { buildAtlasWorkflowStages, calculateAtlasReadinessAssessment } from '@/lib/atlas';
 import { getAtlasData } from '@/lib/atlas-store';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 
 export const metadata = { title: 'Readiness Assessment | Atlas' };
 
 export default async function ReadinessAssessmentPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/readiness-assessment');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
   const assessment = data ? calculateAtlasReadinessAssessment(data) : null;
 
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data || !assessment ? <AdminAccessForm title="Atlas Readiness Access" /> : (
         <>
-          <AtlasHero token={token} title="Readiness Assessment" subtitle="SBA and CDFI readiness scoring for the Nieves Labs $25,000-$50,000 capital package." />
-          <AtlasWorkflowProgress stages={buildAtlasWorkflowStages(data, token)} />
+          <AtlasHero token={atlasToken} title="Readiness Assessment" subtitle="SBA and CDFI readiness scoring for the Nieves Labs $25,000-$50,000 capital package." />
+          <AtlasWorkflowProgress stages={buildAtlasWorkflowStages(data, atlasToken)} />
           <section className="metrics-grid">
             <Metric label="Overall" value={`${assessment.overallReadiness}%`} />
             <Metric label="SBA readiness" value={`${assessment.sbaReadiness}%`} />

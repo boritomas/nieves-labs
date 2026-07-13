@@ -8,16 +8,14 @@ import {
   updateAtlasUseOfFundsPlan,
   upsertAtlasPackageVersion,
 } from '@/lib/atlas-store';
-import { env } from '@/lib/env';
+import { authorizeAtlasRequest } from '@/lib/atlas-auth';
 
-function authorized(request: Request) {
-  const url = new URL(request.url);
-  const token = url.searchParams.get('token') || request.headers.get('x-admin-token') || '';
-  return Boolean(env.adminToken && token === env.adminToken);
+async function authorized(request: Request) {
+  return authorizeAtlasRequest(request);
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
+  if (!(await authorized(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -25,7 +23,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  if (!authorized(request)) {
+  if (!(await authorized(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

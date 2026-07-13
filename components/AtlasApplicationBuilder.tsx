@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import {
+  atlasPath,
   atlasGeneratedDocumentLabels,
   generateAtlasApplicationPreview,
   type AtlasApplicationBuilderSection,
@@ -35,7 +36,7 @@ export default function AtlasApplicationBuilder({
       completionStatus: item.missingFields.length ? 'missing_fields' : reviewed ? 'complete' : 'needs_review',
     } : item));
 
-    const response = await fetch(`/api/atlas/application-sections?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas/application-sections', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: section.id, patch: { reviewed } }),
@@ -104,4 +105,3 @@ export default function AtlasApplicationBuilder({
     </div>
   );
 }
-

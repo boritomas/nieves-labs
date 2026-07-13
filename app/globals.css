@@ -598,6 +598,40 @@ li {
   margin: 56px auto;
 }
 
+.atlas-login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding-top: 48px;
+}
+
+.atlas-login-panel {
+  width: min(100%, 560px);
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.atlas-login-panel form {
+  display: grid;
+  gap: 14px;
+}
+
+.form-message {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(13, 27, 42, 0.72);
+  color: var(--muted);
+}
+
+.form-message.error {
+  border-color: rgba(251, 113, 133, 0.38);
+  color: #fecdd3;
+  background: rgba(127, 29, 29, 0.2);
+}
+
 .consultation-panel {
   display: grid;
   gap: 14px;
@@ -711,6 +745,7 @@ li {
 }
 
 .founder-nav a,
+.founder-nav button,
 .founder-step-nav a,
 .founder-settings-grid a {
   min-height: 44px;
@@ -723,6 +758,14 @@ li {
   color: var(--text);
   background: rgba(13, 27, 42, 0.74);
   font-weight: 800;
+}
+
+.founder-nav button {
+  cursor: pointer;
+}
+
+.nav-logout {
+  white-space: nowrap;
 }
 
 .founder-nav a:hover,

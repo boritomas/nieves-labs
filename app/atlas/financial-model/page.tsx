@@ -1,7 +1,7 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
 import AtlasFinancialModel from '@/components/AtlasFinancialModel';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
@@ -10,18 +10,21 @@ export const metadata = {
 
 export default async function FinancialModelPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/financial-model');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
 
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data ? (
         <AdminAccessForm title="Atlas Financial Model Access" />
       ) : (
         <>
-          <AtlasHero token={token} title="Financial Model" subtitle="Editable 12-month MRR, expense, cash-flow, and repayment model for lender conversations." />
-          <AtlasFinancialModel initialAssumptions={data.financialAssumptions} token={token} />
+          <AtlasHero token={atlasToken} title="Financial Model" subtitle="Editable 12-month MRR, expense, cash-flow, and repayment model for lender conversations." />
+          <AtlasFinancialModel initialAssumptions={data.financialAssumptions} token={atlasToken} />
         </>
       )}
     </main>

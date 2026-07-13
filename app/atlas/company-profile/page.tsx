@@ -4,23 +4,26 @@ import AtlasWorkflowProgress from '@/components/AtlasWorkflowProgress';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
 import { buildAtlasWorkflowStages } from '@/lib/atlas';
 import { getAtlasData } from '@/lib/atlas-store';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 
 export const metadata = { title: 'Company Profile | Atlas' };
 
 export default async function CompanyProfilePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/company-profile');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data ? <AdminAccessForm title="Atlas Company Profile Access" /> : (
         <>
-          <AtlasHero token={token} title="Master Company Profile" subtitle="One reusable source of truth for company, product, business, revenue, funding request, risks, and version history." />
-          <AtlasWorkflowProgress stages={buildAtlasWorkflowStages(data, token)} />
+          <AtlasHero token={atlasToken} title="Master Company Profile" subtitle="One reusable source of truth for company, product, business, revenue, funding request, risks, and version history." />
+          <AtlasWorkflowProgress stages={buildAtlasWorkflowStages(data, atlasToken)} />
           <AtlasCompanyProfileForm
-            token={token}
+            token={atlasToken}
             title="Company, business, and funding profile"
             initialProfile={data.companyProfile}
             fields={[

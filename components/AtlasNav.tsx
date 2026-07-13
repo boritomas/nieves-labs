@@ -28,7 +28,7 @@ const atlasNavItems = [
 ];
 
 export default function AtlasNav({ token }: { token: string }) {
-  const tokenQuery = `?token=${encodeURIComponent(token)}`;
+  const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
 
   return (
     <nav className="atlas-nav" aria-label="Atlas Capital Office navigation">

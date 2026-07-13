@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { atlasTaskStatuses, type AtlasTask, type AtlasTaskStatus } from '@/lib/atlas';
+import { atlasPath, atlasTaskStatuses, type AtlasTask, type AtlasTaskStatus } from '@/lib/atlas';
 
 export default function AtlasTaskChecklist({ initialTasks, token }: { initialTasks: AtlasTask[]; token: string }) {
   const [tasks, setTasks] = useState(initialTasks);
 
   async function updateStatus(task: AtlasTask, status: AtlasTaskStatus) {
     setTasks((items) => items.map((item) => item.id === task.id ? { ...item, status } : item));
-    const response = await fetch(`/api/atlas/tasks?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas/tasks', token), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: task.id, patch: { status } }),
@@ -38,4 +38,3 @@ export default function AtlasTaskChecklist({ initialTasks, token }: { initialTas
     </section>
   );
 }
-

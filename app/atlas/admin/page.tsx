@@ -1,7 +1,7 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
 import AtlasAdvancedDashboard from '@/components/AtlasAdvancedDashboard';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
@@ -10,18 +10,21 @@ export const metadata = {
 
 export default async function AtlasAdminDashboardPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/admin');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
 
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data ? (
         <AdminAccessForm title="Advanced Atlas Dashboard Access" />
       ) : (
         <>
-          <AtlasHero token={token} title="Advanced Atlas Dashboard" subtitle="Internal detail view for readiness scores, workflow stages, source imports, risks, lender data, and package status." />
-          <AtlasAdvancedDashboard data={data} token={token} />
+          <AtlasHero token={atlasToken} title="Advanced Atlas Dashboard" subtitle="Internal detail view for readiness scores, workflow stages, source imports, risks, lender data, and package status." />
+          <AtlasAdvancedDashboard data={data} token={atlasToken} />
         </>
       )}
     </main>

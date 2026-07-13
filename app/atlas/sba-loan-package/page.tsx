@@ -1,6 +1,6 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
@@ -9,7 +9,10 @@ export const metadata = {
 
 export default async function SbaLoanPackagePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/sba-loan-package');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
 
   const sections = data ? [
@@ -25,12 +28,12 @@ export default async function SbaLoanPackagePage({ searchParams }: { searchParam
 
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data ? (
         <AdminAccessForm title="Atlas SBA Loan Package Access" />
       ) : (
         <>
-          <AtlasHero token={token} title="SBA Loan Package" subtitle="Lender-ready narrative workspace for the Nieves Labs SBA Microloan / CDFI capital package." />
+          <AtlasHero token={atlasToken} title="SBA Loan Package" subtitle="Lender-ready narrative workspace for the Nieves Labs SBA Microloan / CDFI capital package." />
           <section className="review-card-grid">
             {sections.map(([title, body]) => (
               <article className="panel" key={title}>

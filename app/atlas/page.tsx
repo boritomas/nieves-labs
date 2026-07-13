@@ -1,6 +1,6 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
 import { AtlasFounderHeader, AtlasFounderHome } from '@/components/AtlasFounderExperience';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
@@ -9,16 +9,19 @@ export const metadata = {
 
 export default async function AtlasFounderHomePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
 
   return (
     <main className="founder-shell">
-      <AtlasFounderHeader token={token} />
+      <AtlasFounderHeader token={atlasToken} />
       {!authorized || !data ? (
         <AdminAccessForm title="Atlas Funding Access" />
       ) : (
-        <AtlasFounderHome data={data} token={token} />
+        <AtlasFounderHome data={data} token={atlasToken} />
       )}
     </main>
   );

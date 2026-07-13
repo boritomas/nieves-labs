@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import AtlasReadinessBreakdown from '@/components/AtlasReadinessBreakdown';
 import AtlasWorkflowProgress from '@/components/AtlasWorkflowProgress';
-import { buildAtlasWorkflowStages, getLatestAtlasPackage, atlasFounderApprovalKeys, type AtlasData } from '@/lib/atlas';
+import { atlasFounderApprovalKeys, atlasPath, buildAtlasWorkflowStages, getLatestAtlasPackage, type AtlasData } from '@/lib/atlas';
 
 export default function AtlasAdvancedDashboard({ data, token }: { data: AtlasData; token: string }) {
   const latestPackage = getLatestAtlasPackage(data);
@@ -26,12 +26,12 @@ export default function AtlasAdvancedDashboard({ data, token }: { data: AtlasDat
           <h2>{data.companyProfile.currentStage}</h2>
           <p>{data.companyProfile.nextAction}</p>
           <div className="hero-actions">
-            <Link className="button-primary" href={`/atlas/sba-loan-package?token=${encodeURIComponent(token)}`}>Open SBA Package</Link>
-            <Link className="button-secondary" href={`/atlas/funding-campaign?token=${encodeURIComponent(token)}`}>Open Campaign OS</Link>
-            <Link className="button-secondary" href={`/atlas/document-vault?token=${encodeURIComponent(token)}`}>Review Documents</Link>
-            <Link className="button-secondary" href={`/atlas/application-builder?token=${encodeURIComponent(token)}`}>Build Application</Link>
-            <Link className="button-secondary" href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Generate Package</Link>
-            <Link className="button-secondary" href={`/atlas/import-center?token=${encodeURIComponent(token)}`}>Open Import Center</Link>
+            <Link className="button-primary" href={atlasPath('/atlas/sba-loan-package', token)}>Open SBA Package</Link>
+            <Link className="button-secondary" href={atlasPath('/atlas/funding-campaign', token)}>Open Campaign OS</Link>
+            <Link className="button-secondary" href={atlasPath('/atlas/document-vault', token)}>Review Documents</Link>
+            <Link className="button-secondary" href={atlasPath('/atlas/application-builder', token)}>Build Application</Link>
+            <Link className="button-secondary" href={atlasPath('/atlas/package-generator', token)}>Generate Package</Link>
+            <Link className="button-secondary" href={atlasPath('/atlas/import-center', token)}>Open Import Center</Link>
           </div>
         </div>
         <div className="panel">
@@ -50,7 +50,7 @@ export default function AtlasAdvancedDashboard({ data, token }: { data: AtlasDat
             <>
               <h2>No package version yet</h2>
               <p>Create the first lender package from the Package Generator.</p>
-              <Link className="button-primary" href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Open Package Generator</Link>
+              <Link className="button-primary" href={atlasPath('/atlas/package-generator', token)}>Open Package Generator</Link>
             </>
           )}
         </div>
@@ -66,7 +66,7 @@ export default function AtlasAdvancedDashboard({ data, token }: { data: AtlasDat
             <span className={`status-pill ${data.importState.fieldConflicts.length ? 'missing' : 'ready'}`}>{data.importState.fieldConflicts.length} conflicts</span>
             <span className={`status-pill ${data.importState.evidenceGaps.length ? 'missing' : 'ready'}`}>{data.importState.evidenceGaps.length} evidence gaps</span>
           </div>
-          <Link className="button-secondary" href={`/atlas/import-center?token=${encodeURIComponent(token)}`}>Review Import Center</Link>
+          <Link className="button-secondary" href={atlasPath('/atlas/import-center', token)}>Review Import Center</Link>
         </div>
         <div className="panel">
           <p className="eyebrow">Required documents</p>

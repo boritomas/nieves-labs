@@ -1,7 +1,7 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
 import AtlasTaskChecklist from '@/components/AtlasTaskChecklist';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
@@ -10,19 +10,22 @@ export const metadata = {
 
 export default async function DueDiligenceChecklistPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/due-diligence-checklist');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
 
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data ? (
         <AdminAccessForm title="Atlas Due Diligence Access" />
       ) : (
         <>
-          <AtlasHero token={token} title="Due Diligence Checklist" subtitle="Tasks and underwriting workstreams needed before approaching SBA Microloan and CDFI lenders." />
+          <AtlasHero token={atlasToken} title="Due Diligence Checklist" subtitle="Tasks and underwriting workstreams needed before approaching SBA Microloan and CDFI lenders." />
           <section className="two-column">
-            <AtlasTaskChecklist initialTasks={data.tasks} token={token} />
+            <AtlasTaskChecklist initialTasks={data.tasks} token={atlasToken} />
             <section className="panel">
               <h2>Underwriting risks</h2>
               <div className="atlas-stack">

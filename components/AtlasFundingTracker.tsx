@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { atlasFundingStatuses, atlasFundingTypes, type AtlasFundingOpportunity, type AtlasFundingStatus, type AtlasFundingType } from '@/lib/atlas';
+import { atlasFundingStatuses, atlasFundingTypes, atlasPath, type AtlasFundingOpportunity, type AtlasFundingStatus, type AtlasFundingType } from '@/lib/atlas';
 
 const blankOpportunity = {
   fundingSource: '',
@@ -40,7 +40,7 @@ export default function AtlasFundingTracker({ initialOpportunities, token }: { i
       return;
     }
 
-    const response = await fetch(`/api/atlas/funding?token=${encodeURIComponent(token)}`, {
+    const response = await fetch(atlasPath('/api/atlas/funding', token), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(draft),
@@ -61,7 +61,7 @@ export default function AtlasFundingTracker({ initialOpportunities, token }: { i
   }
 
   async function remove(id: string) {
-    const response = await fetch(`/api/atlas/funding?token=${encodeURIComponent(token)}&id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const response = await fetch(atlasPath(`/api/atlas/funding?id=${encodeURIComponent(id)}`, token), { method: 'DELETE' });
     if (response.ok) {
       setOpportunities((items) => items.filter((item) => item.id !== id));
       setMessage('Funding source removed.');

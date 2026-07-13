@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { AtlasData, AtlasImportState } from '@/lib/atlas';
+import { atlasPath, type AtlasData, type AtlasImportState } from '@/lib/atlas';
 
 type ImportAction = 'scan' | 'preview' | 'import';
 
@@ -25,7 +25,7 @@ export default function AtlasImportCenter({ initialData, token }: { initialData:
     setBusy(action);
     setMessage('');
     try {
-      const response = await fetch(`/api/atlas/import?token=${encodeURIComponent(token)}`, {
+      const response = await fetch(atlasPath('/api/atlas/import', token), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
@@ -46,7 +46,7 @@ export default function AtlasImportCenter({ initialData, token }: { initialData:
   async function review(fieldId: string, action: 'approve-field' | 'reject-field' | 'defer-field' | 'mark-assumption') {
     setBusy(fieldId);
     try {
-      const response = await fetch(`/api/atlas/import?token=${encodeURIComponent(token)}`, {
+      const response = await fetch(atlasPath('/api/atlas/import', token), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, fieldId }),

@@ -1,4 +1,4 @@
-import type { AtlasData, AtlasFundingOpportunity } from '@/lib/atlas';
+import { atlasPath, type AtlasData, type AtlasFundingOpportunity } from '@/lib/atlas';
 
 export function AtlasLenderResearch({ data, token }: { data: AtlasData; token: string }) {
   return (
@@ -11,7 +11,7 @@ export function AtlasLenderResearch({ data, token }: { data: AtlasData; token: s
       <section className="feature-grid">
         {data.fundingOpportunities.map((opportunity) => <LenderCard key={opportunity.id} opportunity={opportunity} />)}
       </section>
-      <a className="button-primary" href={`/atlas/funding-tracker?token=${encodeURIComponent(token)}`}>Edit funding tracker</a>
+      <a className="button-primary" href={atlasPath('/atlas/funding-tracker', token)}>Edit funding tracker</a>
     </div>
   );
 }

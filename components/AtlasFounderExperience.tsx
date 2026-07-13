@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import {
+  atlasPath,
   atlasFounderApprovalKeys,
   calculateAtlasForecast,
   calculateAtlasReadinessAssessment,
@@ -11,6 +12,7 @@ import {
   type AtlasWorkflowStageStatus,
 } from '@/lib/atlas';
 import { BrandLogo } from './BrandLogo';
+import AtlasSignOutButton from './AtlasSignOutButton';
 
 export type FounderStepId = 'business' | 'funding' | 'documents' | 'review' | 'submit';
 
@@ -25,19 +27,21 @@ export type FounderStep = {
 };
 
 export function AtlasFounderHeader({ token }: { token: string }) {
+  const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
   return (
     <header className="founder-topbar">
       <Link href="/" className="brand" aria-label="Nieves Labs home"><BrandLogo size="sm" /></Link>
       <nav className="founder-nav" aria-label="Atlas founder navigation">
-        <Link href={`/atlas?token=${encodeURIComponent(token)}`}>Home</Link>
-        <Link href={`/atlas/funding-campaign?token=${encodeURIComponent(token)}`}>Funding OS</Link>
-        <Link href={`/atlas/journey?token=${encodeURIComponent(token)}`}>My Application</Link>
-        <Link href={`/atlas/founder-intake?token=${encodeURIComponent(token)}`}>Founder Intake</Link>
-        <Link href={`/atlas/documents?token=${encodeURIComponent(token)}`}>Documents</Link>
-        <Link href={`/atlas/opportunities?token=${encodeURIComponent(token)}`}>Funding Options</Link>
-        <Link href={`/atlas/review?token=${encodeURIComponent(token)}`}>Review &amp; Submit</Link>
-        <Link href={`/atlas/track?token=${encodeURIComponent(token)}`}>Track</Link>
-        <Link href={`/atlas/settings?token=${encodeURIComponent(token)}`}>Settings</Link>
+        <Link href={`/atlas${tokenQuery}`}>Home</Link>
+        <Link href={`/atlas/funding-campaign${tokenQuery}`}>Funding OS</Link>
+        <Link href={`/atlas/journey${tokenQuery}`}>My Application</Link>
+        <Link href={`/atlas/founder-intake${tokenQuery}`}>Founder Intake</Link>
+        <Link href={`/atlas/documents${tokenQuery}`}>Documents</Link>
+        <Link href={`/atlas/opportunities${tokenQuery}`}>Funding Options</Link>
+        <Link href={`/atlas/review${tokenQuery}`}>Review &amp; Submit</Link>
+        <Link href={`/atlas/track${tokenQuery}`}>Track</Link>
+        <Link href={`/atlas/settings${tokenQuery}`}>Settings</Link>
+        {!token ? <AtlasSignOutButton /> : null}
       </nav>
     </header>
   );
@@ -105,7 +109,7 @@ export function AtlasFounderHome({ data, token }: { data: AtlasData; token: stri
             <p className="eyebrow">Your funding journey</p>
             <h2>Five guided steps</h2>
           </div>
-          <Link className="button-secondary" href={`/atlas/admin?token=${encodeURIComponent(token)}`}>Advanced view</Link>
+          <Link className="button-secondary" href={atlasPath('/atlas/admin', token)}>Advanced view</Link>
         </div>
         <div className="founder-journey-list">
           {buildFounderSteps(data, token).map((step, index) => (
@@ -145,8 +149,8 @@ export function AtlasJourneyScreen({ data, token }: { data: AtlasData; token: st
         <p className="founder-current-value">{data.companyProfile.businessSummary}</p>
         <SourceNote label="Source" value="Current Atlas profile, import-reviewed where available" />
         <div className="founder-decision-row">
-          <Link className="button-secondary" href={`/atlas/company-profile?token=${encodeURIComponent(token)}`}>Edit details</Link>
-          <Link className="button-primary" href={`/atlas/documents?token=${encodeURIComponent(token)}`}>Looks good. Continue</Link>
+          <Link className="button-secondary" href={atlasPath('/atlas/company-profile', token)}>Edit details</Link>
+          <Link className="button-primary" href={atlasPath('/atlas/documents', token)}>Looks good. Continue</Link>
         </div>
       </section>
       <GuidedChecklist
@@ -182,7 +186,7 @@ export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token:
           <span>Next best action</span>
           <strong>{data.importState.importedFields.length ? 'Review imported information' : 'Scan existing documents'}</strong>
           <p>{missingDocs.length ? `${missingDocs.length} required documents still need evidence.` : 'Required documents are currently marked complete.'}</p>
-          <Link className="button-primary" href={`/atlas/import-center?token=${encodeURIComponent(token)}`}>{data.importState.importedFields.length ? 'Review imported information' : 'Scan existing documents'}</Link>
+          <Link className="button-primary" href={atlasPath('/atlas/import-center', token)}>{data.importState.importedFields.length ? 'Review imported information' : 'Scan existing documents'}</Link>
         </div>
       </section>
       <section className="founder-simple-panel">
@@ -330,7 +334,7 @@ export function AtlasFounderIntake({ data, token }: { data: AtlasData; token: st
           <span>Next best action</span>
           <strong>{readiness.founderActions[0] || 'Review lender package'}</strong>
           <p>{missingDocuments.length ? `${missingDocuments.length} required document items still need attention.` : 'Required document checklist is currently clear.'}</p>
-          <Link className="button-primary" href={`/atlas/documents?token=${encodeURIComponent(token)}`}>Review documents</Link>
+          <Link className="button-primary" href={atlasPath('/atlas/documents', token)}>Review documents</Link>
         </div>
       </section>
       <section className="founder-simple-panel">
@@ -381,8 +385,8 @@ export function AtlasFounderOpportunities({ data, token }: { data: AtlasData; to
           ))}
         </div>
         <div className="founder-decision-row">
-          <Link className="button-secondary" href={`/atlas/lender-comparison?token=${encodeURIComponent(token)}`}>See comparison details</Link>
-          <Link className="button-primary" href={`/atlas/review?token=${encodeURIComponent(token)}`}>Review my application</Link>
+          <Link className="button-secondary" href={atlasPath('/atlas/lender-comparison', token)}>See comparison details</Link>
+          <Link className="button-primary" href={atlasPath('/atlas/review', token)}>Review my application</Link>
         </div>
       </section>
     </>
@@ -425,8 +429,8 @@ export function AtlasFounderReview({ data, token }: { data: AtlasData; token: st
           </div>
         </details>
         <div className="founder-decision-row">
-          <Link className="button-secondary" href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Edit application draft</Link>
-          <Link className="button-primary" href={`/atlas/track?token=${encodeURIComponent(token)}`}>Continue to tracking</Link>
+          <Link className="button-secondary" href={atlasPath('/atlas/package-generator', token)}>Edit application draft</Link>
+          <Link className="button-primary" href={atlasPath('/atlas/track', token)}>Continue to tracking</Link>
         </div>
       </section>
       <BusinessReadinessPanel data={data} />
@@ -525,7 +529,7 @@ export function AtlasFounderTrack({ data, token }: { data: AtlasData; token: str
           <span>Next action</span>
           <strong>{topLender?.nextAction || 'Choose a lender and confirm requirements'}</strong>
           <p>Follow-up: {topLender?.nextFollowUpDate || 'TBD'} • Contact: {topLender?.contactName || topLender?.contact || 'TBD'}</p>
-          <Link className="button-primary" href={`/atlas/manual-submission?token=${encodeURIComponent(token)}`}>{submitted ? 'Update tracking' : 'Review submission checklist'}</Link>
+          <Link className="button-primary" href={atlasPath('/atlas/manual-submission', token)}>{submitted ? 'Update tracking' : 'Review submission checklist'}</Link>
         </div>
       </section>
     </>
@@ -544,12 +548,12 @@ export function AtlasFounderSettings({ token }: { token: string }) {
         <h2>Internal views remain available.</h2>
         <p>These tools are preserved for admin review, debugging, and detailed lender preparation. The guided experience remains the default.</p>
         <div className="founder-settings-grid">
-          <Link href={`/atlas/admin?token=${encodeURIComponent(token)}`}>Advanced Atlas dashboard</Link>
-          <Link href={`/atlas/import-center?token=${encodeURIComponent(token)}`}>Document import details</Link>
-          <Link href={`/atlas/financial-model?token=${encodeURIComponent(token)}`}>Financial model</Link>
-          <Link href={`/atlas/funding-tracker?token=${encodeURIComponent(token)}`}>Funding tracker</Link>
-          <Link href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Application draft editor</Link>
-          <Link href={`/atlas/founder-review?token=${encodeURIComponent(token)}`}>Founder approval checklist</Link>
+          <Link href={atlasPath('/atlas/admin', token)}>Advanced Atlas dashboard</Link>
+          <Link href={atlasPath('/atlas/import-center', token)}>Document import details</Link>
+          <Link href={atlasPath('/atlas/financial-model', token)}>Financial model</Link>
+          <Link href={atlasPath('/atlas/funding-tracker', token)}>Funding tracker</Link>
+          <Link href={atlasPath('/atlas/package-generator', token)}>Application draft editor</Link>
+          <Link href={atlasPath('/atlas/founder-review', token)}>Founder approval checklist</Link>
         </div>
       </section>
     </>
@@ -574,7 +578,7 @@ export function AtlasWorkingState({ data, token }: { data: AtlasData; token: str
           </div>
         ))}
       </div>
-      <Link className="button-primary" href={`/atlas/review?token=${encodeURIComponent(token)}`}>Review application</Link>
+      <Link className="button-primary" href={atlasPath('/atlas/review', token)}>Review application</Link>
     </section>
   );
 }
@@ -590,7 +594,7 @@ export function buildFounderSteps(data: AtlasData, token: string): FounderStep[]
       id: 'business',
       title: 'About Your Business',
       plainTitle: 'About',
-      href: `/atlas/journey?token=${encodeURIComponent(token)}`,
+      href: atlasPath('/atlas/journey', token),
       status: data.companyProfile.companyName && data.companyProfile.businessSummary ? 'complete' : 'in_progress',
       shortStatus: data.companyProfile.businessSummary ? 'Complete' : 'In progress',
       detail: 'Confirm company, founder, product, and business-stage basics.',
@@ -599,7 +603,7 @@ export function buildFounderSteps(data: AtlasData, token: string): FounderStep[]
       id: 'funding',
       title: 'Your Funding Request',
       plainTitle: 'Funding',
-      href: `/atlas/journey?token=${encodeURIComponent(token)}#funding-request`,
+      href: atlasPath('/atlas/journey#funding-request', token),
       status: data.financialAssumptions.loanAmount > 0 && data.companyProfile.primaryUseOfFunds.length ? 'complete' : 'needs_attention',
       shortStatus: data.financialAssumptions.loanAmount > 0 ? 'In progress' : 'Needs attention',
       detail: `Review ${money(data.financialAssumptions.loanAmount)} request, use of funds, assumptions, and repayment plan.`,
@@ -608,7 +612,7 @@ export function buildFounderSteps(data: AtlasData, token: string): FounderStep[]
       id: 'documents',
       title: 'Your Documents',
       plainTitle: 'Documents',
-      href: `/atlas/documents?token=${encodeURIComponent(token)}`,
+      href: atlasPath('/atlas/documents', token),
       status: missingDocs.length ? 'needs_attention' : 'complete',
       shortStatus: missingDocs.length ? `${missingDocs.length} missing` : 'Complete',
       detail: 'Let Atlas scan, import, and show only missing or conflicting information.',
@@ -617,7 +621,7 @@ export function buildFounderSteps(data: AtlasData, token: string): FounderStep[]
       id: 'review',
       title: 'Atlas Review',
       plainTitle: 'Review',
-      href: `/atlas/opportunities?token=${encodeURIComponent(token)}`,
+      href: atlasPath('/atlas/opportunities', token),
       status: applicationAssessment.overallReadiness >= 75 ? 'complete' : 'in_progress',
       shortStatus: applicationAssessment.overallReadiness >= 75 ? 'Ready' : 'In progress',
       detail: 'Atlas checks readiness, evidence gaps, lender fit, and application draft consistency.',
@@ -626,7 +630,7 @@ export function buildFounderSteps(data: AtlasData, token: string): FounderStep[]
       id: 'submit',
       title: 'Review and Submit',
       plainTitle: 'Submit',
-      href: `/atlas/review?token=${encodeURIComponent(token)}`,
+      href: atlasPath('/atlas/review', token),
       status: approvalsMissing ? 'needs_attention' : 'complete',
       shortStatus: approvalsMissing ? `${approvalsMissing} approvals` : 'Ready',
       detail: 'Review the package, download or copy materials, and submit manually through the lender.',
@@ -644,18 +648,18 @@ function getNextBestAction(data: AtlasData, token: string) {
   const missingDocs = data.documents.filter((document) => document.required && !document.completed);
   const latest = getLatestAtlasPackage(data);
   if (!data.companyProfile.businessSummary) {
-    return { label: 'Confirm your business story', detail: 'Start by reviewing the company description lenders will see.', href: `/atlas/journey?token=${encodeURIComponent(token)}` };
+    return { label: 'Confirm your business story', detail: 'Start by reviewing the company description lenders will see.', href: atlasPath('/atlas/journey', token) };
   }
   if (data.financialAssumptions.loanAmount <= 0 || !data.companyProfile.primaryUseOfFunds.length) {
-    return { label: 'Complete your funding request', detail: 'Confirm the amount, use of funds, and repayment assumptions.', href: `/atlas/journey?token=${encodeURIComponent(token)}#funding-request` };
+    return { label: 'Complete your funding request', detail: 'Confirm the amount, use of funds, and repayment assumptions.', href: atlasPath('/atlas/journey#funding-request', token) };
   }
   if (missingDocs.length || data.importState.founderReviewQueue.some((item) => item.status === 'pending_review')) {
-    return { label: 'Review your documents', detail: 'Atlas found document items that need confirmation.', href: `/atlas/documents?token=${encodeURIComponent(token)}` };
+    return { label: 'Review your documents', detail: 'Atlas found document items that need confirmation.', href: atlasPath('/atlas/documents', token) };
   }
   if (!latest) {
-    return { label: 'Prepare your application', detail: 'Atlas can generate an application draft for founder review.', href: `/atlas/review?token=${encodeURIComponent(token)}` };
+    return { label: 'Prepare your application', detail: 'Atlas can generate an application draft for founder review.', href: atlasPath('/atlas/review', token) };
   }
-  return { label: 'Review and submit manually', detail: 'Confirm approvals before submitting through a lender’s official process.', href: `/atlas/review?token=${encodeURIComponent(token)}` };
+  return { label: 'Review and submit manually', detail: 'Confirm approvals before submitting through a lender’s official process.', href: atlasPath('/atlas/review', token) };
 }
 
 function estimateTimeRemaining(data: AtlasData) {

@@ -1,7 +1,7 @@
 import AdminAccessForm from '@/components/AdminAccessForm';
 import AtlasReadinessBreakdown from '@/components/AtlasReadinessBreakdown';
 import { AtlasHeader, AtlasHero } from '@/components/AtlasShell';
-import { env } from '@/lib/env';
+import { getAtlasPageAccess, redirectToAtlasLogin } from '@/lib/atlas-auth';
 import { getAtlasData } from '@/lib/atlas-store';
 
 export const metadata = {
@@ -10,17 +10,20 @@ export const metadata = {
 
 export default async function CapitalOfficePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const access = await getAtlasPageAccess(token);
+  const authorized = access.authorized;
+  if (!authorized) redirectToAtlasLogin('/atlas/capital-office');
+  const atlasToken = access.emergencyToken;
   const data = authorized ? await getAtlasData() : null;
 
   return (
     <main className="site-shell">
-      <AtlasHeader token={token} />
+      <AtlasHeader token={atlasToken} />
       {!authorized || !data ? (
         <AdminAccessForm title="Atlas Capital Office Access" />
       ) : (
         <>
-          <AtlasHero token={token} title="Capital Office" subtitle="Executive funding command center for readiness, target capital, lender packaging, and operating discipline." />
+          <AtlasHero token={atlasToken} title="Capital Office" subtitle="Executive funding command center for readiness, target capital, lender packaging, and operating discipline." />
           <section className="metrics-grid">
             <Metric label="Capital readiness" value={`${data.readinessScores.capitalReadiness}%`} />
             <Metric label="Application readiness" value={`${data.readinessScores.applicationReadiness}%`} />

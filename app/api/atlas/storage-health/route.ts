@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getAtlasData, getAtlasStorageProvider } from '@/lib/atlas-store';
 import { env } from '@/lib/env';
+import { authorizeAtlasRequest } from '@/lib/atlas-auth';
 
-function authorized(request: Request) {
+async function authorized(request: Request) {
+  if (await authorizeAtlasRequest(request)) return true;
   const url = new URL(request.url);
   const token = url.searchParams.get('token') || request.headers.get('x-admin-token') || '';
   const diagnosticsToken = process.env.ATLAS_DIAGNOSTICS_TOKEN || '';
-  return Boolean((env.adminToken && token === env.adminToken) || (diagnosticsToken && token === diagnosticsToken));
+  return Boolean(diagnosticsToken && token === diagnosticsToken);
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
+  if (!(await authorized(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

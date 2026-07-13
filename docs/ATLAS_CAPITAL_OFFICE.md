@@ -1,6 +1,6 @@
 # Atlas Capital Office
 
-Atlas is an internal first-class module inside the Nieves AI Platform. It uses the same admin-token protection pattern as the existing admin console and the same lightweight app-storage convention as orders.
+Atlas is an internal first-class module inside the Nieves AI Platform. It uses founder/admin session protection for normal access and keeps the legacy admin token only as an emergency recovery path.
 
 Atlas prepares founder-reviewed lender materials. It does not submit applications automatically, does not guarantee approval, and should not be presented as legal, tax, credit, or underwriting advice.
 
@@ -14,7 +14,7 @@ Atlas prepares founder-reviewed lender materials. It does not submit application
 - `/atlas/funding-tracker`
 - `/atlas/due-diligence-checklist`
 
-All routes require the existing admin token query parameter.
+All routes require a valid Atlas founder/admin session. The legacy admin token query parameter is retained only for emergency recovery and diagnostics.
 
 ## Release 0.2 summary
 
@@ -212,7 +212,7 @@ Atlas never modifies original files. It also excludes sensitive personal, bankin
 
 - `/atlas/import-center`
 
-This route is protected by the existing admin token pattern.
+This route is protected by the Atlas founder/admin session pattern.
 
 ## Release 1.1 import API
 
@@ -266,7 +266,7 @@ New route:
 
 - `/atlas/funding-campaign`
 
-The route is protected by the existing Atlas admin-token pattern.
+The route is protected by the Atlas founder/admin session pattern. Emergency `ADMIN_TOKEN` access remains available for recovery only.
 
 ## Release 1.2 five-step campaign model
 
@@ -308,6 +308,39 @@ Those remain founder-only actions on official lender screens.
 - Add evidence packet export containing screenshots, submitted answer summaries, uploaded-document lists, and follow-up tasks.
 - Add reminder automation for lender response windows and document requests.
 - Add account-resolution playbooks for duplicate-account and password-reset loops.
+
+## Atlas Autonomous Funding Operator v1
+
+Atlas now includes the first secure founder-auth and campaign-memory layer needed to turn the two-day founder-guided funding pilot into a repeatable five-step operating flow.
+
+Access changes:
+
+- `/atlas/login` provides founder/admin sign-in.
+- Atlas sessions use an HTTP-only `atlas_session` cookie.
+- Founder roles are modeled as `founder_admin`, `internal_admin`, `founder_user`, and `read_only`.
+- `/atlas/*` routes redirect unauthenticated users to `/atlas/login?returnTo=...`.
+- Clean session-mode links do not include URL tokens.
+- `ADMIN_TOKEN` remains only for emergency recovery and protected diagnostics.
+
+Environment variables:
+
+- `ATLAS_SESSION_SECRET`
+- `ATLAS_FOUNDER_EMAIL`
+- `ATLAS_FOUNDER_PASSWORD_HASH`
+- `ATLAS_FOUNDER_NAME` optional
+- `ADMIN_TOKEN` emergency recovery only
+
+Storage additions:
+
+- `campaignState`
+- `lenderWorkflowLibrary`
+- `pilotFailureRecords`
+
+The formal non-sensitive failure report lives at:
+
+- `docs/ATLAS_FOUNDER_PILOT_FAILURE_REPORT.md`
+
+Founder-only values remain prohibited in source control, URLs, logs, screenshots, exports, and documentation. This includes SSN/ITIN, dates of birth, passwords, MFA codes, bank account values, private application IDs, identity documents, and private financial records.
 
 ## Release 1.1 storage updates
 

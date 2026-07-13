@@ -384,6 +384,78 @@ export type AtlasImportState = {
   lastImportAt: string;
 };
 
+export type AtlasCampaignState = {
+  id: string;
+  requestedAmount: number;
+  activeLender: string;
+  backupLenders: string[];
+  currentStage: string;
+  currentPortal: string;
+  currentApplicationPage: string;
+  accountStatus: string;
+  registrationStatus: string;
+  loginStatus: string;
+  fieldsCompleted: number;
+  fieldsMissing: number;
+  documentsUploaded: number;
+  documentsMissing: number;
+  founderActionsPending: string[];
+  founderActionsCompleted: string[];
+  lastSuccessfulCheckpoint: string;
+  lastBrowserAction: string;
+  nextRetry: string;
+  failoverCondition: string;
+  submissionEvidence: string;
+  followUpDate: string;
+  decisionStatus: string;
+  interruptions: number;
+  founderTimeMinutes: number;
+  reusableFieldsAutofilledPercent: number;
+  codexPromptsRequired: number;
+  resumptions: number;
+  updatedAt: string;
+};
+
+export type AtlasLenderWorkflowField = {
+  id: string;
+  lender: string;
+  portalUrl: string;
+  pageName: string;
+  fieldLabel: string;
+  fieldType: 'business_profile' | 'founder_profile' | 'financial' | 'document' | 'certification' | 'identity' | 'portal_account' | 'follow_up';
+  required: boolean;
+  validationRule: string;
+  expectedFormat: string;
+  sourceAtlasField: string;
+  autofillResult: 'autofilled' | 'founder_only' | 'blocked' | 'not_attempted' | 'requires_confirmation';
+  errorEncountered: string;
+  fixOrWorkaround: string;
+  founderOnly: boolean;
+  saveBehavior: string;
+  submissionBehavior: string;
+  lastVerifiedDate: string;
+  outcome: string;
+};
+
+export type AtlasPilotFailureRecord = {
+  id: string;
+  lenderOrModule: string;
+  portalOrRoute: string;
+  pageOrStep: string;
+  fieldOrAction: string;
+  whatHappened: string;
+  expected: string;
+  actual: string;
+  rootCause: string;
+  workaround: string;
+  productDefect: string;
+  automationDefect: string;
+  founderIntervention: string;
+  permanentFix: string;
+  regressionTest: string;
+  lastVerifiedDate: string;
+};
+
 export type AtlasData = {
   companyProfile: AtlasCompanyProfile;
   financialAssumptions: AtlasFinancialAssumptions;
@@ -397,6 +469,9 @@ export type AtlasData = {
   applicationSections: AtlasApplicationSection[];
   packageVersions: AtlasPackageVersion[];
   importState: AtlasImportState;
+  campaignState: AtlasCampaignState;
+  lenderWorkflowLibrary: AtlasLenderWorkflowField[];
+  pilotFailureRecords: AtlasPilotFailureRecord[];
   readinessScores: AtlasReadinessScores;
 };
 
@@ -497,6 +572,12 @@ export const atlasApplicationSectionIds: AtlasApplicationSectionId[] = [
   'chapter_7_explanation',
   'supporting_documents',
 ];
+
+export function atlasPath(path: string, token = '') {
+  if (!token) return path;
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}token=${encodeURIComponent(token)}`;
+}
 
 export function getAtlasApplicationSectionTitle(id: AtlasApplicationSectionId) {
   return id.split('_').map((word) => word[0].toUpperCase() + word.slice(1)).join(' ');
@@ -930,7 +1011,6 @@ export function calculateReadinessScores(data: Omit<AtlasData, 'readinessScores'
 }
 
 export function buildAtlasWorkflowStages(data: AtlasData, token: string): AtlasWorkflowStage[] {
-  const query = `?token=${encodeURIComponent(token)}`;
   const assessment = calculateAtlasReadinessAssessment(data);
   const campaign = buildAtlasFundingCampaignOS(data);
   const hasSelectedLender = data.fundingOpportunities.some((opportunity) => ['targeted', 'preparing', 'submitted', 'follow_up', 'approved'].includes(opportunity.status));
@@ -963,7 +1043,7 @@ export function buildAtlasWorkflowStages(data: AtlasData, token: string): AtlasW
   ].map(([id, title, href, status, description]) => ({
     id: String(id),
     title: String(title),
-    href: `${href}${query}`,
+    href: atlasPath(String(href), token),
     status: status as AtlasWorkflowStageStatus,
     description: String(description),
   }));
@@ -1039,14 +1119,14 @@ export function buildAtlasApplicationSections(data: AtlasData, token: string): A
         ['Product name', data.companyProfile.productName],
         ['Revenue stage', data.companyProfile.revenueStage],
       ]),
-      editHref: `/atlas/capital-office?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/capital-office', token),
       previewText: `${data.companyProfile.companyName} is preparing ${data.companyProfile.productName} for ${data.companyProfile.revenueStage} operations through ${data.companyProfile.moduleName}.`,
     },
     {
       id: 'founder_information',
       title: 'Founder information',
       missingFields: missing([['Founder background', data.companyProfile.founderBackground]]),
-      editHref: `/atlas/sba-loan-package?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/sba-loan-package', token),
       previewText: data.companyProfile.founderBackground,
     },
     {
@@ -1056,21 +1136,21 @@ export function buildAtlasApplicationSections(data: AtlasData, token: string): A
         ['Funding request', data.companyProfile.fundingRequest],
         ['Loan amount', String(data.financialAssumptions.loanAmount || '')],
       ]),
-      editHref: `/atlas/financial-model?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/financial-model', token),
       previewText: `${data.companyProfile.fundingRequest} Current model assumes a ${money(data.financialAssumptions.loanAmount)} request.`,
     },
     {
       id: 'use_of_funds',
       title: 'Use of funds',
       missingFields: data.companyProfile.primaryUseOfFunds.length ? [] : ['Primary use of funds'],
-      editHref: `/atlas/sba-loan-package?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/sba-loan-package', token),
       previewText: data.companyProfile.useOfFunds,
     },
     {
       id: 'business_narrative',
       title: 'Business narrative',
       missingFields: missing([['Business summary', data.companyProfile.businessSummary]]),
-      editHref: `/atlas/sba-loan-package?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/sba-loan-package', token),
       previewText: data.companyProfile.businessSummary,
     },
     {
@@ -1081,7 +1161,7 @@ export function buildAtlasApplicationSections(data: AtlasData, token: string): A
         ['Starting MRR', String(data.financialAssumptions.startingMrr || '')],
         ['Average subscription price', String(data.financialAssumptions.averageSubscriptionPrice || '')],
       ]),
-      editHref: `/atlas/financial-model?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/financial-model', token),
       previewText: `${data.companyProfile.revenueAssumptions} The model starts at ${money(data.financialAssumptions.startingMrr)} MRR with an average subscription price of ${money(data.financialAssumptions.averageSubscriptionPrice)}.`,
     },
     {
@@ -1092,28 +1172,28 @@ export function buildAtlasApplicationSections(data: AtlasData, token: string): A
         ['Loan term', String(data.financialAssumptions.loanTermMonths || '')],
         ['Interest rate', String(data.financialAssumptions.estimatedInterestRate || '')],
       ]),
-      editHref: `/atlas/financial-model?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/financial-model', token),
       previewText: data.companyProfile.repaymentStrategy,
     },
     {
       id: 'risk_mitigation',
       title: 'Risk mitigation',
       missingFields: missing([['Risk mitigation', data.companyProfile.riskMitigation]]),
-      editHref: `/atlas/due-diligence-checklist?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/due-diligence-checklist', token),
       previewText: data.companyProfile.riskMitigation,
     },
     {
       id: 'chapter_7_explanation',
       title: 'Chapter 7 explanation',
       missingFields: missing([['Chapter 7 explanation', data.companyProfile.chapterSevenExplanation]]),
-      editHref: `/atlas/sba-loan-package?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/sba-loan-package', token),
       previewText: data.companyProfile.chapterSevenExplanation,
     },
     {
       id: 'supporting_documents',
       title: 'Supporting documents',
       missingFields: documentMissing,
-      editHref: `/atlas/document-vault?token=${encodeURIComponent(token)}`,
+      editHref: atlasPath('/atlas/document-vault', token),
       previewText: documentMissing.length
         ? `${documentMissing.length} required supporting documents remain missing: ${documentMissing.slice(0, 5).join(', ')}.`
         : 'All required supporting documents are marked complete for founder review.',

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { parseAtlasStatement, statementContentHash } from '@/lib/atlas-statement-ingestion';
 import { getAtlasData, updateAtlasDocument } from '@/lib/atlas-store';
 import { env } from '@/lib/env';
+import { authorizeAtlasRequest } from '@/lib/atlas-auth';
 
 const bucket = 'atlas-private-documents';
 const profileSlug = 'default';
@@ -13,11 +14,12 @@ type SupabaseRequestInit = {
   headers?: Record<string, string>;
 };
 
-function authorized(request: Request) {
+async function authorized(request: Request) {
+  if (await authorizeAtlasRequest(request)) return true;
   const url = new URL(request.url);
   const token = url.searchParams.get('token') || request.headers.get('x-admin-token') || '';
   const diagnosticsToken = process.env.ATLAS_DIAGNOSTICS_TOKEN || '';
-  return Boolean((env.adminToken && token === env.adminToken) || (diagnosticsToken && token === diagnosticsToken));
+  return Boolean(diagnosticsToken && token === diagnosticsToken);
 }
 
 function supabaseConfig() {
@@ -301,7 +303,7 @@ async function countSmokeArtifacts(result: Awaited<ReturnType<typeof ingestState
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
+  if (!(await authorized(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const url = new URL(request.url);
@@ -323,7 +325,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!authorized(request)) {
+  if (!(await authorized(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const formData = await request.formData();
