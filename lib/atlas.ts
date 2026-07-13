@@ -547,6 +547,26 @@ export type AtlasFundingCampaignOS = {
   founderOnlyFields: string[];
 };
 
+export type AtlasFundingOperatorAudit = {
+  reusableFieldCount: number;
+  populatedReusableFieldCount: number;
+  duplicateQuestionCount: number;
+  missingFieldCount: number;
+  automaticallyPopulatedFieldCount: number;
+  manuallyEnteredFieldCount: number;
+  autofillPercentage: number;
+  founderSessions: number;
+  totalFounderTimeMinutes: number;
+  codexRestartCount: number;
+  lenderFailoverCount: number;
+  automaticUploadCount: number;
+  manualUploadCount: number;
+  documentReuseCount: number;
+  learningRecordCount: number;
+  provenLenderAdapterCount: number;
+  blockerCount: number;
+};
+
 export const atlasFundingTypes: AtlasFundingType[] = ['SBA Microloan', 'CDFI', 'Grant', 'Bank Loan', 'Investor', 'Accelerator'];
 export const atlasFundingStatuses: AtlasFundingStatus[] = ['researching', 'targeted', 'preparing', 'submitted', 'follow_up', 'approved', 'declined'];
 export const atlasTaskStatuses: AtlasTaskStatus[] = ['not_started', 'in_progress', 'complete', 'blocked'];
@@ -784,6 +804,41 @@ export function buildAtlasFundingCampaignOS(data: AtlasData): AtlasFundingCampai
       'Personal guarantee or certification language',
       'CAPTCHA, MFA, password, and payment-card steps',
     ],
+  };
+}
+
+export function buildAtlasFundingOperatorAudit(data: AtlasData): AtlasFundingOperatorAudit {
+  const workflowRecords = data.lenderWorkflowLibrary || [];
+  const reusableFields = workflowRecords.filter((field) => !field.founderOnly);
+  const automaticallyPopulated = workflowRecords.filter((field) => field.autofillResult === 'autofilled');
+  const manualFields = workflowRecords.filter((field) => field.founderOnly || ['founder_only', 'requires_confirmation'].includes(field.autofillResult));
+  const blockedFields = workflowRecords.filter((field) => ['blocked', 'not_attempted'].includes(field.autofillResult));
+  const completedDocuments = data.documents.filter((document) => document.completed);
+  const fieldsCompleted = Number(data.campaignState.fieldsCompleted || automaticallyPopulated.length);
+  const fieldsMissing = Number(data.campaignState.fieldsMissing || data.documents.filter((document) => document.required && !document.completed).length);
+  const reusableFieldCount = Math.max(reusableFields.length, fieldsCompleted + fieldsMissing);
+  const autofillPercentage = reusableFieldCount > 0 ? Math.round((fieldsCompleted / reusableFieldCount) * 100) : 0;
+  const founderSessions = Math.max(1, Math.ceil(Number(data.campaignState.interruptions || 0) / 5));
+  const blockerRecords = data.pilotFailureRecords.filter((record) => /blocked|paused|failed|declined/i.test(`${record.actual} ${record.whatHappened}`));
+
+  return {
+    reusableFieldCount,
+    populatedReusableFieldCount: fieldsCompleted,
+    duplicateQuestionCount: 0,
+    missingFieldCount: fieldsMissing,
+    automaticallyPopulatedFieldCount: fieldsCompleted,
+    manuallyEnteredFieldCount: manualFields.length,
+    autofillPercentage,
+    founderSessions,
+    totalFounderTimeMinutes: Number(data.campaignState.founderTimeMinutes || 0),
+    codexRestartCount: Number(data.campaignState.resumptions || 0),
+    lenderFailoverCount: data.fundingOpportunities.filter((opportunity) => ['declined', 'follow_up'].includes(opportunity.status)).length,
+    automaticUploadCount: 0,
+    manualUploadCount: Number(data.campaignState.documentsUploaded || 0),
+    documentReuseCount: completedDocuments.length,
+    learningRecordCount: workflowRecords.length + data.pilotFailureRecords.length,
+    provenLenderAdapterCount: workflowRecords.some((field) => field.lender === 'DreamSpring' && field.autofillResult === 'autofilled') ? 1 : 0,
+    blockerCount: blockedFields.length + blockerRecords.length,
   };
 }
 

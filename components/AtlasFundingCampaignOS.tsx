@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { atlasPath, buildAtlasFundingCampaignOS, type AtlasData, type AtlasLenderPlaybookEntry } from '@/lib/atlas';
+import { atlasPath, buildAtlasFundingCampaignOS, buildAtlasFundingOperatorAudit, type AtlasData, type AtlasLenderPlaybookEntry } from '@/lib/atlas';
 
 export default function AtlasFundingCampaignOS({ data, token }: { data: AtlasData; token: string }) {
   const campaign = buildAtlasFundingCampaignOS(data);
+  const audit = buildAtlasFundingOperatorAudit(data);
 
   return (
     <>
@@ -90,6 +91,34 @@ export default function AtlasFundingCampaignOS({ data, token }: { data: AtlasDat
             <p>{data.campaignState.nextRetry}</p>
           </div>
         </div>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Automation audit</p>
+        <h2>Human-intervention budget</h2>
+        <div className="metrics-grid compact">
+          <div className="metric-card">
+            <span>Reusable fields</span>
+            <strong>{audit.populatedReusableFieldCount}/{audit.reusableFieldCount}</strong>
+            <p>{audit.autofillPercentage}% reusable non-sensitive field coverage from current Atlas state.</p>
+          </div>
+          <div className="metric-card">
+            <span>Duplicate questions</span>
+            <strong>{audit.duplicateQuestionCount}</strong>
+            <p>Approved reusable questions should not be asked again unless stale, conflicting, or lender-specific.</p>
+          </div>
+          <div className="metric-card">
+            <span>Founder sessions</span>
+            <strong>{audit.founderSessions}</strong>
+            <p>{Math.round(audit.totalFounderTimeMinutes / 60)} hours captured from the pilot; target is four sessions or fewer per lender.</p>
+          </div>
+          <div className="metric-card">
+            <span>Learning records</span>
+            <strong>{audit.learningRecordCount}</strong>
+            <p>{audit.blockerCount} blockers recorded across account, portal, eligibility, and founder-only steps.</p>
+          </div>
+        </div>
+        <p className="atlas-note">A lender workflow record is not treated as a functioning adapter until it has been safely validated against the live portal without duplicate applications or unauthorized submission.</p>
       </section>
 
       <section className="two-column">
