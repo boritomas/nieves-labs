@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Atlas Browser Assistant",
+  "version": "1.0.0",
+  "description": "Founder-approved lender form assistant for Atlas Capital Office.",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["https://nieves-labs.com/*", "https://www.nieves-labs.com/*", "https://*.dreamspring.org/*", "https://*.peoplefund.org/*", "https://*.liftfund.com/*", "https://*.sba.gov/*", "https://*.bcloftexas.org/*"],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "Atlas Browser Assistant"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["assistant-core.js", "content-script.js"],
+      "css": ["content-style.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

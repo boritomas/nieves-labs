@@ -1,0 +1,116 @@
+#atlas-browser-assistant {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 2147483647;
+  width: min(420px, calc(100vw - 28px));
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  color: #f8fafc;
+  background: #07111f;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.45);
+  padding: 16px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+#atlas-browser-assistant * {
+  box-sizing: border-box;
+}
+
+#atlas-browser-assistant .aba-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+#atlas-browser-assistant button {
+  appearance: none;
+  border: 1px solid rgba(226, 232, 240, 0.18);
+  border-radius: 999px;
+  background: #d4af37;
+  color: #06111e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+#atlas-browser-assistant .aba-head button {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+}
+
+#atlas-browser-assistant h3 {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f7e8b1;
+}
+
+#atlas-browser-assistant p,
+#atlas-browser-assistant ol {
+  margin: 8px 0;
+}
+
+#atlas-browser-assistant .aba-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#atlas-browser-assistant .aba-metrics span,
+#atlas-browser-assistant .aba-row {
+  border: 1px solid rgba(226, 232, 240, 0.14);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 10px;
+}
+
+#atlas-browser-assistant .aba-list {
+  display: grid;
+  gap: 8px;
+}
+
+#atlas-browser-assistant .aba-row {
+  display: grid;
+  gap: 4px;
+}
+
+#atlas-browser-assistant .aba-row strong {
+  color: #fff;
+}
+
+#atlas-browser-assistant .aba-row span {
+  color: #cbd5e1;
+}
+
+#atlas-browser-assistant .aba-row em {
+  color: #d4af37;
+  font-style: normal;
+  font-size: 12px;
+}
+
+#atlas-browser-assistant .aba-row.founder_only em,
+#atlas-browser-assistant .aba-error {
+  color: #fecdd3;
+}
+
+#atlas-browser-assistant .aba-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+#atlas-browser-assistant .aba-foot,
+#atlas-browser-assistant .aba-resume {
+  color: #b8c3d7;
+}
