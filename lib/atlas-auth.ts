@@ -17,11 +17,21 @@ export type AtlasSession = {
 const atlasSessionCookie = 'atlas_session';
 const sessionTtlSeconds = 60 * 60 * 24 * 14;
 
-export function getAtlasSessionConfigStatus() {
+export function getAtlasAuthEnv() {
   return {
-    sessionSecretConfigured: Boolean(env.atlasSessionSecret),
-    founderEmailConfigured: Boolean(env.atlasFounderEmail),
-    founderPasswordConfigured: Boolean(env.atlasFounderPasswordHash),
+    sessionSecret: process.env.ATLAS_SESSION_SECRET || '',
+    founderEmail: process.env.ATLAS_FOUNDER_EMAIL || '',
+    founderPasswordHash: process.env.ATLAS_FOUNDER_PASSWORD_HASH || '',
+    founderName: process.env.ATLAS_FOUNDER_NAME || 'Tomas Nieves',
+  };
+}
+
+export function getAtlasSessionConfigStatus() {
+  const authEnv = getAtlasAuthEnv();
+  return {
+    sessionSecretConfigured: Boolean(authEnv.sessionSecret),
+    founderEmailConfigured: Boolean(authEnv.founderEmail),
+    founderPasswordConfigured: Boolean(authEnv.founderPasswordHash),
   };
 }
 
@@ -81,7 +91,7 @@ export function hasAtlasRole(session: AtlasSession, requiredRoles: AtlasRole[]) 
 }
 
 export function createAtlasSessionToken(input: Pick<AtlasSession, 'email' | 'name' | 'roles'>) {
-  if (!env.atlasSessionSecret) {
+  if (!getAtlasAuthEnv().sessionSecret) {
     throw new Error('ATLAS_SESSION_SECRET is not configured.');
   }
 
@@ -117,7 +127,7 @@ export function clearAtlasSessionCookie(response: NextResponse) {
 }
 
 export function verifyAtlasPassword(password: string) {
-  const configured = env.atlasFounderPasswordHash;
+  const configured = getAtlasAuthEnv().founderPasswordHash;
   if (!configured) return false;
 
   const [algorithm, salt, expected] = configured.split(':');
@@ -138,7 +148,7 @@ export function createAtlasPasswordHash(password: string) {
 }
 
 function verifyAtlasSessionToken(raw: string): AtlasSession | null {
-  if (!raw || !env.atlasSessionSecret) return null;
+  if (!raw || !getAtlasAuthEnv().sessionSecret) return null;
   const [payload, signature] = raw.split('.');
   if (!payload || !signature || !safeEqual(sign(payload), signature)) return null;
 
@@ -152,7 +162,7 @@ function verifyAtlasSessionToken(raw: string): AtlasSession | null {
 }
 
 function sign(payload: string) {
-  return createHmac('sha256', env.atlasSessionSecret).update(payload).digest('base64url');
+  return createHmac('sha256', getAtlasAuthEnv().sessionSecret).update(payload).digest('base64url');
 }
 
 function hashPassword(password: string, salt: string) {

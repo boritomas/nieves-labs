@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import {
   createAtlasSessionToken,
+  getAtlasAuthEnv,
   getAtlasSessionConfigStatus,
   isSafeAtlasReturnTo,
   setAtlasSessionCookie,
   verifyAtlasPassword,
 } from '@/lib/atlas-auth';
-import { env } from '@/lib/env';
 
 export async function POST(request: Request) {
   const config = getAtlasSessionConfigStatus();
@@ -18,14 +18,15 @@ export async function POST(request: Request) {
   const email = String(body.email || '').trim().toLowerCase();
   const password = String(body.password || '');
   const returnTo = isSafeAtlasReturnTo(String(body.returnTo || '')) ? String(body.returnTo) : '/atlas';
+  const atlasAuthEnv = getAtlasAuthEnv();
 
-  if (email !== env.atlasFounderEmail.toLowerCase() || !verifyAtlasPassword(password)) {
+  if (email !== atlasAuthEnv.founderEmail.toLowerCase() || !verifyAtlasPassword(password)) {
     return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
   }
 
   const token = createAtlasSessionToken({
     email,
-    name: env.atlasFounderName,
+    name: atlasAuthEnv.founderName,
     roles: ['founder_admin'],
   });
   const response = NextResponse.json({ ok: true, returnTo });
