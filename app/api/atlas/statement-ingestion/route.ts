@@ -115,22 +115,17 @@ async function ingestStatementFile(input: {
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify({
       profile_id: profileId,
-      document_type: 'bank_statement',
+      document_key: `${input.synthetic ? 'synthetic' : 'bank-statement'}-${hash.slice(0, 12)}`,
       document_name: input.filename,
       category: 'financial',
-      status: 'uploaded',
       storage_bucket: bucket,
       storage_path: objectPath,
+      mime_type: input.contentType || 'application/octet-stream',
+      size_bytes: input.buffer.byteLength,
       content_hash: hash,
       source_type: input.source,
       verification_status: parsed.transactions.length ? 'pending_review' : 'requires_founder_verification',
-      sensitive: true,
-      uploaded_by: 'atlas-founder',
-      uploaded_at: now,
-      metadata: {
-        transactionCount: parsed.transactions.length,
-        synthetic: Boolean(input.synthetic),
-      },
+      completed: true,
     }),
   });
   const documentId = documentRows[0].id;
@@ -141,46 +136,39 @@ async function ingestStatementFile(input: {
     body: JSON.stringify({
       profile_id: profileId,
       document_id: documentId,
-      account_owner_name: companyName,
       statement_start_date: parsed.statementStartDate,
       statement_end_date: parsed.statementEndDate,
       beginning_balance: parsed.beginningBalance,
       ending_balance: parsed.endingBalance,
-      total_deposits: parsed.totalDeposits,
-      total_withdrawals: parsed.totalWithdrawals,
+      deposits: parsed.totalDeposits,
+      withdrawals: parsed.totalWithdrawals,
       fees: parsed.fees,
       transfers: parsed.transfers,
-      founder_contributions: parsed.founderContributions,
-      potential_revenue: parsed.potentialRevenue,
-      potential_personal_expenses: parsed.potentialPersonalExpenses,
       source_type: input.source,
       verification_status: 'pending_founder_review',
-      traceability: {
-        objectPath,
-        hash,
-        parser: 'atlas-basic-statement-parser-v1',
-      },
+      extraction_confidence: parsed.transactions.length ? 72 : 15,
     }),
   });
   const statementId = statementRows[0].id;
 
-  await supabaseRequest('/rest/v1/atlas_statement_summaries', {
+  const summaryRows = await supabaseRequest<Array<{ id: string }>>('/rest/v1/atlas_statement_summaries', {
     method: 'POST',
-    headers: { Prefer: 'return=minimal' },
+    headers: { Prefer: 'return=representation' },
     body: JSON.stringify({
       profile_id: profileId,
-      statement_id: statementId,
       months_available: parsed.statementStartDate && parsed.statementEndDate ? 1 : 0,
       average_monthly_deposits: parsed.totalDeposits,
-      average_monthly_ending_balance: parsed.endingBalance,
-      deposit_consistency: parsed.transactions.length ? 'requires_founder_review' : 'missing',
+      average_ending_balance: parsed.endingBalance || 0,
+      deposit_consistency_status: parsed.transactions.length ? 'requires_founder_review' : 'missing',
       commingling_risk: parsed.potentialPersonalExpenses > 0 ? 'needs_attention' : 'requires_founder_review',
       missing_periods: [],
       lender_statement_requirement_fit: 'requires_lender_confirmation',
-      summary: 'Atlas parsed this statement for funding-readiness review. Ambiguous accounting classifications require founder confirmation.',
+      founder_contributions: parsed.founderContributions,
+      potential_revenue: parsed.potentialRevenue,
       verification_status: 'pending_founder_review',
     }),
   });
+  const summaryId = summaryRows[0].id;
 
   if (parsed.transactions.length) {
     const transactionRows = await supabaseRequest<Array<{ id: string; external_transaction_id: string }>>('/rest/v1/atlas_transactions', {
@@ -189,16 +177,12 @@ async function ingestStatementFile(input: {
       body: JSON.stringify(parsed.transactions.map((transaction, index) => ({
         profile_id: profileId,
         statement_id: statementId,
-        posted_date: transaction.postedDate || null,
+        transaction_date: transaction.postedDate || null,
         description: transaction.description,
         amount: transaction.amount,
-        transaction_type: transaction.amount >= 0 ? 'credit' : 'debit',
-        raw_category: transaction.category,
+        normalized_description: transaction.description.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim(),
+        transaction_hash: `${hash.slice(0, 16)}-${index}`,
         source_type: input.source,
-        source_trace: {
-          index,
-          parser: 'atlas-basic-statement-parser-v1',
-        },
       }))),
     });
 
@@ -206,14 +190,10 @@ async function ingestStatementFile(input: {
       method: 'POST',
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify(parsed.transactions.map((transaction, index) => ({
-        profile_id: profileId,
         transaction_id: transactionRows[index]?.id,
         classification: transaction.category,
         confidence: transaction.confidence,
-        requires_founder_review: transaction.category === 'requires_founder_review' || transaction.flags.length > 0,
         flags: transaction.flags,
-        reviewer: 'atlas',
-        reviewed_at: now,
       })).filter((row) => row.transaction_id)),
     });
   }
@@ -245,6 +225,7 @@ async function ingestStatementFile(input: {
   return {
     documentId,
     statementId,
+    summaryId,
     objectPath,
     transactionCount: parsed.transactions.length,
     totals: {
@@ -284,7 +265,7 @@ async function runSmoke() {
     }).catch(() => undefined);
   }
   await supabaseRequest(`/rest/v1/atlas_transactions?statement_id=eq.${result.statementId}`, { method: 'DELETE' }).catch(() => undefined);
-  await supabaseRequest(`/rest/v1/atlas_statement_summaries?statement_id=eq.${result.statementId}`, { method: 'DELETE' }).catch(() => undefined);
+  await supabaseRequest(`/rest/v1/atlas_statement_summaries?id=eq.${result.summaryId}`, { method: 'DELETE' }).catch(() => undefined);
   await supabaseRequest(`/rest/v1/atlas_bank_statements?id=eq.${result.statementId}`, { method: 'DELETE' }).catch(() => undefined);
   await supabaseRequest(`/rest/v1/atlas_documents?id=eq.${result.documentId}`, { method: 'DELETE' }).catch(() => undefined);
   await deletePrivateObjects([result.objectPath]);
