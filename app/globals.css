@@ -940,7 +940,8 @@ li {
 .founder-lender-list,
 .founder-review-summary,
 .founder-settings-grid,
-.founder-progress-tasks {
+.founder-progress-tasks,
+.founder-two-column {
   display: grid;
   gap: 14px;
 }
@@ -975,6 +976,17 @@ li {
 
 .founder-settings-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.founder-two-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.founder-two-column > div {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.64);
+  padding: 20px;
 }
 
 .founder-progress-tasks div.complete span {
@@ -1580,6 +1592,7 @@ li {
   .founder-step-nav,
   .founder-lender-list,
   .founder-review-summary,
+  .founder-two-column,
   .founder-settings-grid {
     grid-template-columns: 1fr;
   }

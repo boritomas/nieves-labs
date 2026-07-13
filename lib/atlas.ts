@@ -395,6 +395,25 @@ export type AtlasFinancialForecast = {
   months: AtlasForecastMonth[];
 };
 
+export type AtlasBusinessReadinessStatus = 'Ready' | 'Mostly ready' | 'Needs attention' | 'Missing' | 'Requires lender confirmation';
+
+export type AtlasBusinessReadinessReport = {
+  entityStatus: AtlasBusinessReadinessStatus;
+  einStatus: AtlasBusinessReadinessStatus;
+  bankingStatus: AtlasBusinessReadinessStatus;
+  consistencyStatus: AtlasBusinessReadinessStatus;
+  completed: string[];
+  founderActions: string[];
+  conflicts: AtlasEvidenceGap[];
+  lenderRequirements: Array<{
+    lender: string;
+    requirement: string;
+    status: string;
+    source: string;
+    lastVerifiedDate: string;
+  }>;
+};
+
 export const atlasFundingTypes: AtlasFundingType[] = ['SBA Microloan', 'CDFI', 'Grant', 'Bank Loan', 'Investor', 'Accelerator'];
 export const atlasFundingStatuses: AtlasFundingStatus[] = ['researching', 'targeted', 'preparing', 'submitted', 'follow_up', 'approved', 'declined'];
 export const atlasTaskStatuses: AtlasTaskStatus[] = ['not_started', 'in_progress', 'complete', 'blocked'];
@@ -481,6 +500,98 @@ export function calculatePersonalFinancialSummary(profile: AtlasPersonalFinancia
 
 export function calculateUseOfFundsTotal(plan: AtlasUseOfFundsPlan) {
   return plan.items.reduce((total, item) => total + Number(item.amount || 0), 0);
+}
+
+export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusinessReadinessReport {
+  const sourceFields = data.importState.importedFields || [];
+  const documents = data.documents || [];
+  const requiredDocs = documents.filter((document) => document.required);
+  const completedRequiredDocs = requiredDocs.filter((document) => document.completed);
+  const hasFormation = documents.some((document) => document.id === 'formation-documents' && document.completed);
+  const hasOperatingAgreement = documents.some((document) => document.id === 'operating-agreement' && document.completed);
+  const hasEinDocument = documents.some((document) => document.id === 'ein' && document.completed);
+  const hasBankStatements = documents.some((document) => document.id === 'bank-statements' && document.completed);
+  const useOfFundsTotal = calculateUseOfFundsTotal(data.useOfFundsPlan);
+  const completed: string[] = [];
+  const founderActions: string[] = [];
+  const conflicts: AtlasEvidenceGap[] = [...(data.importState.evidenceGaps || [])];
+
+  if (data.companyProfile.companyName && data.companyProfile.state) {
+    completed.push(`Matched the business profile to ${data.companyProfile.companyName} in ${data.companyProfile.state}.`);
+  } else {
+    founderActions.push('Confirm the legal business name and formation state.');
+  }
+
+  if (hasFormation) {
+    completed.push('Found formation-document evidence in the document vault.');
+  } else {
+    founderActions.push('Upload or confirm formation documents before lender review.');
+  }
+
+  if (hasOperatingAgreement) {
+    completed.push('Operating agreement is marked available.');
+  } else {
+    founderActions.push('Upload the operating agreement or mark why it is not applicable.');
+  }
+
+  if (hasEinDocument) {
+    completed.push('Located EIN confirmation documentation and kept EIN values masked.');
+  } else {
+    founderActions.push('Upload the EIN confirmation letter. EIN confirmation document missing.');
+  }
+
+  if (hasBankStatements) {
+    completed.push('Bank statements are marked available for lender package review.');
+  } else {
+    founderActions.push('Upload recent business bank statements for statement-history review.');
+  }
+
+  if (useOfFundsTotal === data.useOfFundsPlan.selectedAmount) {
+    completed.push('Use-of-funds total matches the selected funding amount.');
+  } else {
+    conflicts.push({
+      id: 'use-of-funds-total-mismatch',
+      category: 'Conflict',
+      label: 'Use-of-funds total',
+      detail: `Use-of-funds items total ${money(useOfFundsTotal)}, but selected amount is ${money(data.useOfFundsPlan.selectedAmount)}.`,
+      severity: 'high',
+    });
+    founderActions.push('Adjust use-of-funds items so the total matches the selected funding amount.');
+  }
+
+  if (!sourceFields.some((field) => field.fieldPath.includes('bank') || field.sourceDocumentType.toLowerCase().includes('csv'))) {
+    founderActions.push('Import bank statement PDF/CSV/OFX/QFX files when available; ambiguous transactions will require founder review.');
+  }
+
+  const entityStatus: AtlasBusinessReadinessStatus = hasFormation && data.companyProfile.companyName
+    ? hasOperatingAgreement ? 'Mostly ready' : 'Needs attention'
+    : 'Missing';
+  const einStatus: AtlasBusinessReadinessStatus = hasEinDocument ? 'Mostly ready' : 'Missing';
+  const bankingStatus: AtlasBusinessReadinessStatus = hasBankStatements ? 'Needs attention' : 'Missing';
+  const consistencyStatus: AtlasBusinessReadinessStatus = conflicts.length ? 'Needs attention' : 'Mostly ready';
+
+  const lenderRequirements = data.fundingOpportunities.filter((lender) => lender.status !== 'declined').map((lender) => ({
+    lender: lender.lenderName || lender.fundingSource,
+    requirement: 'Bank statement months, startup exceptions, personal statement requirements, bankruptcy policy, and new-account acceptance',
+    status: 'REQUIRES LENDER CONFIRMATION',
+    source: lender.website || 'Official lender source not yet attached',
+    lastVerifiedDate: '',
+  }));
+
+  if (completedRequiredDocs.length) {
+    completed.push(`${completedRequiredDocs.length} of ${requiredDocs.length} required documents are marked ready.`);
+  }
+
+  return {
+    entityStatus,
+    einStatus,
+    bankingStatus,
+    consistencyStatus,
+    completed: completed.slice(0, 6),
+    founderActions: founderActions.slice(0, 8),
+    conflicts,
+    lenderRequirements,
+  };
 }
 
 export function calculateAtlasReadinessAssessment(data: AtlasData) {

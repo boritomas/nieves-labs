@@ -370,3 +370,72 @@ Internal names may remain in code and advanced/admin documentation.
 - Guided screens are presentation-layer wrappers around existing Atlas modules; deeper field-by-field editing still uses the preserved advanced routes.
 - Atlas still prepares materials only and does not submit lender applications automatically.
 - Founder review remains mandatory before any lender-facing use.
+
+## Atlas Funding OS v1 production storage
+
+Atlas Funding OS v1 moves production Atlas state away from local `.data/atlas.json` and into a dedicated Supabase project. Local JSON remains a development fallback only. Vercel production must set `ATLAS_STORAGE_PROVIDER=supabase`, `ATLAS_SUPABASE_URL`, and `ATLAS_SUPABASE_SECRET_KEY`.
+
+The app also accepts `ATLAS_SUPABASE_SERVICE_ROLE_KEY` as a backward-compatible alias, but the preferred server-only value is `ATLAS_SUPABASE_SECRET_KEY`.
+
+Production behavior:
+
+- If `ATLAS_STORAGE_PROVIDER=supabase`, Atlas reads and writes the durable Supabase profile snapshot.
+- If Vercel production has no Supabase configuration, Atlas refuses to write sensitive data to local JSON.
+- Server credentials stay server-only and must never be exposed through `NEXT_PUBLIC_*`, URLs, logs, screenshots, or exports.
+- Existing Atlas JSON can be backed up with `node scripts/backup-atlas-json.mjs`.
+- Existing Atlas JSON can be migrated with `node scripts/migrate-atlas-to-supabase.mjs` when the required Atlas Supabase env vars are present.
+
+## Atlas Funding OS v1 database and storage
+
+The production SQL migration lives at:
+
+- `docs/sql/atlas-funding-os-v1.sql`
+
+It creates a private Supabase storage bucket:
+
+- `atlas-private-documents`
+
+It also creates durable tables for:
+
+- profiles, companies, founders, ownership
+- entity and EIN verification metadata
+- bank accounts, statements, summaries, transactions, and classifications
+- documents, document versions, source records, imports, and field sources
+- lender records, lender requirements, and requirement mappings
+- use-of-funds plans, financial scenarios, application packages, package versions, approvals, applications, follow-ups, founder actions, readiness scores, and audit events
+
+All public Atlas tables have RLS enabled. Browser/client access is intentionally denied by default. Atlas server routes use server-only credentials for authorized operations.
+
+## Atlas Funding OS v1 automated readiness checks
+
+Atlas now generates a founder-facing business-readiness report inside the existing five-step journey. It does not add a new founder-facing dashboard.
+
+The report checks:
+
+- business identity and formation-document status
+- operating agreement availability
+- EIN confirmation-document status, with EIN values masked by default
+- banking-readiness status based on statement availability
+- use-of-funds consistency
+- imported field/evidence conflicts
+- lender-specific requirements that still require lender confirmation
+- plain-language "Atlas completed" and "Tomas still needs to" action lists
+
+Unknown official facts remain marked as `REQUIRES FOUNDER OR STATE PORTAL VERIFICATION` or `REQUIRES LENDER CONFIRMATION`. Atlas never assumes entity good standing, lender acceptance, EIN validity, or final accounting/tax classifications without verified evidence.
+
+## Atlas Funding OS v1 rollback
+
+Rollback path:
+
+1. Keep the JSON backup manifest created under the workspace-level `outputs/atlas-backups/` folder.
+2. Remove or disable `ATLAS_STORAGE_PROVIDER=supabase` in the target environment.
+3. Restore the selected backup to `.data/atlas.json` for local development only.
+4. Do not use JSON fallback for production funding-campaign data unless a founder-approved emergency process is documented.
+
+## Atlas Funding OS v1 remaining limitations
+
+- Manual bank-statement upload metadata and parsing support are now modeled, but real bank OCR/OFX/QFX parsing requires founder-provided source files and additional parser QA.
+- Plaid or live bank OAuth is intentionally not implemented in this mission.
+- Official state registry checks may require portal access or manual founder verification.
+- Lender rules that are not published in official sources remain marked for lender confirmation.
+- Atlas prepares packages and tracks submissions, but Tomas must still review and submit lender applications manually.

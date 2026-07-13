@@ -4,6 +4,7 @@ import {
   calculateAtlasForecast,
   calculateAtlasReadinessAssessment,
   calculateUseOfFundsTotal,
+  generateAtlasBusinessReadinessReport,
   generateAtlasPackage,
   getLatestAtlasPackage,
   type AtlasData,
@@ -76,6 +77,7 @@ export function AtlasFounderHome({ data, token }: { data: AtlasData; token: stri
   const progress = getFounderProgress(data);
   const next = getNextBestAction(data, token);
   const insight = getAtlasInsight(data);
+  const readiness = generateAtlasBusinessReadinessReport(data);
   return (
     <>
       <AtlasFounderHero
@@ -121,6 +123,8 @@ export function AtlasFounderHome({ data, token }: { data: AtlasData; token: stri
         <h2>{insight.title}</h2>
         <p>{insight.detail}</p>
       </section>
+      <BusinessReadinessPanel data={data} />
+      <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
   );
 }
@@ -158,6 +162,7 @@ export function AtlasJourneyScreen({ data, token }: { data: AtlasData; token: st
 
 export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token: string }) {
   const missingDocs = data.documents.filter((document) => document.required && !document.completed);
+  const readiness = generateAtlasBusinessReadinessReport(data);
   return (
     <>
       <AtlasFounderHero
@@ -203,6 +208,7 @@ export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token:
           </div>
         </details>
       </section>
+      <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
   );
 }
@@ -244,6 +250,7 @@ export function AtlasFounderReview({ data, token }: { data: AtlasData; token: st
   const generated = generateAtlasPackage(data);
   const missingDocs = data.documents.filter((document) => document.required && !document.completed);
   const approvalsMissing = latest ? atlasFounderApprovalKeys.filter((key) => !latest.founderApprovals[key]) : atlasFounderApprovalKeys;
+  const readiness = generateAtlasBusinessReadinessReport(data);
   return (
     <>
       <AtlasFounderHero
@@ -278,7 +285,79 @@ export function AtlasFounderReview({ data, token }: { data: AtlasData; token: st
           <Link className="button-primary" href={`/atlas/track?token=${encodeURIComponent(token)}`}>Continue to tracking</Link>
         </div>
       </section>
+      <BusinessReadinessPanel data={data} />
+      <section className="founder-simple-panel">
+        <p className="eyebrow">Lender rules</p>
+        <h2>Requirements that still need confirmation</h2>
+        <div className="founder-status-list">
+          {readiness.lenderRequirements.map((item) => (
+            <div className="founder-status-row" key={`${item.lender}-${item.requirement}`}>
+              <span>{item.status}</span>
+              <strong>{item.lender}</strong>
+              <p>{item.requirement}. Source: {item.source}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+      <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
+  );
+}
+
+function BusinessReadinessPanel({ data }: { data: AtlasData }) {
+  const readiness = generateAtlasBusinessReadinessReport(data);
+  const items = [
+    ['Business identity', readiness.entityStatus],
+    ['EIN confirmation', readiness.einStatus],
+    ['Banking readiness', readiness.bankingStatus],
+    ['Document consistency', readiness.consistencyStatus],
+  ];
+
+  return (
+    <section className="founder-simple-panel">
+      <p className="eyebrow">Automated checks</p>
+      <h2>Business readiness verification</h2>
+      <p>Atlas checks approved documents and application data, but it never assumes lender acceptance or official state status without a verified source.</p>
+      <section className="founder-review-summary">
+        {items.map(([label, status]) => (
+          <SummaryItem key={label} label={label} value={status} status={status} />
+        ))}
+      </section>
+      {readiness.conflicts.length > 0 && (
+        <div className="founder-status-list">
+          {readiness.conflicts.slice(0, 4).map((conflict) => (
+            <div className="founder-status-row" key={conflict.id}>
+              <span>{conflict.severity}</span>
+              <strong>{conflict.label}</strong>
+              <p>{conflict.detail}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function FounderActionList({ completed, actions }: { completed: string[]; actions: string[] }) {
+  return (
+    <section className="founder-simple-panel">
+      <p className="eyebrow">Plain-language action list</p>
+      <h2>What Atlas found, and what Tomas still needs to do</h2>
+      <div className="founder-two-column">
+        <div>
+          <h3>Atlas completed</h3>
+          <ul className="atlas-list">
+            {(completed.length ? completed : ['Prepared the funding workspace and reviewed available Atlas records.']).map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+        <div>
+          <h3>Tomas still needs to</h3>
+          <ol className="atlas-list">
+            {(actions.length ? actions : ['Review the final application package before any lender submission.']).map((item) => <li key={item}>{item}</li>)}
+          </ol>
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -24,6 +24,15 @@ import {
 
 const dataDir = path.join(process.cwd(), '.data');
 const dataFile = path.join(dataDir, 'atlas.json');
+const atlasProfileSlug = 'default';
+const atlasTenantId = 'nieves-labs';
+
+type AtlasStorageProvider = 'json' | 'supabase';
+type AtlasSupabaseRequestInit = {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+};
 
 const now = new Date().toISOString();
 
@@ -381,7 +390,70 @@ function normalizeAtlasData(data: AtlasData): AtlasData {
   };
 }
 
-export async function getAtlasData(): Promise<AtlasData> {
+function getSupabaseConfig() {
+  return {
+    url: process.env.ATLAS_SUPABASE_URL || '',
+    secretKey: process.env.ATLAS_SUPABASE_SECRET_KEY || process.env.ATLAS_SUPABASE_SERVICE_ROLE_KEY || '',
+  };
+}
+
+export function getAtlasStorageProvider(): AtlasStorageProvider {
+  const configuredProvider = process.env.ATLAS_STORAGE_PROVIDER;
+  const supabase = getSupabaseConfig();
+  const hasSupabase = Boolean(supabase.url && supabase.secretKey);
+
+  if (configuredProvider === 'supabase') {
+    if (!hasSupabase) {
+      throw new Error('Atlas Supabase storage is selected, but ATLAS_SUPABASE_URL and ATLAS_SUPABASE_SECRET_KEY are not configured.');
+    }
+    return 'supabase';
+  }
+
+  if (configuredProvider && configuredProvider !== 'json') {
+    throw new Error(`Unsupported Atlas storage provider: ${configuredProvider}`);
+  }
+
+  if (process.env.VERCEL_ENV === 'production' && !hasSupabase) {
+    throw new Error('Atlas production storage is not configured. Refusing to use local JSON storage on Vercel production.');
+  }
+
+  if (process.env.VERCEL_ENV && hasSupabase) {
+    return 'supabase';
+  }
+
+  return 'json';
+}
+
+async function supabaseRequest<T>(pathName: string, init: AtlasSupabaseRequestInit = {}): Promise<T> {
+  const { url, secretKey } = getSupabaseConfig();
+  if (!url || !secretKey) {
+    throw new Error('Atlas Supabase credentials are not configured.');
+  }
+
+  const response = await fetch(`${url.replace(/\/$/, '')}${pathName}`, {
+    ...init,
+    headers: {
+      apikey: secretKey,
+      Authorization: `Bearer ${secretKey}`,
+      'Content-Type': 'application/json',
+      ...(init.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Atlas Supabase request failed (${response.status}): ${text.slice(0, 240)}`);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+async function readJsonAtlasData(): Promise<AtlasData> {
   try {
     const raw = await readFile(dataFile, 'utf8');
     return withScores(JSON.parse(raw) as AtlasData);
@@ -390,9 +462,79 @@ export async function getAtlasData(): Promise<AtlasData> {
   }
 }
 
-async function writeAtlasData(data: AtlasData) {
+async function writeJsonAtlasData(data: AtlasData) {
   await mkdir(dataDir, { recursive: true });
   await writeFile(dataFile, JSON.stringify(withScores(data), null, 2));
+}
+
+async function readSupabaseAtlasData(): Promise<AtlasData> {
+  const rows = await supabaseRequest<Array<{ snapshot: AtlasData }>>(
+    `/rest/v1/atlas_profiles?profile_slug=eq.${encodeURIComponent(atlasProfileSlug)}&select=snapshot&limit=1`,
+    { method: 'GET' },
+  );
+
+  if (!rows.length) {
+    const seeded = withScores(seedData);
+    await writeSupabaseAtlasData(seeded);
+    return seeded;
+  }
+
+  return withScores(rows[0].snapshot);
+}
+
+async function writeSupabaseAtlasData(data: AtlasData) {
+  const snapshot = withScores(data);
+  await supabaseRequest<Array<{ id: string }>>(
+    `/rest/v1/atlas_profiles?on_conflict=profile_slug`,
+    {
+      method: 'POST',
+      headers: {
+        Prefer: 'resolution=merge-duplicates,return=representation',
+      },
+      body: JSON.stringify({
+        profile_slug: atlasProfileSlug,
+        tenant_id: atlasTenantId,
+        snapshot,
+        storage_version: 1,
+        verification_status: 'pending_review',
+        founder_approval_status: 'pending_review',
+        source_type: 'atlas_app',
+        updated_by: 'atlas-app',
+      }),
+    },
+  );
+  await writeAtlasAuditEvent('atlas_snapshot_saved', 'Atlas profile snapshot saved to durable Supabase storage.', {
+    profileSlug: atlasProfileSlug,
+    storageVersion: 1,
+  });
+}
+
+async function writeAtlasAuditEvent(eventType: string, summary: string, metadata: Record<string, unknown> = {}) {
+  if (getAtlasStorageProvider() !== 'supabase') return;
+
+  await supabaseRequest('/rest/v1/atlas_audit_events', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      event_type: eventType,
+      actor: 'atlas-app',
+      summary,
+      metadata,
+    }),
+  });
+}
+
+export async function getAtlasData(): Promise<AtlasData> {
+  return getAtlasStorageProvider() === 'supabase' ? readSupabaseAtlasData() : readJsonAtlasData();
+}
+
+async function writeAtlasData(data: AtlasData) {
+  if (getAtlasStorageProvider() === 'supabase') {
+    await writeSupabaseAtlasData(data);
+    return;
+  }
+
+  await writeJsonAtlasData(data);
 }
 
 export async function updateAtlasFinancialAssumptions(patch: Partial<AtlasFinancialAssumptions>) {
