@@ -5,7 +5,8 @@ import { env } from '@/lib/env';
 function authorized(request: Request) {
   const url = new URL(request.url);
   const token = url.searchParams.get('token') || request.headers.get('x-admin-token') || '';
-  return Boolean(env.adminToken && token === env.adminToken);
+  const diagnosticsToken = process.env.ATLAS_DIAGNOSTICS_TOKEN || '';
+  return Boolean((env.adminToken && token === env.adminToken) || (diagnosticsToken && token === diagnosticsToken));
 }
 
 export async function GET(request: Request) {
