@@ -27,6 +27,7 @@ export default function AtlasAdvancedDashboard({ data, token }: { data: AtlasDat
           <p>{data.companyProfile.nextAction}</p>
           <div className="hero-actions">
             <Link className="button-primary" href={`/atlas/sba-loan-package?token=${encodeURIComponent(token)}`}>Open SBA Package</Link>
+            <Link className="button-secondary" href={`/atlas/funding-campaign?token=${encodeURIComponent(token)}`}>Open Campaign OS</Link>
             <Link className="button-secondary" href={`/atlas/document-vault?token=${encodeURIComponent(token)}`}>Review Documents</Link>
             <Link className="button-secondary" href={`/atlas/application-builder?token=${encodeURIComponent(token)}`}>Build Application</Link>
             <Link className="button-secondary" href={`/atlas/package-generator?token=${encodeURIComponent(token)}`}>Generate Package</Link>

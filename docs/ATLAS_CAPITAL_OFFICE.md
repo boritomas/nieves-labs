@@ -258,6 +258,57 @@ Atlas supports:
 
 DOCX and XLSX are parsed server-side from ZIP XML content. PDF parsing is a conservative text extraction pass and does not perform OCR.
 
+## Release 1.2 summary
+
+Release 1.2 captures the live funding campaign lessons learned from the SBA/CDFI application effort and turns them into a five-step Funding Campaign OS.
+
+New route:
+
+- `/atlas/funding-campaign`
+
+The route is protected by the existing Atlas admin-token pattern.
+
+## Release 1.2 five-step campaign model
+
+Atlas now compresses future funding campaigns into:
+
+1. Founder profile once
+2. Lender triage and failover
+3. Portal field mapping
+4. Submission proof and evidence
+5. Follow-up operating loop
+
+The intent is to stop repeating two-day manual portal loops. Atlas now records which paths succeeded, which paths blocked, what founder-only checkpoint stopped automation, and which next action should happen after submission.
+
+## Release 1.2 lender campaign lessons
+
+- DreamSpring: successful submitted path; application moved to lender review with a three-business-day response expectation.
+- SBA Lender Match: blocked by SBA account/loan-number registration validation. Do not retry the same registration loop without SBA account resolution.
+- PeopleFund: blocked by account-creation/login conflict. Use an account-resolution branch before retrying.
+- BCL of Texas: prescreen indicated lending opportunities were not available at this time. Preserve decline reason and move on.
+- LiftFund: paused by login/reset delivery and founder-only field requirements. Preserve progress; resume only after access recovery.
+
+## Release 1.2 automation guardrails
+
+Atlas may prepare materials, map non-sensitive answers, preserve status evidence, and track follow-up. Atlas must not store or certify:
+
+- SSN/ITIN
+- Date of birth
+- Government ID or identity-verification answers
+- Credit authorization
+- Personal guarantees or lender certifications
+- CAPTCHA, MFA, password, or payment-card steps
+
+Those remain founder-only actions on official lender screens.
+
+## Future Release 1.3 recommendations
+
+- Add encrypted founder-only session vault or browser-local autofill for sensitive fields that should never enter source control.
+- Add lender-specific form maps for DreamSpring, SBA Lender Match, PeopleFund, LiftFund, and other verified CDFI paths.
+- Add evidence packet export containing screenshots, submitted answer summaries, uploaded-document lists, and follow-up tasks.
+- Add reminder automation for lender response windows and document requests.
+- Add account-resolution playbooks for duplicate-account and password-reset loops.
+
 ## Release 1.1 storage updates
 
 Release 1.1 extends the file-backed Atlas storage shape with database-ready equivalents for:

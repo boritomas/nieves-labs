@@ -30,6 +30,7 @@ export function AtlasFounderHeader({ token }: { token: string }) {
       <Link href="/" className="brand" aria-label="Nieves Labs home"><BrandLogo size="sm" /></Link>
       <nav className="founder-nav" aria-label="Atlas founder navigation">
         <Link href={`/atlas?token=${encodeURIComponent(token)}`}>Home</Link>
+        <Link href={`/atlas/funding-campaign?token=${encodeURIComponent(token)}`}>Funding OS</Link>
         <Link href={`/atlas/journey?token=${encodeURIComponent(token)}`}>My Application</Link>
         <Link href={`/atlas/founder-intake?token=${encodeURIComponent(token)}`}>Founder Intake</Link>
         <Link href={`/atlas/documents?token=${encodeURIComponent(token)}`}>Documents</Link>

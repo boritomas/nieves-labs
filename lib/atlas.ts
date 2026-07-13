@@ -435,6 +435,43 @@ export type AtlasBusinessReadinessReport = {
   }>;
 };
 
+export type AtlasFundingCampaignStep = {
+  id: string;
+  stepNumber: number;
+  title: string;
+  outcome: string;
+  automation: string[];
+  founderCheckpoint: string;
+  status: AtlasWorkflowStageStatus;
+};
+
+export type AtlasLenderPlaybookEntry = {
+  lender: string;
+  path: string;
+  result: 'submitted' | 'blocked' | 'declined' | 'fallback' | 'ready';
+  lesson: string;
+  automationRule: string;
+};
+
+export type AtlasFundingCampaignOS = {
+  title: string;
+  requestedAmount: number;
+  currentApplication: {
+    lender: string;
+    program: string;
+    status: string;
+    submittedAt: string;
+    applicationId: string;
+    evidence: string;
+    nextFollowUp: string;
+  };
+  steps: AtlasFundingCampaignStep[];
+  lenderPlaybook: AtlasLenderPlaybookEntry[];
+  blockedPaths: AtlasLenderPlaybookEntry[];
+  automationBacklog: string[];
+  founderOnlyFields: string[];
+};
+
 export const atlasFundingTypes: AtlasFundingType[] = ['SBA Microloan', 'CDFI', 'Grant', 'Bank Loan', 'Investor', 'Accelerator'];
 export const atlasFundingStatuses: AtlasFundingStatus[] = ['researching', 'targeted', 'preparing', 'submitted', 'follow_up', 'approved', 'declined'];
 export const atlasTaskStatuses: AtlasTaskStatus[] = ['not_started', 'in_progress', 'complete', 'blocked'];
@@ -521,6 +558,152 @@ export function calculatePersonalFinancialSummary(profile: AtlasPersonalFinancia
 
 export function calculateUseOfFundsTotal(plan: AtlasUseOfFundsPlan) {
   return plan.items.reduce((total, item) => total + Number(item.amount || 0), 0);
+}
+
+export function buildAtlasFundingCampaignOS(data: AtlasData): AtlasFundingCampaignOS {
+  const submitted = data.fundingOpportunities.find((opportunity) => opportunity.status === 'submitted');
+  const rawApplicationId = submitted?.applicationUrl?.includes('/loan_applications/')
+    ? submitted.applicationUrl.split('/').filter(Boolean).at(-1) || ''
+    : '';
+  const applicationId = rawApplicationId.includes('private-recorded') ? 'Recorded in private evidence package' : rawApplicationId;
+  const requestedAmount = data.useOfFundsPlan.selectedAmount || data.financialAssumptions.loanAmount || data.companyProfile.fundingTargetMax;
+  const docsComplete = data.documents.filter((document) => document.required).every((document) => document.completed);
+  const useOfFundsReady = calculateUseOfFundsTotal(data.useOfFundsPlan) === requestedAmount;
+  const hasSubmittedApplication = Boolean(submitted);
+  const founderReviewReady = data.applicationSections.every((section) => section.reviewed);
+
+  const lenderPlaybook: AtlasLenderPlaybookEntry[] = [
+    {
+      lender: 'DreamSpring',
+      path: 'CDFI / startup-friendly small business loan',
+      result: hasSubmittedApplication ? 'submitted' : 'ready',
+      lesson: 'This was the successful failover path after other portals blocked on account, prescreen, or SBA registration issues.',
+      automationRule: 'Prioritize DreamSpring-style portals that permit founder-guided identity checkpoints, payment verification, and an application status page.',
+    },
+    {
+      lender: 'SBA Lender Match',
+      path: 'SBA lender discovery / SSO registration',
+      result: 'blocked',
+      lesson: 'SBA registration can block if an existing SBA loan number or account history must be reconciled.',
+      automationRule: 'Detect SBA SSO registration blockers early and route to support/founder-only resolution instead of retrying the same form.',
+    },
+    {
+      lender: 'PeopleFund',
+      path: 'Texas CDFI / SBA microlender',
+      result: 'blocked',
+      lesson: 'Account creation may fail when a prior account exists but password recovery does not resolve cleanly.',
+      automationRule: 'Add an account-exists branch: switch to support/contact escalation after one failed login reset cycle.',
+    },
+    {
+      lender: 'BCL of Texas',
+      path: 'CDFI prescreen / consultation',
+      result: 'declined',
+      lesson: 'Prescreen returned that lending opportunities were not available at this time.',
+      automationRule: 'Preserve the decline reason, stop retrying, and automatically move the lender to fallback status.',
+    },
+    {
+      lender: 'LiftFund',
+      path: 'SBA Microloan / borrower portal',
+      result: 'blocked',
+      lesson: 'Portal access stalled on login/reset delivery and founder-only field requirements.',
+      automationRule: 'Keep partially completed non-sensitive progress, then pause until access recovery or lender contact clears the blocker.',
+    },
+  ];
+
+  const steps: AtlasFundingCampaignStep[] = [
+    {
+      id: 'founder-profile-once',
+      stepNumber: 1,
+      title: 'Founder profile once',
+      outcome: 'Collect one reusable business/founder packet, mask sensitive identity values, and flag anything Tomas must enter directly.',
+      automation: [
+        'Map company profile, owner profile, EIN evidence, contact details, and preferred lender answers into reusable field groups.',
+        'Block source-control storage of SSN, DOB, identity documents, bank logins, passwords, and credit authorization values.',
+      ],
+      founderCheckpoint: 'Tomas enters or confirms private identity fields only inside official lender portals.',
+      status: data.companyProfile.companyName && data.companyProfile.businessEmail ? 'complete' : 'in_progress',
+    },
+    {
+      id: 'lender-triage',
+      stepNumber: 2,
+      title: 'Lender triage and failover',
+      outcome: 'Rank SBA Microloan, CDFI, and verified startup-friendly lenders, then move quickly when a portal blocks.',
+      automation: [
+        'Score each lender on amount fit, startup fit, bankruptcy tolerance, account friction, state fit, and document fit.',
+        'Convert failed prescreens, duplicate-account loops, and SSO blockers into tracked fallback decisions.',
+      ],
+      founderCheckpoint: 'Tomas approves which lender path to pursue before final submission.',
+      status: hasSubmittedApplication ? 'complete' : data.fundingOpportunities.length ? 'in_progress' : 'not_started',
+    },
+    {
+      id: 'field-mapping',
+      stepNumber: 3,
+      title: 'Portal field mapping',
+      outcome: 'Use Atlas answers to populate non-sensitive lender forms with the same answer set every time.',
+      automation: [
+        'Generate application-ready answers for business summary, use of funds, revenue assumptions, risk mitigation, and Chapter 7 disclosure.',
+        'Track exact values entered, documents requested, and fields left for founder-only entry.',
+      ],
+      founderCheckpoint: 'Tomas reviews certifications, guarantees, CAPTCHA/MFA, and any credit or identity consent.',
+      status: founderReviewReady ? 'complete' : 'in_progress',
+    },
+    {
+      id: 'submission-proof',
+      stepNumber: 4,
+      title: 'Submission proof and evidence',
+      outcome: 'Capture status, confirmation details, documents submitted, and next response window immediately after submission.',
+      automation: [
+        'Record lender, program, requested amount, application status, submission evidence, and follow-up date.',
+        'Leave browser evidence visible until founder review is complete.',
+      ],
+      founderCheckpoint: 'Tomas gives explicit final approval before any lender submission action.',
+      status: hasSubmittedApplication ? 'complete' : 'blocked',
+    },
+    {
+      id: 'follow-up-automation',
+      stepNumber: 5,
+      title: 'Follow-up operating loop',
+      outcome: 'Turn the submitted application into a clean follow-up queue instead of a manual memory task.',
+      automation: [
+        'Create next follow-up, owner reminder, lender request tracker, and document-request checklist.',
+        'Preserve blocker history so the next funding campaign starts from the best path, not from scratch.',
+      ],
+      founderCheckpoint: 'Tomas responds to lender-only calls, signatures, identity verification, or underwriting requests.',
+      status: submitted?.nextFollowUpDate ? 'in_progress' : 'not_started',
+    },
+  ];
+
+  return {
+    title: 'Five-step funding campaign OS',
+    requestedAmount,
+    currentApplication: {
+      lender: submitted?.lenderName || 'DreamSpring',
+      program: submitted?.type || 'CDFI',
+      status: submitted?.statusNotes || (hasSubmittedApplication ? 'Submitted and under review.' : 'No submitted application recorded yet.'),
+      submittedAt: submitted?.lastContactedDate || '',
+      applicationId,
+      evidence: submitted?.notes || 'Evidence should be captured as a safe screenshot or lender confirmation page.',
+      nextFollowUp: submitted?.nextFollowUpDate || 'Set after submission.',
+    },
+    steps,
+    lenderPlaybook,
+    blockedPaths: lenderPlaybook.filter((entry) => ['blocked', 'declined'].includes(entry.result)),
+    automationBacklog: [
+      'Add encrypted founder-only field vault or session-only autofill for DOB, SSN/ITIN, personal address, phone, and identity fields.',
+      'Add per-lender form maps that separate safe business fields from founder-only certification fields.',
+      'Add account-resolution playbooks for duplicate-account and password-reset loops.',
+      'Add lender response reminders for the three-business-day review window and document requests.',
+      'Add evidence packet export with screenshots, submitted answers, uploaded-document list, and follow-up tasks.',
+    ],
+    founderOnlyFields: [
+      'SSN/ITIN',
+      'Date of birth',
+      'Government ID or identity verification',
+      'Credit authorization',
+      'Personal guarantee or certification language',
+      'CAPTCHA, MFA, password, and payment-card steps',
+    ],
+  };
 }
 
 export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusinessReadinessReport {
@@ -749,6 +932,7 @@ export function calculateReadinessScores(data: Omit<AtlasData, 'readinessScores'
 export function buildAtlasWorkflowStages(data: AtlasData, token: string): AtlasWorkflowStage[] {
   const query = `?token=${encodeURIComponent(token)}`;
   const assessment = calculateAtlasReadinessAssessment(data);
+  const campaign = buildAtlasFundingCampaignOS(data);
   const hasSelectedLender = data.fundingOpportunities.some((opportunity) => ['targeted', 'preparing', 'submitted', 'follow_up', 'approved'].includes(opportunity.status));
   const requiredDocsComplete = data.documents.filter((document) => document.required).every((document) => document.completed);
   const packageVersion = getLatestAtlasPackage(data);
@@ -760,6 +944,7 @@ export function buildAtlasWorkflowStages(data: AtlasData, token: string): AtlasW
       : 'not_started';
 
   return [
+    ['funding-campaign', 'Funding Campaign OS', '/atlas/funding-campaign', campaign.currentApplication.applicationId ? 'complete' : 'in_progress', 'Five-step lender campaign, failover rules, and follow-up evidence.'],
     ['readiness-assessment', 'Readiness Assessment', '/atlas/readiness-assessment', assessment.overallReadiness >= 80 ? 'complete' : 'in_progress', 'SBA/CDFI readiness scoring, gaps, and recommendations.'],
     ['import-center', 'Import Center', '/atlas/import-center', importStageStatus, 'Discover, parse, trace, and founder-review source documents.'],
     ['company-profile', 'Company Profile', '/atlas/company-profile', data.companyProfile.companyName && data.companyProfile.industry ? 'complete' : 'in_progress', 'Reusable master profile for all lender materials.'],

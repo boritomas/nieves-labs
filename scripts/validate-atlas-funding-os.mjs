@@ -4,7 +4,9 @@ import { readFile } from 'fs/promises';
 const store = await readFile(new URL('../lib/atlas-store.ts', import.meta.url), 'utf8');
 const atlas = await readFile(new URL('../lib/atlas.ts', import.meta.url), 'utf8');
 const founderExperience = await readFile(new URL('../components/AtlasFounderExperience.tsx', import.meta.url), 'utf8');
-const source = `${store}\n${atlas}\n${founderExperience}`;
+const campaign = await readFile(new URL('../components/AtlasFundingCampaignOS.tsx', import.meta.url), 'utf8');
+const campaignRoute = await readFile(new URL('../app/atlas/funding-campaign/page.tsx', import.meta.url), 'utf8');
+const source = `${store}\n${atlas}\n${founderExperience}\n${campaign}\n${campaignRoute}`;
 
 const requiredSnippets = [
   ['50k loan amount', 'loanAmount: 50000'],
@@ -12,9 +14,14 @@ const requiredSnippets = [
   ['PeopleFund primary lender', "id: 'peoplefund-primary'"],
   ['BCL secondary lender', "id: 'bcl-of-texas-secondary'"],
   ['LiftFund paused record', "id: 'liftfund-paused'"],
+  ['DreamSpring submitted path', "id: 'dreamspring-submitted'"],
+  ['SBA Lender Match blocker', "id: 'sba-lender-match-blocked'"],
+  ['Funding Campaign OS route', 'Funding Campaign OS'],
+  ['Five-step campaign model', 'buildAtlasFundingCampaignOS'],
   ['EIN verification status field', 'einVerificationStatus'],
   ['Full EIN excluded field', 'Full EIN intentionally excluded'],
   ['Founder-only boundary', 'credit authorization must be entered only by Tomas'],
+  ['Founder-only sensitive guardrail', 'SSN/ITIN'],
   ['Business readiness EIN ready state', "einStatus: AtlasBusinessReadinessStatus"],
 ];
 
@@ -43,8 +50,8 @@ console.log(JSON.stringify({
   ok: true,
   requestedAmount: 50000,
   useOfFundsTotal,
-  primaryLender: 'PeopleFund',
-  secondaryLender: 'BCL of Texas',
+  submittedLender: 'DreamSpring',
+  preservedBlockers: ['SBA Lender Match', 'PeopleFund', 'BCL of Texas', 'LiftFund'],
   pausedLenderPreserved: 'LiftFund',
   fullEinStored: false,
 }, null, 2));

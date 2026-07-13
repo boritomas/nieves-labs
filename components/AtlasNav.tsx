@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 const atlasNavItems = [
   ['Executive Dashboard', '/atlas'],
+  ['Funding Campaign OS', '/atlas/funding-campaign'],
   ['Capital Office', '/atlas/capital-office'],
   ['Readiness', '/atlas/readiness-assessment'],
   ['Founder Intake', '/atlas/founder-intake'],

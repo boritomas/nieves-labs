@@ -1199,6 +1199,53 @@ li {
   gap: 16px;
 }
 
+.atlas-campaign-steps {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas-campaign-step {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.68);
+}
+
+.atlas-campaign-step > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: #06111e;
+  background: var(--brand);
+  font-weight: 900;
+}
+
+.atlas-campaign-step strong {
+  font-size: 19px;
+}
+
+.atlas-campaign-step.complete {
+  border-color: rgba(52, 211, 153, 0.42);
+}
+
+.atlas-campaign-step.in_progress {
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+.atlas-campaign-step.blocked {
+  border-color: rgba(251, 113, 133, 0.42);
+}
+
+.atlas-note {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .atlas-form-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
