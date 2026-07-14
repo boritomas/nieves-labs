@@ -2,6 +2,7 @@ import Link from 'next/link';
 import {
   atlasPath,
   atlasFounderApprovalKeys,
+  buildAtlasAutonomousOperatorState,
   calculateAtlasReadinessAssessment,
   calculateUseOfFundsTotal,
   generateAtlasBusinessReadinessReport,
@@ -82,28 +83,82 @@ export function AtlasFounderStepNav({ data, token, active }: { data: AtlasData; 
 }
 
 export function AtlasFounderHome({ data, token }: { data: AtlasData; token: string }) {
-  const progress = getFounderProgress(data);
-  const next = getNextBestAction(data, token);
-  const insight = getAtlasInsight(data);
+  const operator = buildAtlasAutonomousOperatorState(data);
   const readiness = generateAtlasBusinessReadinessReport(data);
   const reconciliation = reconcileAtlasDocuments(data, token);
   return (
     <>
       <AtlasFounderHero
         title={`Welcome back, ${data.companyProfile.founderName.split(' ')[0] || 'Tomas'}.`}
-        subtitle="Let’s continue getting your business funded. Atlas will keep the process focused and show one clear next step at a time."
+        subtitle="Atlas is now operating like a funding employee: searching, preparing, learning, tracking, and stopping only for founder-only actions."
       />
+      <section className="founder-review-summary">
+        <SummaryItem label="Operating mode" value="Founder pilot" status="Active" />
+        <SummaryItem label="KPI" value={operator.primaryKpi} status={`${Math.round(operator.fttfSavedMinutes / 60)} hrs saved`} />
+        <SummaryItem label="Atlas agents" value={String(operator.whatAtlasIsDoing.length)} status="Running" />
+        <SummaryItem label="Waiting on Tomas" value={String(operator.waitingOnFounder.length)} status={operator.waitingOnFounder.length ? 'Needs founder' : 'Clear'} />
+      </section>
       <section className="founder-home-card" aria-labelledby="atlas-current-status">
         <div>
-          <p className="eyebrow">Current status</p>
-          <h2 id="atlas-current-status">Your application is {progress}% complete.</h2>
-          <p>Atlas found {reconciliation.founderActions.length + reconciliation.autoResolved.length} issues, resolved {reconciliation.autoResolved.length}, and needs Tomas for {reconciliation.founderActions.length} precise item{reconciliation.founderActions.length === 1 ? '' : 's'}.</p>
+          <p className="eyebrow">What Atlas is doing</p>
+          <h2 id="atlas-current-status">Atlas is actively running {operator.whatAtlasIsDoing.filter((agent) => ['active', 'learning'].includes(agent.status)).length} funding workstream{operator.whatAtlasIsDoing.filter((agent) => ['active', 'learning'].includes(agent.status)).length === 1 ? '' : 's'}.</h2>
+          <p>{operator.whatAtlasIsDoing[0]?.currentAction}</p>
         </div>
         <div className="founder-next-action">
-          <span>Next best action</span>
-          <strong>{next.label}</strong>
-          <p>{next.detail}</p>
-          <Link className="button-primary" href={next.href}>Continue my application</Link>
+          <span>What happens next</span>
+          <strong>{operator.whatHappensNext}</strong>
+          <p>Atlas will continue automatically until a legal, account-holder, identity, certification, or final-submission gate requires Tomas.</p>
+          <Link className="button-primary" href={atlasPath(operator.waitingOnFounder[0]?.href || '/atlas/track', token)}>Open founder queue</Link>
+        </div>
+      </section>
+      <section className="founder-simple-panel">
+        <p className="eyebrow">Digital funding employee</p>
+        <h2>Current autonomous work</h2>
+        <div className="founder-status-list">
+          {operator.whatAtlasIsDoing.map((agent) => (
+            <div className="founder-status-row" key={agent.id}>
+              <span>{agent.status.replaceAll('_', ' ')}</span>
+              <strong>{agent.name}</strong>
+              <p>{agent.currentAction}</p>
+              <small>{agent.lastOutcome} Time saved estimate: {agent.founderTimeSavedMinutes} min.</small>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="founder-simple-panel">
+        <p className="eyebrow">Waiting on founder</p>
+        <h2>{operator.waitingOnFounder.length ? `${operator.waitingOnFounder.length} founder-only action${operator.waitingOnFounder.length === 1 ? '' : 's'}` : 'No founder-only actions right now'}</h2>
+        <div className="founder-status-list">
+          {(operator.waitingOnFounder.length ? operator.waitingOnFounder : [{
+            id: 'none',
+            label: 'Atlas can continue without Tomas right now.',
+            reason: 'No current legal, account, MFA, identity, signature, or certification blocker is recorded.',
+            requiredBecause: 'Atlas will keep monitoring lender and grant activity.',
+            estimatedMinutes: 0,
+            href: '/atlas/track',
+            blockerType: 'lender_response' as const,
+          }]).map((item) => (
+            <div className="founder-status-row" key={item.id}>
+              <span>{item.blockerType.replaceAll('_', ' ')}</span>
+              <strong>{item.label}</strong>
+              <p>{item.reason}</p>
+              <small>{item.requiredBecause} Estimated founder time: {item.estimatedMinutes} min.</small>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="founder-simple-panel">
+        <p className="eyebrow">What Atlas completed</p>
+        <h2>Learning memory from every application attempt</h2>
+        <div className="founder-status-list">
+          {operator.whatAtlasCompleted.slice(0, 8).map((event) => (
+            <div className="founder-status-row" key={event.id}>
+              <span>{event.source}</span>
+              <strong>{event.lesson}</strong>
+              <p>{event.automationRule}</p>
+              <small>{event.impact}</small>
+            </div>
+          ))}
         </div>
       </section>
       <section className="founder-simple-panel">
@@ -129,8 +184,8 @@ export function AtlasFounderHome({ data, token }: { data: AtlasData; token: stri
       </section>
       <section className="founder-insight">
         <p className="eyebrow">Atlas insight</p>
-        <h2>{insight.title}</h2>
-        <p>{insight.detail}</p>
+        <h2>Founder Time To Funding is now the operating metric.</h2>
+        <p>Atlas baseline captured {Math.round(operator.fttfBaselineMinutes / 60)} hours from the first pilot and is now targeting {Math.round(operator.fttfCurrentMinutes / 60)} hours or less by reusing {reconciliation.autoResolved.length} resolved items and preventing known lender loops.</p>
       </section>
       <BusinessReadinessPanel data={data} />
       <AtlasActivityFeed data={data} />

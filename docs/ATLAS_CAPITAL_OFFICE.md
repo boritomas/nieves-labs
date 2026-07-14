@@ -455,6 +455,29 @@ Internal names may remain in code and advanced/admin documentation.
 - Atlas still prepares materials only and does not submit lender applications automatically.
 - Founder review remains mandatory before any lender-facing use.
 
+## Atlas Autonomous Funding Operator v2
+
+Atlas now treats the founder pilot as a digital funding employee rather than a dashboard. The default Atlas home answers four questions only: what Atlas is doing, what Atlas completed, what Atlas is waiting on from Tomas, and what happens next.
+
+The V2 operator layer derives its state from existing Atlas memory: DreamSpring submission status, blocked SBA/PeopleFund/LiftFund lessons, grant-discovery results, document reconciliation, lender field maps, package readiness, and campaign follow-up data. The primary KPI is Founder Time To Funding (FTTF).
+
+Current autonomous agents:
+
+- Funding Discovery Agent
+- Eligibility Agent
+- Company Knowledge Agent
+- Application Agent
+- Browser Automation Agent
+- Follow-up Agent
+- Self-Healing Agent
+
+Atlas still stops for founder-only legal, identity, account-holder, certification, signature, MFA, CAPTCHA, credit authorization, and final-submission actions. Those items appear in the founder queue instead of being hidden inside dashboards.
+
+Validation support:
+
+- `npm run check:atlas-operator` verifies the V2 operator model, founder queue, FTTF metric, home screen wiring, and watchdog registration.
+- `npm run watchdog -- <timeout-seconds> <command> [...args]` runs long commands with heartbeat output and a hard timeout so validation does not appear silently stuck.
+
 ## Atlas Funding OS v1 production storage
 
 Atlas Funding OS v1 moves production Atlas state away from local `.data/atlas.json` and into a dedicated Supabase project. Local JSON remains a development fallback only. Vercel production must set `ATLAS_STORAGE_PROVIDER=supabase`, `ATLAS_SUPABASE_URL`, and `ATLAS_SUPABASE_SECRET_KEY`.

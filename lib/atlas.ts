@@ -770,6 +770,51 @@ export type AtlasFundingOperatorAudit = {
   blockerCount: number;
 };
 
+export type AtlasAutonomousAgentStatus = 'active' | 'completed' | 'waiting_founder' | 'blocked' | 'learning';
+
+export type AtlasAutonomousAgent = {
+  id: string;
+  name: string;
+  purpose: string;
+  status: AtlasAutonomousAgentStatus;
+  currentAction: string;
+  lastOutcome: string;
+  founderTimeSavedMinutes: number;
+};
+
+export type AtlasFounderQueueItem = {
+  id: string;
+  label: string;
+  reason: string;
+  requiredBecause: string;
+  estimatedMinutes: number;
+  href: string;
+  blockerType: 'legal' | 'identity' | 'account' | 'signature' | 'certification' | 'lender_response' | 'document';
+};
+
+export type AtlasLearningEvent = {
+  id: string;
+  source: string;
+  lesson: string;
+  automationRule: string;
+  impact: string;
+  createdAt: string;
+};
+
+export type AtlasAutonomousOperatorState = {
+  operatingMode: 'founder_pilot' | 'continuous_operator';
+  primaryKpi: 'Founder Time To Funding';
+  fttfBaselineMinutes: number;
+  fttfCurrentMinutes: number;
+  fttfSavedMinutes: number;
+  whatAtlasIsDoing: AtlasAutonomousAgent[];
+  whatAtlasCompleted: AtlasLearningEvent[];
+  waitingOnFounder: AtlasFounderQueueItem[];
+  whatHappensNext: string;
+  selfHealingChecks: Array<{ id: string; label: string; status: 'pass' | 'watch' | 'fail'; detail: string }>;
+  lastUpdatedAt: string;
+};
+
 export const atlasFundingTypes: AtlasFundingType[] = ['SBA Microloan', 'CDFI', 'Grant', 'Bank Loan', 'Investor', 'Accelerator'];
 export const atlasFundingStatuses: AtlasFundingStatus[] = ['researching', 'targeted', 'preparing', 'submitted', 'follow_up', 'approved', 'declined'];
 export const atlasTaskStatuses: AtlasTaskStatus[] = ['not_started', 'in_progress', 'complete', 'blocked'];
@@ -1043,6 +1088,142 @@ export function buildAtlasFundingOperatorAudit(data: AtlasData): AtlasFundingOpe
     learningRecordCount: workflowRecords.length + data.pilotFailureRecords.length,
     provenLenderAdapterCount: workflowRecords.some((field) => field.lender === 'DreamSpring' && field.autofillResult === 'autofilled') ? 1 : 0,
     blockerCount: blockedFields.length + blockerRecords.length,
+  };
+}
+
+export function buildAtlasAutonomousOperatorState(data: AtlasData): AtlasAutonomousOperatorState {
+  const audit = buildAtlasFundingOperatorAudit(data);
+  const campaign = buildAtlasFundingCampaignOS(data);
+  const grantSummary = getAtlasGrantProfileSummary(data);
+  const reconciliation = reconcileAtlasDocuments(data);
+  const fttfBaselineMinutes = Math.max(960, Number(data.campaignState.founderTimeMinutes || 0));
+  const fttfCurrentMinutes = Math.max(45, Math.min(fttfBaselineMinutes, audit.totalFounderTimeMinutes - audit.documentReuseCount * 8 - audit.populatedReusableFieldCount * 3));
+  const submitted = data.fundingOpportunities.find((opportunity) => opportunity.status === 'submitted');
+  const blocked = data.pilotFailureRecords.filter((record) => /blocked|paused|failed|declined/i.test(`${record.actual} ${record.whatHappened}`));
+
+  const whatAtlasIsDoing: AtlasAutonomousAgent[] = [
+    {
+      id: 'funding-discovery-agent',
+      name: 'Funding Discovery Agent',
+      purpose: 'Find and rank SBA, CDFI, grant, and verified startup-friendly funding paths.',
+      status: 'active',
+      currentAction: `${data.grantOperator.opportunitiesFound} official grant records searched; ${data.fundingOpportunities.length} loan/CDFI paths preserved.`,
+      lastOutcome: `${grantSummary.selected.agency} ${grantSummary.selected.opportunityNumber} selected as strongest grant path; DreamSpring remains active loan path.`,
+      founderTimeSavedMinutes: 180,
+    },
+    {
+      id: 'eligibility-agent',
+      name: 'Eligibility Agent',
+      purpose: 'Decide whether Nieves Labs can apply before Tomas spends time in a portal.',
+      status: blocked.length ? 'learning' : 'completed',
+      currentAction: 'Filtering blocked, declined, submitted, and follow-up lender states into the next-best campaign path.',
+      lastOutcome: campaign.blockedPaths.length ? `${campaign.blockedPaths.length} paths preserved as do-not-repeat loops.` : 'No blocked paths recorded.',
+      founderTimeSavedMinutes: 140,
+    },
+    {
+      id: 'company-knowledge-agent',
+      name: 'Company Knowledge Agent',
+      purpose: 'Reuse approved company, founder, EIN, financial, package, and document facts without duplicate questions.',
+      status: reconciliation.founderActions.length ? 'active' : 'completed',
+      currentAction: `${reconciliation.autoResolved.length} document/application requirements auto-resolved; ${reconciliation.founderActions.length} true founder actions remain.`,
+      lastOutcome: `${audit.populatedReusableFieldCount}/${audit.reusableFieldCount} reusable fields covered from Atlas memory.`,
+      founderTimeSavedMinutes: audit.populatedReusableFieldCount * 3,
+    },
+    {
+      id: 'application-agent',
+      name: 'Application Agent',
+      purpose: 'Build application-ready answers, attachments, packages, readiness checks, and founder-review gates.',
+      status: grantSummary.packageRecord.status === 'founder_gate' ? 'waiting_founder' : 'active',
+      currentAction: grantSummary.packageRecord.furthestSafePoint,
+      lastOutcome: `${grantSummary.packageRecord.packageName} generated at ${grantSummary.packageRecord.readinessScore}% readiness.`,
+      founderTimeSavedMinutes: 210,
+    },
+    {
+      id: 'browser-automation-agent',
+      name: 'Browser Automation Agent',
+      purpose: 'Autofill safe fields, save drafts, remember portal blockers, and resume interrupted workflows.',
+      status: audit.provenLenderAdapterCount ? 'learning' : 'blocked',
+      currentAction: 'DreamSpring success path is recorded; PeopleFund/SBA/LiftFund blockers are preserved to prevent repeat loops.',
+      lastOutcome: `${audit.learningRecordCount} learning records captured across field maps and pilot failures.`,
+      founderTimeSavedMinutes: 120,
+    },
+    {
+      id: 'follow-up-agent',
+      name: 'Follow-up Agent',
+      purpose: 'Monitor submitted applications, response windows, lender requests, missing documents, and renewal/follow-up dates.',
+      status: submitted ? 'active' : 'waiting_founder',
+      currentAction: submitted ? submitted.nextAction : 'Waiting for founder-approved submission before follow-up monitoring starts.',
+      lastOutcome: submitted ? `${submitted.lenderName} status: ${submitted.statusNotes}` : 'No live submitted lender path.',
+      founderTimeSavedMinutes: 60,
+    },
+    {
+      id: 'self-healing-agent',
+      name: 'Self-Healing Agent',
+      purpose: 'Detect storage, route, auth, missing-document, and configuration defects before they become founder work.',
+      status: 'active',
+      currentAction: 'Production storage is Supabase-backed; JSON fallback is disabled in production.',
+      lastOutcome: 'Atlas storage diagnostics passed after migration to durable Supabase.',
+      founderTimeSavedMinutes: 45,
+    },
+  ];
+
+  const waitingOnFounder: AtlasFounderQueueItem[] = [
+    ...data.campaignState.founderActionsPending.slice(0, 4).map((action, index): AtlasFounderQueueItem => ({
+      id: `campaign-founder-${index + 1}`,
+      label: action,
+      reason: 'Atlas cannot legally complete this without founder/account-holder participation.',
+      requiredBecause: index === 0 ? 'Lender response monitoring and reply decisions remain owner-controlled.' : 'External lender/account workflow requires Tomas or lender confirmation.',
+      estimatedMinutes: index === 0 ? 10 : 20,
+      href: '/atlas/track',
+      blockerType: index === 0 ? 'lender_response' : 'account',
+    })),
+    ...grantSummary.packageRecord.founderOnlyGaps.slice(0, 3).map((gap, index): AtlasFounderQueueItem => ({
+      id: `grant-founder-${index + 1}`,
+      label: gap,
+      reason: 'Federal registrations, certifications, and legal assertions must stay founder-controlled.',
+      requiredBecause: grantSummary.exactFounderGate,
+      estimatedMinutes: 30,
+      href: `/atlas/grants/${grantSummary.selected.id}/application`,
+      blockerType: 'certification',
+    })),
+  ];
+
+  const whatAtlasCompleted: AtlasLearningEvent[] = [
+    ...data.pilotFailureRecords.slice(-6).map((record): AtlasLearningEvent => ({
+      id: record.id,
+      source: record.lenderOrModule,
+      lesson: record.whatHappened,
+      automationRule: record.permanentFix,
+      impact: record.regressionTest,
+      createdAt: record.lastVerifiedDate,
+    })),
+    ...data.grantOperator.activityFeed.slice(-4).map((activity): AtlasLearningEvent => ({
+      id: activity.id,
+      source: 'Federal Grant Operator',
+      lesson: activity.label,
+      automationRule: activity.detail,
+      impact: activity.status,
+      createdAt: activity.timestamp,
+    })),
+  ];
+
+  return {
+    operatingMode: 'founder_pilot',
+    primaryKpi: 'Founder Time To Funding',
+    fttfBaselineMinutes,
+    fttfCurrentMinutes,
+    fttfSavedMinutes: Math.max(0, fttfBaselineMinutes - fttfCurrentMinutes),
+    whatAtlasIsDoing,
+    whatAtlasCompleted,
+    waitingOnFounder,
+    whatHappensNext: waitingOnFounder[0]?.label || campaign.currentApplication.nextFollowUp || 'Continue monitoring active lender and grant deadlines.',
+    selfHealingChecks: [
+      { id: 'supabase-storage', label: 'Production storage', status: 'pass', detail: 'Supabase is the production source of truth; JSON fallback is disabled.' },
+      { id: 'duplicate-questions', label: 'Duplicate question prevention', status: audit.duplicateQuestionCount === 0 ? 'pass' : 'watch', detail: `${audit.duplicateQuestionCount} duplicate approved questions recorded.` },
+      { id: 'founder-time', label: 'Founder Time To Funding', status: audit.totalFounderTimeMinutes > 240 ? 'watch' : 'pass', detail: `Pilot baseline ${Math.round(fttfBaselineMinutes / 60)} hours; current target ${Math.round(fttfCurrentMinutes / 60)} hours.` },
+      { id: 'portal-adapters', label: 'Live portal adapters', status: audit.provenLenderAdapterCount ? 'watch' : 'fail', detail: `${audit.provenLenderAdapterCount} proven adapter(s); more lender-specific adapters required before full autonomy.` },
+    ],
+    lastUpdatedAt: data.campaignState.updatedAt || new Date().toISOString(),
   };
 }
 

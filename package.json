@@ -14,7 +14,9 @@
     "brand:assets": "node scripts/generate-brand-assets.mjs",
     "check:ctas": "node scripts/check-public-ctas.mjs",
     "check:platform": "node scripts/check-platform-integrity.mjs",
-    "check:atlas-storage": "node scripts/validate-atlas-production-storage.mjs"
+    "check:atlas-storage": "node scripts/validate-atlas-production-storage.mjs",
+    "check:atlas-operator": "node scripts/validate-atlas-autonomous-operator.mjs",
+    "watchdog": "node scripts/run-with-heartbeat.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.263.1",
