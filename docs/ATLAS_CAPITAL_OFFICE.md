@@ -630,6 +630,7 @@ Atlas now includes a protected founder-pilot federal grant workflow. The route g
 - `/atlas/grants/opportunities`
 - `/atlas/grants/[opportunity]`
 - `/atlas/grants/[opportunity]/application`
+- `/atlas/grants/project-pitch`
 - `/atlas/grants/track`
 
 The founder-facing flow remains three steps:
@@ -638,15 +639,21 @@ The founder-facing flow remains three steps:
 2. Review the strongest official-source grant opportunities.
 3. Review the application package and stop at founder-only approvals.
 
-The first pilot uses official Grants.gov source data. The selected opportunity is:
+The federal grant operator now records the real submission state explicitly:
+
+- Federal grant applications submitted: `0`
+- Submission evidence: none
+- NSF 26-511 status: monitored only; Project Pitch preparation is required before any full NSF Phase I proposal may be submitted.
+
+The first pilot uses official NSF America’s Seed Fund / NSF SBIR/STTR Project Pitch guidance plus official Grants.gov source data. The selected near-term path is:
 
 - Agency: U.S. National Science Foundation
-- Opportunity number: `26-511`
-- Program: SBIR/STTR Phase I, Phase II, Fast-Track Programs
-- Official source: Grants.gov opportunity detail `362551`
-- Fit status: Strong fit, with founder registration and technical-claim verification required
+- Submission type: NSF Project Pitch
+- Program: NSF SBIR/STTR / America’s Seed Fund
+- Official source: `https://seedfund.nsf.gov/apply/project-pitch/`
+- Fit status: Strong fit, with founder approval, portal authentication, field-limit validation, and registration verification required
 
-Atlas also tracks monitor opportunities from NIH Parent SBIR (`PA-27-100`) and NSF PESOSE (`26-506`) while hiding low-value or unrelated opportunities by default.
+Atlas also tracks monitor opportunities from NSF scientific instrumentation pilot (`26-511`), NIH Parent SBIR (`PA-27-100`), and NSF PESOSE (`26-506`) while hiding low-value or unrelated opportunities by default.
 
 The first application package is prepared to the founder gate only. It includes:
 
@@ -662,6 +669,18 @@ The first application package is prepared to the founder gate only. It includes:
 - learning records
 
 Atlas does not submit federal grant applications, certify eligibility, sign legal statements, create accounts through MFA/CAPTCHA, or represent approval probability. Current blocking founder-only gates are SAM.gov/UEI, Grants.gov/AOR, NSF/Research.gov path verification, technical-claim approval, budget-rate confirmation, and final legal certification/submission.
+
+The NSF Project Pitch review route includes:
+
+- official process and source links
+- registration preflight table
+- concept scoring across five Nieves Labs concepts
+- selected concept rationale
+- exact draft Project Pitch text
+- missing evidence and assumptions
+- founder approval phrase: `I approve the NSF Project Pitch for submission.`
+
+Atlas must stop before any NSF portal submission until Tomas reviews the Project Pitch text and gives explicit final approval.
 
 Regression coverage:
 

@@ -16,6 +16,7 @@
     "check:platform": "node scripts/check-platform-integrity.mjs",
     "check:atlas-storage": "node scripts/validate-atlas-production-storage.mjs",
     "check:atlas-operator": "node scripts/validate-atlas-autonomous-operator.mjs",
+    "check:atlas-grants": "node scripts/validate-atlas-grants.mjs",
     "watchdog": "node scripts/run-with-heartbeat.mjs"
   },
   "dependencies": {

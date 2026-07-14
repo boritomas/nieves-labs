@@ -2,6 +2,7 @@ import Link from 'next/link';
 import {
   atlasPath,
   generateAtlasGrantApplicationMarkdown,
+  generateAtlasNsfProjectPitchMarkdown,
   getAtlasGrantProfileSummary,
   reconcileAtlasDocuments,
   type AtlasData,
@@ -24,7 +25,7 @@ export function AtlasGrantHome({ data, token }: { data: AtlasData; token: string
           <span>Next founder action</span>
           <strong>{summary.nextFounderAction}</strong>
           <p>{summary.exactFounderGate}</p>
-          <Link className="button-primary" href={atlasPath(`/atlas/grants/${summary.selected.id}/application`, token)}>Review package</Link>
+          <Link className="button-primary" href={atlasPath('/atlas/grants/project-pitch', token)}>Review NSF pitch</Link>
         </div>
       </section>
 
@@ -32,14 +33,21 @@ export function AtlasGrantHome({ data, token }: { data: AtlasData; token: string
         {[
           ['1', 'Confirm business', grant.grantProfileStatus],
           ['2', 'Pick opportunity', `${grant.opportunities.length} official-source records ranked`],
-          ['3', 'Approve package', grant.selectedPackage.status.replaceAll('_', ' ')],
+          ['3', 'Approve Project Pitch', grant.nsfProjectPitch.status.replaceAll('_', ' ')],
         ].map(([step, title, detail]) => (
-          <Link key={step} href={atlasPath(step === '2' ? '/atlas/grants/opportunities' : step === '3' ? `/atlas/grants/${summary.selected.id}/application` : '/atlas/grants/profile', token)}>
+          <Link key={step} href={atlasPath(step === '2' ? '/atlas/grants/opportunities' : step === '3' ? '/atlas/grants/project-pitch' : '/atlas/grants/profile', token)}>
             <span>{step}</span>
             <strong>{title}</strong>
             <small>{detail}</small>
           </Link>
         ))}
+      </section>
+
+      <section className="metrics-grid">
+        <Metric label="Federal grant applications submitted" value={String(grant.federalGrantApplicationsSubmitted)} />
+        <Metric label="Submission evidence" value={grant.submissionEvidence.length ? `${grant.submissionEvidence.length} record(s)` : 'None'} />
+        <Metric label="NSF gate" value={grant.nsfProjectPitch.projectPitchRequired ? 'Project Pitch required' : 'Verify'} />
+        <Metric label="Full Phase I proposal" value={grant.nsfProjectPitch.fullProposalInvitationRequired ? 'Invitation required' : 'Verify'} />
       </section>
 
       <section className="two-column">
@@ -82,6 +90,10 @@ export function AtlasGrantHome({ data, token }: { data: AtlasData; token: string
       <section className="panel">
         <p className="eyebrow">Top recommendation</p>
         <OpportunitySummary opportunity={summary.selected} token={token} />
+        <div className="hero-actions">
+          <Link className="button-primary" href={atlasPath('/atlas/grants/project-pitch', token)}>Open Project Pitch</Link>
+          <Link className="button-secondary" href={atlasPath('/atlas/grants/track', token)}>Submission tracking</Link>
+        </div>
       </section>
 
       <section className="panel">
@@ -98,6 +110,108 @@ export function AtlasGrantHome({ data, token }: { data: AtlasData; token: string
             </div>
           ))}
         </div>
+      </section>
+    </div>
+  );
+}
+
+export function AtlasNsfProjectPitchReview({ data, token }: { data: AtlasData; token: string }) {
+  const grant = data.grantOperator;
+  const pitch = grant.nsfProjectPitch;
+  const markdown = generateAtlasNsfProjectPitchMarkdown(data);
+  const selectedConcept = pitch.conceptScores.find((item) => item.id === pitch.selectedConceptId) || pitch.conceptScores[0];
+  return (
+    <div className="atlas-stack">
+      <section className="founder-home-card">
+        <div>
+          <p className="eyebrow">NSF Project Pitch</p>
+          <h2>{pitch.projectTitle}</h2>
+          <p>Atlas prepared the truthful Project Pitch package, but no federal grant application has been submitted. NSF requires founder approval, portal access, and an invitation before any full Phase I proposal.</p>
+        </div>
+        <div className="founder-next-action">
+          <span>Current evidence status</span>
+          <strong>{grant.federalGrantApplicationsSubmitted} federal grant applications submitted</strong>
+          <p>{grant.submissionEvidence.length ? `${grant.submissionEvidence.length} evidence record(s) captured.` : 'Submission evidence: none.'}</p>
+          <a className="button-primary" href="https://seedfund.nsf.gov/apply/project-pitch/" target="_blank" rel="noreferrer">Official NSF pitch portal</a>
+        </div>
+      </section>
+
+      <section className="metrics-grid">
+        <Metric label="Project Pitch required" value={pitch.projectPitchRequired ? 'YES' : 'VERIFY'} />
+        <Metric label="Full proposal invitation" value={pitch.fullProposalInvitationRequired ? 'REQUIRED' : 'VERIFY'} />
+        <Metric label="Pitch status" value={pitch.status.replaceAll('_', ' ')} />
+        <Metric label="Selected concept score" value={`${selectedConcept.totalScore}/160`} />
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Official process</p>
+        <h2>Verified NSF route</h2>
+        <p><strong>Program:</strong> {pitch.applicableProgram}</p>
+        <p><strong>Submission route:</strong> {pitch.submissionRoute}</p>
+        <p><strong>Last verified:</strong> {pitch.lastVerifiedDate}</p>
+        <ul>{pitch.officialSources.map((source) => <li key={source}><a href={source} target="_blank" rel="noreferrer">{source}</a></li>)}</ul>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Registration preflight</p>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Item</th><th>Status</th><th>Evidence</th><th>Founder-only action</th></tr></thead>
+            <tbody>
+              {grant.registrations.map((item) => (
+                <tr key={item.id}>
+                  <td><strong>{item.name}</strong></td>
+                  <td>{item.status.replaceAll('_', ' ')}</td>
+                  <td>{item.verificationStatus}</td>
+                  <td>{item.founderOnlyStep || item.missingAction}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Concept selection</p>
+        <h2>Selected: {selectedConcept.concept}</h2>
+        <p>{selectedConcept.rationale}</p>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Concept</th><th>Score</th><th>Recommendation</th><th>Rationale</th></tr></thead>
+            <tbody>
+              {pitch.conceptScores.map((concept) => (
+                <tr key={concept.id}>
+                  <td><strong>{concept.concept}</strong></td>
+                  <td>{concept.totalScore}/160</td>
+                  <td>{concept.recommendation}</td>
+                  <td>{concept.rationale}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Founder approval gate</p>
+        <h2>Atlas must stop before submission</h2>
+        <p>Required approval phrase: <strong>{pitch.requiredFounderApprovalPhrase}</strong></p>
+        <p>{pitch.finalSubmissionAction}</p>
+        <div className="status-list">
+          <span className="status-pill missing">Do not submit without founder approval</span>
+          <span className="status-pill missing">No confirmation number yet</span>
+          <span className="status-pill ready">Pitch text prepared</span>
+        </div>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Exact text for portal review</p>
+        <pre className="atlas-preview">{markdown}</pre>
+      </section>
+
+      <section className="hero-actions">
+        <Link className="button-secondary" href={atlasPath(`/atlas/grants/${grant.selectedOpportunityId}/application`, token)}>View package record</Link>
+        <Link className="button-secondary" href={atlasPath('/atlas/grants/track', token)}>Track submission evidence</Link>
       </section>
     </div>
   );
@@ -266,6 +380,8 @@ export function AtlasGrantTracking({ data }: { data: AtlasData }) {
         <p className="eyebrow">Grant tracking</p>
         <h2>{grant.selectedPackage.submissionStatus}</h2>
         <p>Confirmation number: {grant.selectedPackage.confirmationNumber || 'Not applicable until founder-approved submission.'}</p>
+        <p>Federal grant applications submitted: {grant.federalGrantApplicationsSubmitted}</p>
+        <p>Submission evidence: {grant.submissionEvidence.length ? `${grant.submissionEvidence.length} record(s)` : 'None'}</p>
         <p>Follow-up date: {grant.selectedPackage.followUpDate}</p>
       </section>
       <section className="panel">

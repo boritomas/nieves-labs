@@ -583,12 +583,77 @@ export type AtlasGrantCompetitor = {
   lastVerifiedDate: string;
 };
 
+export type AtlasGrantSubmissionEvidence = {
+  id: string;
+  agency: string;
+  program: string;
+  opportunityNumber: string;
+  submissionType: string;
+  projectTitle: string;
+  submittedAt: string;
+  submittedBy: string;
+  portal: string;
+  workspaceId: string;
+  confirmationNumber: string;
+  confirmationUrl: string;
+  receiptFile: string;
+  submittedPackageVersion: string;
+  submittedDocuments: string[];
+  validationStatus: 'none' | 'draft' | 'submitted' | 'confirmed' | 'rejected';
+};
+
+export type AtlasNsfProjectPitchConceptScore = {
+  id: string;
+  concept: string;
+  technicalInnovation: number;
+  researchUncertainty: number;
+  societalEconomicImpact: number;
+  commercialPotential: number;
+  nsfTopicFit: number;
+  teamCapability: number;
+  evidenceStrength: number;
+  submissionReadiness: number;
+  totalScore: number;
+  recommendation: 'Selected' | 'Alternate' | 'Monitor';
+  rationale: string;
+};
+
+export type AtlasNsfProjectPitchField = {
+  id: string;
+  label: string;
+  purpose: string;
+  response: string;
+  evidenceStatus: AtlasNarsClassification;
+  founderReviewRequired: boolean;
+};
+
+export type AtlasNsfProjectPitch = {
+  id: string;
+  status: 'prepared_for_founder_review' | 'portal_draft' | 'submitted' | 'blocked';
+  applicableProgram: string;
+  projectPitchRequired: boolean;
+  fullProposalInvitationRequired: boolean;
+  submissionRoute: string;
+  projectTitle: string;
+  selectedConceptId: string;
+  officialSources: string[];
+  lastVerifiedDate: string;
+  conceptScores: AtlasNsfProjectPitchConceptScore[];
+  fields: AtlasNsfProjectPitchField[];
+  assumptions: string[];
+  missingEvidence: string[];
+  requiredFounderApprovalPhrase: string;
+  finalSubmissionAction: string;
+};
+
 export type AtlasGrantOperator = {
   id: string;
   fundingGoal: string;
   grantProfileStatus: string;
   registrationReadiness: string;
   selectedOpportunityId: string;
+  federalGrantApplicationsSubmitted: number;
+  submissionEvidence: AtlasGrantSubmissionEvidence[];
   officialSourcesSearched: string[];
   opportunitiesFound: number;
   opportunitiesExcluded: number;
@@ -600,6 +665,7 @@ export type AtlasGrantOperator = {
   registrations: AtlasGrantRegistration[];
   opportunities: AtlasGrantOpportunity[];
   selectedPackage: AtlasGrantApplicationPackage;
+  nsfProjectPitch: AtlasNsfProjectPitch;
   competitors: AtlasGrantCompetitor[];
   activityFeed: AtlasOperatorActivity[];
   lastVerifiedDate: string;
@@ -1297,6 +1363,31 @@ export function generateAtlasGrantApplicationMarkdown(data: AtlasData | Omit<Atl
     '',
     '## Founder-Only Gaps',
     ...pkg.founderOnlyGaps.map((item) => `- ${item}`),
+  ].join('\n');
+}
+
+export function generateAtlasNsfProjectPitchMarkdown(data: AtlasData | Omit<AtlasData, 'readinessScores'>) {
+  const pitch = data.grantOperator.nsfProjectPitch;
+  const selectedConcept = pitch.conceptScores.find((item) => item.id === pitch.selectedConceptId) || pitch.conceptScores[0];
+  return [
+    `# ${pitch.projectTitle}`,
+    '',
+    `**Company:** ${data.companyProfile.companyName}`,
+    `**Program:** ${pitch.applicableProgram}`,
+    `**Submission route:** ${pitch.submissionRoute}`,
+    `**Status:** ${pitch.status.replaceAll('_', ' ')}`,
+    `**Selected concept:** ${selectedConcept.concept}`,
+    '',
+    '## Required Founder Approval',
+    `Atlas must not submit this pitch until Tomas provides this exact approval phrase: "${pitch.requiredFounderApprovalPhrase}"`,
+    '',
+    '## Project Pitch Responses',
+    ...pitch.fields.flatMap((field) => [`### ${field.label}`, field.response, '']),
+    '## Assumptions',
+    ...pitch.assumptions.map((item) => `- ${item}`),
+    '',
+    '## Missing Evidence',
+    ...pitch.missingEvidence.map((item) => `- ${item}`),
   ].join('\n');
 }
 
