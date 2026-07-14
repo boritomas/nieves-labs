@@ -639,11 +639,13 @@ The founder-facing flow remains three steps:
 2. Review the strongest official-source grant opportunities.
 3. Review the application package and stop at founder-only approvals.
 
-The federal grant operator now records the real submission state explicitly:
+The federal grant operator records the real submission state explicitly:
 
-- Federal grant applications submitted: `0`
-- Submission evidence: none
-- NSF 26-511 status: monitored only; Project Pitch preparation is required before any full NSF Phase I proposal may be submitted.
+- Federal grant applications submitted: `1`
+- Submission evidence: NSF Project Pitch confirmation `00119518`
+- Submission type: NSF SBIR/STTR Project Pitch
+- Topic area: Artificial Intelligence
+- NSF 26-511 status: monitored only; a full NSF Phase I proposal still requires NSF invitation after Project Pitch review.
 
 The first pilot uses official NSF America’s Seed Fund / NSF SBIR/STTR Project Pitch guidance plus official Grants.gov source data. The selected near-term path is:
 
@@ -680,7 +682,7 @@ The NSF Project Pitch review route includes:
 - missing evidence and assumptions
 - founder approval phrase: `I approve the NSF Project Pitch for submission.`
 
-Atlas must stop before any NSF portal submission until Tomas reviews the Project Pitch text and gives explicit final approval.
+The NSF Project Pitch was submitted through the official NSF TIP Submission Portal / MyWork workflow with founder approval. Atlas must now monitor `info@nieves-labs.com` for NSF feedback. If NSF invites a full Phase I proposal, Atlas must verify NSF ID, Research.gov organization, SAM.gov, UEI, Grants.gov, PI/SPO/AOR roles, and full proposal requirements before preparing the next package.
 
 Regression coverage:
 

@@ -120,18 +120,20 @@ export function AtlasNsfProjectPitchReview({ data, token }: { data: AtlasData; t
   const pitch = grant.nsfProjectPitch;
   const markdown = generateAtlasNsfProjectPitchMarkdown(data);
   const selectedConcept = pitch.conceptScores.find((item) => item.id === pitch.selectedConceptId) || pitch.conceptScores[0];
+  const latestEvidence = grant.submissionEvidence[0];
+  const isSubmitted = pitch.status === 'submitted' && Boolean(latestEvidence);
   return (
     <div className="atlas-stack">
       <section className="founder-home-card">
         <div>
           <p className="eyebrow">NSF Project Pitch</p>
           <h2>{pitch.projectTitle}</h2>
-          <p>Atlas prepared the truthful Project Pitch package, but no federal grant application has been submitted. NSF requires founder approval, portal access, and an invitation before any full Phase I proposal.</p>
+          <p>{isSubmitted ? 'Atlas submitted the NSF Project Pitch through the official TIP Submission Portal and captured the confirmation evidence. NSF must invite Nieves Labs before any full Phase I proposal may be submitted.' : 'Atlas prepared the truthful Project Pitch package, but no federal grant application has been submitted. NSF requires founder approval, portal access, and an invitation before any full Phase I proposal.'}</p>
         </div>
         <div className="founder-next-action">
           <span>Current evidence status</span>
           <strong>{grant.federalGrantApplicationsSubmitted} federal grant applications submitted</strong>
-          <p>{grant.submissionEvidence.length ? `${grant.submissionEvidence.length} evidence record(s) captured.` : 'Submission evidence: none.'}</p>
+          <p>{latestEvidence ? `Confirmation ${latestEvidence.confirmationNumber} captured for ${latestEvidence.program}.` : 'Submission evidence: none.'}</p>
           <a className="button-primary" href="https://seedfund.nsf.gov/apply/project-pitch/" target="_blank" rel="noreferrer">Official NSF pitch portal</a>
         </div>
       </section>
@@ -193,14 +195,24 @@ export function AtlasNsfProjectPitchReview({ data, token }: { data: AtlasData; t
       </section>
 
       <section className="panel">
-        <p className="eyebrow">Founder approval gate</p>
-        <h2>Atlas must stop before submission</h2>
-        <p>Required approval phrase: <strong>{pitch.requiredFounderApprovalPhrase}</strong></p>
-        <p>{pitch.finalSubmissionAction}</p>
+        <p className="eyebrow">{isSubmitted ? 'Submission evidence' : 'Founder approval gate'}</p>
+        <h2>{isSubmitted ? 'NSF Project Pitch submitted' : 'Atlas must stop before submission'}</h2>
+        {isSubmitted ? (
+          <>
+            <p><strong>Confirmation number:</strong> {latestEvidence?.confirmationNumber}</p>
+            <p><strong>Submitted:</strong> {latestEvidence?.submittedAt}</p>
+            <p><strong>Next step:</strong> Watch the submitting inbox and spam folder for NSF feedback within approximately one month. Do not submit another pitch while this one is pending.</p>
+          </>
+        ) : (
+          <>
+            <p>Required approval phrase: <strong>{pitch.requiredFounderApprovalPhrase}</strong></p>
+            <p>{pitch.finalSubmissionAction}</p>
+          </>
+        )}
         <div className="status-list">
-          <span className="status-pill missing">Do not submit without founder approval</span>
-          <span className="status-pill missing">No confirmation number yet</span>
-          <span className="status-pill ready">Pitch text prepared</span>
+          <span className={`status-pill ${isSubmitted ? 'ready' : 'missing'}`}>{isSubmitted ? 'Submission confirmed' : 'Do not submit without founder approval'}</span>
+          <span className={`status-pill ${isSubmitted ? 'ready' : 'missing'}`}>{isSubmitted ? `Confirmation ${latestEvidence?.confirmationNumber}` : 'No confirmation number yet'}</span>
+          <span className="status-pill ready">{isSubmitted ? 'Awaiting NSF review' : 'Pitch text prepared'}</span>
         </div>
       </section>
 
