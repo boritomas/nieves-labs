@@ -646,6 +646,9 @@ The federal grant operator records the real submission state explicitly:
 - Submission type: NSF SBIR/STTR Project Pitch
 - Topic area: Artificial Intelligence
 - NSF 26-511 status: monitored only; a full NSF Phase I proposal still requires NSF invitation after Project Pitch review.
+- Business/application contact email for every funding and grant path: `info@nieves-labs.com`
+
+Atlas must use `info@nieves-labs.com` as the submitted business contact email for Nieves Labs applications. A third-party portal may require a separate OAuth or account-holder login, but that login identity must not replace the submitted Nieves Labs application contact email. Atlas must not submit a Nieves Labs application from an unrelated business profile.
 
 The first pilot uses official NSF America’s Seed Fund / NSF SBIR/STTR Project Pitch guidance plus official Grants.gov source data. The selected near-term path is:
 

@@ -34,6 +34,7 @@ const checks = [
   ['post-submission live grant sweep recorded', store.includes('post-submission-26-511-gate') && store.includes('post-submission-nih-not-ready') && store.includes('post-submission-pesose-not-ready')],
   ['NIH remains blocked without health concept', store.includes('Do not submit under the current Nieves Labs evidence package') && store.includes('truthful health, CDC, FDA, biomedical, or public-health R&D concept')],
   ['PESOSE remains blocked without open-source ecosystem evidence', store.includes('approved open-source product, governance plan, and partner/community evidence')],
+  ['Nieves Labs grant contact email is standardized', store.includes('info@nieves-labs.com') && store.includes('standardized-business-contact-email') && store.includes('business/application contact email')],
   ['registration manager tracks founder-only gates', store.includes('SAM.gov entity registration') && store.includes('Grants.gov workspace / AOR')],
   ['application package records submitted NSF pitch', store.includes('furthestSafePoint') && store.includes("status: 'submitted'") && store.includes('NSF Project Pitch submitted')],
   ['Project Pitch founder approval phrase retained', store.includes('I approve the NSF Project Pitch for submission.')],

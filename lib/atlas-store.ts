@@ -58,7 +58,7 @@ export const emptyAtlasImportState: AtlasImportState = {
 const seedGrantOperator: AtlasGrantOperator = {
   id: 'atlas_federal_grant_operator_v1',
   fundingGoal: 'Find and prepare the strongest official federal grant or SBIR/STTR opportunity for Nieves Labs without asking Tomas to re-enter known company data.',
-  grantProfileStatus: 'Real Nieves Labs grant profile built from existing Atlas company, founder, financial, document, product, and funding package data.',
+  grantProfileStatus: 'Real Nieves Labs grant profile built from existing Atlas company, founder, financial, document, product, and funding package data. All funding and grant applications must use info@nieves-labs.com as the Nieves Labs business/application contact email.',
   registrationReadiness: 'Known gaps remain for SAM.gov, UEI, Login.gov, NSF ID, Research.gov organization registration, PI/SPO/AOR role assignment, and Grants.gov readiness. These are founder/account-holder controlled gates.',
   selectedOpportunityId: 'nsf-sbir-project-pitch-ai',
   federalGrantApplicationsSubmitted: 1,
@@ -397,6 +397,15 @@ const seedGrantOperator: AtlasGrantOperator = {
         founderAction: 'Approve or revise technical novelty claim before portal use.',
       },
       {
+        id: 'business-contact-email',
+        opportunityId: 'nsf-sbir-project-pitch-ai',
+        requirement: 'Use the approved Nieves Labs business contact email on funding and grant applications.',
+        source: 'Founder instruction and Atlas company profile.',
+        status: 'complete',
+        atlasResolution: 'Approved business/application email is info@nieves-labs.com. Portal login identities may differ only when a third-party system requires OAuth or account-holder login; submitted application contact details must remain info@nieves-labs.com.',
+        founderAction: 'Do not submit a Nieves Labs grant or funding application from an unrelated business profile or with an unintended contact email.',
+      },
+      {
         id: 'budget',
         opportunityId: 'nsf-sbir-project-pitch-ai',
         requirement: 'Solicitation-compliant budget and budget justification.',
@@ -493,6 +502,7 @@ const seedGrantOperator: AtlasGrantOperator = {
     { id: 'post-submission-26-511-gate', timestamp: now, status: 'Requires verification', label: 'Checked NSF 26-511 full-proposal path', detail: 'Live Grants.gov page still confirms a full Phase I proposal requires an official NSF Project Pitch invitation. No full proposal was submitted.' },
     { id: 'post-submission-nih-not-ready', timestamp: now, status: 'Requires verification', label: 'Checked NIH PA-27-100', detail: 'Live Grants.gov page confirms Health category and NIH/CDC/FDA scope. Current Nieves Labs package lacks a truthful approved health or biomedical R&D concept, so Atlas did not submit.' },
     { id: 'post-submission-pesose-not-ready', timestamp: now, status: 'Requires verification', label: 'Checked NSF 26-506 PESOSE', detail: 'Live Grants.gov page confirms PESOSE is for secure open-source ecosystems. Current evidence lacks an approved open-source ecosystem, governance plan, and partner/community commitments, so Atlas did not submit.' },
+    { id: 'standardized-business-contact-email', timestamp: now, status: 'Completed', label: 'Standardized application contact email', detail: 'All Nieves Labs funding and grant applications must use info@nieves-labs.com as the business/application contact email. Personal OAuth login identities must not override submitted contact details.' },
   ],
   lastVerifiedDate: '2026-07-14',
 };
