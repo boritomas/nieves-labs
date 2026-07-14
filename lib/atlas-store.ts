@@ -26,7 +26,7 @@ import {
   atlasFounderApprovalKeys,
 } from './atlas';
 
-const dataDir = path.join(process.cwd(), '.data');
+const dataDir = process.env.VERCEL ? path.join('/tmp', 'nieves-labs-atlas') : path.join(process.cwd(), '.data');
 const dataFile = path.join(dataDir, 'atlas.json');
 const atlasProfileSlug = 'default';
 const atlasTenantId = 'nieves-labs';
@@ -1054,6 +1054,10 @@ export function getAtlasStorageProvider(): AtlasStorageProvider {
       throw new Error('Atlas Supabase storage is selected, but ATLAS_SUPABASE_URL and ATLAS_SUPABASE_SECRET_KEY are not configured.');
     }
     return 'supabase';
+  }
+
+  if (configuredProvider === 'json') {
+    return 'json';
   }
 
   if (configuredProvider && configuredProvider !== 'json') {
