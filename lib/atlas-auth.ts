@@ -111,7 +111,7 @@ export function setAtlasSessionCookie(response: NextResponse, token: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: '/atlas',
+    path: '/',
     maxAge: sessionTtlSeconds,
   });
 }
@@ -121,7 +121,7 @@ export function clearAtlasSessionCookie(response: NextResponse) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: '/atlas',
+    path: '/',
     maxAge: 0,
   });
 }

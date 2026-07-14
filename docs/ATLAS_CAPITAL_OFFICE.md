@@ -464,10 +464,12 @@ The app also accepts `ATLAS_SUPABASE_SERVICE_ROLE_KEY` as a backward-compatible 
 Production behavior:
 
 - If `ATLAS_STORAGE_PROVIDER=supabase`, Atlas reads and writes the durable Supabase profile snapshot.
-- If Vercel production has no Supabase configuration, Atlas refuses to write sensitive data to local JSON.
+- Vercel production always requires Supabase credentials and refuses `ATLAS_STORAGE_PROVIDER=json`.
+- If Vercel production has no Supabase configuration, Atlas refuses to boot the protected storage path rather than writing sensitive data to local JSON.
 - Server credentials stay server-only and must never be exposed through `NEXT_PUBLIC_*`, URLs, logs, screenshots, or exports.
 - Existing Atlas JSON can be backed up with `node scripts/backup-atlas-json.mjs`.
 - Existing Atlas JSON can be migrated with `node scripts/migrate-atlas-to-supabase.mjs` when the required Atlas Supabase env vars are present.
+- Production storage can be verified with `npm run check:atlas-storage` when Atlas test credentials or a diagnostics token are provided in the shell environment.
 
 ## Atlas Funding OS v1 database and storage
 
@@ -583,9 +585,10 @@ The operator activity feed records what Atlas searched, what it resolved, what d
 Rollback path:
 
 1. Keep the JSON backup manifest created under the workspace-level `outputs/atlas-backups/` folder.
-2. Remove or disable `ATLAS_STORAGE_PROVIDER=supabase` in the target environment.
+2. Do not remove `ATLAS_STORAGE_PROVIDER=supabase` from Vercel production as a routine rollback step.
 3. Restore the selected backup to `.data/atlas.json` for local development only.
-4. Do not use JSON fallback for production funding-campaign data unless a founder-approved emergency process is documented.
+4. If production Supabase is unavailable, treat it as a production incident and restore Supabase from backup or database tooling before resuming founder work.
+5. Do not use JSON fallback for production funding-campaign data unless a founder-approved emergency process is documented and the risk is explicitly accepted.
 
 ## Atlas Funding OS v1 remaining limitations
 

@@ -1049,6 +1049,16 @@ export function getAtlasStorageProvider(): AtlasStorageProvider {
   const supabase = getSupabaseConfig();
   const hasSupabase = Boolean(supabase.url && supabase.secretKey);
 
+  if (process.env.VERCEL_ENV === 'production') {
+    if (configuredProvider && configuredProvider !== 'supabase') {
+      throw new Error('Atlas production storage must use Supabase. JSON storage is local-development only.');
+    }
+    if (!hasSupabase) {
+      throw new Error('Atlas production storage is not configured. Refusing to use local JSON storage on Vercel production.');
+    }
+    return 'supabase';
+  }
+
   if (configuredProvider === 'supabase') {
     if (!hasSupabase) {
       throw new Error('Atlas Supabase storage is selected, but ATLAS_SUPABASE_URL and ATLAS_SUPABASE_SECRET_KEY are not configured.');
@@ -1062,10 +1072,6 @@ export function getAtlasStorageProvider(): AtlasStorageProvider {
 
   if (configuredProvider && configuredProvider !== 'json') {
     throw new Error(`Unsupported Atlas storage provider: ${configuredProvider}`);
-  }
-
-  if (process.env.VERCEL_ENV === 'production' && !hasSupabase) {
-    throw new Error('Atlas production storage is not configured. Refusing to use local JSON storage on Vercel production.');
   }
 
   if (process.env.VERCEL_ENV && hasSupabase) {
