@@ -657,6 +657,14 @@ The first pilot uses official NSF America’s Seed Fund / NSF SBIR/STTR Project 
 
 Atlas also tracks monitor opportunities from NSF scientific instrumentation pilot (`26-511`), NIH Parent SBIR (`PA-27-100`), and NSF PESOSE (`26-506`) while hiding low-value or unrelated opportunities by default.
 
+After NSF Project Pitch submission, Atlas performed a live post-submission sweep of the other identified official grant records:
+
+- NSF `26-511`: not submit-ready. The live Grants.gov record confirms Phase I proposers must obtain an official NSF invitation after Project Pitch review before submitting a full proposal.
+- NIH `PA-27-100`: not submit-ready. The live Grants.gov record confirms the opportunity is a Health-category NIH/CDC/FDA Parent SBIR. Nieves Labs does not yet have an approved health, CDC, FDA, biomedical, or public-health R&D concept in Atlas evidence.
+- NSF `26-506` PESOSE: not submit-ready. The live Grants.gov record confirms the opportunity is for secure open-source ecosystems. Nieves Labs does not yet have an approved open-source product, governance plan, and partner/community evidence package.
+
+Atlas must not submit speculative grant applications. It may prepare a future package only when the missing evidence and founder/account-holder gates are resolved.
+
 The first application package is prepared to the founder gate only. It includes:
 
 - project concept
