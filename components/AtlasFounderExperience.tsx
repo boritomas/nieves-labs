@@ -35,6 +35,7 @@ export function AtlasFounderHeader({ token }: { token: string }) {
       <nav className="founder-nav" aria-label="Atlas founder navigation">
         <Link href={`/atlas${tokenQuery}`}>Home</Link>
         <Link href={`/atlas/funding-campaign${tokenQuery}`}>Funding OS</Link>
+        <Link href={`/atlas/grants${tokenQuery}`}>Grants</Link>
         <Link href={`/atlas/journey${tokenQuery}`}>My Application</Link>
         <Link href={`/atlas/founder-intake${tokenQuery}`}>Founder Intake</Link>
         <Link href={`/atlas/documents${tokenQuery}`}>Documents</Link>

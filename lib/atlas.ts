@@ -456,6 +456,155 @@ export type AtlasPilotFailureRecord = {
   lastVerifiedDate: string;
 };
 
+export type AtlasGrantRegistrationStatus = 'verified' | 'missing' | 'requires_founder' | 'requires_verification' | 'not_applicable';
+export type AtlasGrantFitOutcome = 'Strong fit' | 'Potential fit' | 'Weak fit' | 'Not eligible' | 'Requires verification';
+export type AtlasGrantOpportunityStatus = 'Open' | 'Upcoming' | 'Closed' | 'Rolling' | 'Forecasted' | 'Requires verification';
+export type AtlasGrantApplicationStatus = 'profile_ready' | 'opportunity_selected' | 'package_prepared' | 'founder_gate' | 'submitted' | 'blocked';
+export type AtlasNarsClassification = 'Verified fact' | 'Founder provided' | 'Uploaded evidence' | 'Calculated' | 'Planning assumption' | 'AI-generated draft' | 'Recommendation' | 'Unknown' | 'Requires verification';
+
+export type AtlasGrantRegistration = {
+  id: string;
+  name: string;
+  status: AtlasGrantRegistrationStatus;
+  accountOwner: string;
+  verificationStatus: string;
+  expirationDate: string;
+  renewalDate: string;
+  missingAction: string;
+  founderOnlyStep: string;
+  estimatedCompletionMinutes: number;
+  source: string;
+};
+
+export type AtlasGrantOpportunity = {
+  id: string;
+  opportunityId: string;
+  opportunityNumber: string;
+  agency: string;
+  program: string;
+  title: string;
+  summary: string;
+  officialUrl: string;
+  sourceDocument: string;
+  openDate: string;
+  deadline: string;
+  deadlineTimeZone: string;
+  awardMinimum: number;
+  awardMaximum: number;
+  estimatedAwards: string;
+  eligibility: string;
+  entityRestrictions: string;
+  ownershipRestrictions: string;
+  employeeLimits: string;
+  geographicRestrictions: string;
+  topicFit: string;
+  researchInstitutionRequirement: string;
+  costSharing: string;
+  periodOfPerformance: string;
+  requiredRegistrations: string[];
+  requiredForms: string[];
+  requiredAttachments: string[];
+  pageLimits: string;
+  formattingRules: string;
+  evaluationCriteria: string[];
+  submissionPortal: string;
+  contact: string;
+  lastVerifiedDate: string;
+  status: AtlasGrantOpportunityStatus;
+  fitScore: number;
+  fitOutcome: AtlasGrantFitOutcome;
+  fitRationale: string;
+  concerns: string[];
+  missingEvidence: string[];
+  recommendedAction: string;
+  pursueRecommendation: 'Pursue now' | 'Monitor' | 'Do not pursue';
+  narsClassification: AtlasNarsClassification;
+};
+
+export type AtlasGrantRequirement = {
+  id: string;
+  opportunityId: string;
+  requirement: string;
+  source: string;
+  status: 'complete' | 'can_generate' | 'requires_founder' | 'requires_partner' | 'requires_registration' | 'not_applicable';
+  atlasResolution: string;
+  founderAction: string;
+};
+
+export type AtlasGrantBudgetItem = {
+  id: string;
+  category: string;
+  amount: number;
+  basis: string;
+  purpose: string;
+  allowabilityStatus: 'allowable' | 'requires_verification' | 'not_allowed';
+  source: string;
+  assumption: string;
+  founderApproval: boolean;
+};
+
+export type AtlasGrantApplicationPackage = {
+  id: string;
+  opportunityId: string;
+  packageName: string;
+  status: AtlasGrantApplicationStatus;
+  selectedConcept: string;
+  projectAbstract: string;
+  technicalNarrative: string;
+  commercializationPlan: string;
+  workPlan: string;
+  budgetNarrative: string;
+  complianceChecklist: AtlasGrantRequirement[];
+  budget: AtlasGrantBudgetItem[];
+  documentsReused: string[];
+  draftsGenerated: string[];
+  founderOnlyGaps: string[];
+  readinessScore: number;
+  applicationPortal: string;
+  furthestSafePoint: string;
+  submissionStatus: string;
+  confirmationNumber: string;
+  followUpDate: string;
+  learningRecords: string[];
+  updatedAt: string;
+};
+
+export type AtlasGrantCompetitor = {
+  id: string;
+  name: string;
+  category: string;
+  targetCustomer: string;
+  scope: string;
+  strengths: string;
+  weakness: string;
+  differentiationOpportunity: string;
+  pricing: string;
+  source: string;
+  lastVerifiedDate: string;
+};
+
+export type AtlasGrantOperator = {
+  id: string;
+  fundingGoal: string;
+  grantProfileStatus: string;
+  registrationReadiness: string;
+  selectedOpportunityId: string;
+  officialSourcesSearched: string[];
+  opportunitiesFound: number;
+  opportunitiesExcluded: number;
+  founderSessions: number;
+  founderTimeMinutes: number;
+  duplicateQuestionCount: number;
+  documentsReusedAutomatically: number;
+  reusePercentage: number;
+  registrations: AtlasGrantRegistration[];
+  opportunities: AtlasGrantOpportunity[];
+  selectedPackage: AtlasGrantApplicationPackage;
+  competitors: AtlasGrantCompetitor[];
+  activityFeed: AtlasOperatorActivity[];
+  lastVerifiedDate: string;
+};
+
 export type AtlasData = {
   companyProfile: AtlasCompanyProfile;
   financialAssumptions: AtlasFinancialAssumptions;
@@ -472,6 +621,7 @@ export type AtlasData = {
   campaignState: AtlasCampaignState;
   lenderWorkflowLibrary: AtlasLenderWorkflowField[];
   pilotFailureRecords: AtlasPilotFailureRecord[];
+  grantOperator: AtlasGrantOperator;
   readinessScores: AtlasReadinessScores;
 };
 
@@ -898,6 +1048,75 @@ export function buildAtlasFundingOperatorAudit(data: AtlasData): AtlasFundingOpe
 
 export function getAtlasActiveFundingAmount(data: AtlasData | Omit<AtlasData, 'readinessScores'>) {
   return Number(data.campaignState?.requestedAmount || data.useOfFundsPlan?.selectedAmount || data.companyProfile?.fundingTargetMax || data.financialAssumptions?.loanAmount || 50000);
+}
+
+export function getAtlasGrantProfileSummary(data: AtlasData | Omit<AtlasData, 'readinessScores'>) {
+  const grant = data.grantOperator;
+  const registrationsKnown = grant.registrations.filter((item) => item.status === 'verified' || item.status === 'requires_founder').length;
+  const selected = grant.opportunities.find((item) => item.id === grant.selectedOpportunityId) || grant.opportunities[0];
+  const packageRecord = grant.selectedPackage;
+  const topPursue = grant.opportunities.filter((item) => item.pursueRecommendation === 'Pursue now').slice(0, 3);
+  const monitor = grant.opportunities.filter((item) => item.pursueRecommendation === 'Monitor').slice(0, 3);
+  const excluded = grant.opportunities.filter((item) => item.pursueRecommendation === 'Do not pursue');
+
+  return {
+    registrationsKnown,
+    selected,
+    packageRecord,
+    topPursue,
+    monitor,
+    excluded,
+    readyToPrepare: Boolean(selected && packageRecord.status === 'founder_gate'),
+    nextFounderAction: packageRecord.founderOnlyGaps[0] || 'Review selected opportunity package and approve the next official portal step.',
+    exactFounderGate: packageRecord.furthestSafePoint,
+  };
+}
+
+export function generateAtlasGrantApplicationMarkdown(data: AtlasData | Omit<AtlasData, 'readinessScores'>) {
+  const grant = data.grantOperator;
+  const selected = grant.opportunities.find((item) => item.id === grant.selectedOpportunityId) || grant.opportunities[0];
+  const pkg = grant.selectedPackage;
+  const budgetTotal = pkg.budget.reduce((sum, item) => sum + item.amount, 0);
+  return [
+    `# ${pkg.packageName}`,
+    '',
+    `**Company:** ${data.companyProfile.companyName}`,
+    `**Opportunity:** ${selected.title}`,
+    `**Agency:** ${selected.agency}`,
+    `**Opportunity number:** ${selected.opportunityNumber}`,
+    `**Deadline:** ${selected.deadline} ${selected.deadlineTimeZone}`,
+    `**Status:** ${pkg.status}`,
+    '',
+    '## Project Concept',
+    pkg.selectedConcept,
+    '',
+    '## Project Abstract',
+    pkg.projectAbstract,
+    '',
+    '## Technical Narrative',
+    pkg.technicalNarrative,
+    '',
+    '## Commercialization Plan',
+    pkg.commercializationPlan,
+    '',
+    '## Work Plan',
+    pkg.workPlan,
+    '',
+    '## Budget Narrative',
+    `${pkg.budgetNarrative}\n\nTotal draft budget: ${money(budgetTotal)}.`,
+    '',
+    '## Compliance Checklist',
+    ...pkg.complianceChecklist.map((item) => `- ${item.status}: ${item.requirement} — ${item.atlasResolution}${item.founderAction ? ` Founder action: ${item.founderAction}` : ''}`),
+    '',
+    '## Documents Reused',
+    ...pkg.documentsReused.map((item) => `- ${item}`),
+    '',
+    '## Drafts Generated',
+    ...pkg.draftsGenerated.map((item) => `- AI-GENERATED DRAFT - REQUIRES FOUNDER REVIEW: ${item}`),
+    '',
+    '## Founder-Only Gaps',
+    ...pkg.founderOnlyGaps.map((item) => `- ${item}`),
+  ].join('\n');
 }
 
 export function reconcileAtlasDocuments(data: AtlasData | Omit<AtlasData, 'readinessScores'>, token = ''): AtlasDocumentReconciliation {

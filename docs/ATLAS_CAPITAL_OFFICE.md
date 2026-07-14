@@ -594,3 +594,49 @@ Rollback path:
 - Official state registry checks may require portal access or manual founder verification.
 - Lender rules that are not published in official sources remain marked for lender confirmation.
 - Atlas prepares packages and tracks submissions, but Tomas must still review and submit lender applications manually.
+
+## Atlas Federal Grant Operator v1
+
+Atlas now includes a protected founder-pilot federal grant workflow. The route group is:
+
+- `/atlas/grants`
+- `/atlas/grants/profile`
+- `/atlas/grants/opportunities`
+- `/atlas/grants/[opportunity]`
+- `/atlas/grants/[opportunity]/application`
+- `/atlas/grants/track`
+
+The founder-facing flow remains three steps:
+
+1. Confirm what Atlas already knows.
+2. Review the strongest official-source grant opportunities.
+3. Review the application package and stop at founder-only approvals.
+
+The first pilot uses official Grants.gov source data. The selected opportunity is:
+
+- Agency: U.S. National Science Foundation
+- Opportunity number: `26-511`
+- Program: SBIR/STTR Phase I, Phase II, Fast-Track Programs
+- Official source: Grants.gov opportunity detail `362551`
+- Fit status: Strong fit, with founder registration and technical-claim verification required
+
+Atlas also tracks monitor opportunities from NIH Parent SBIR (`PA-27-100`) and NSF PESOSE (`26-506`) while hiding low-value or unrelated opportunities by default.
+
+The first application package is prepared to the founder gate only. It includes:
+
+- project concept
+- project abstract
+- technical narrative
+- commercialization plan
+- work plan
+- budget narrative
+- compliance checklist
+- document reuse map
+- founder-only gaps
+- learning records
+
+Atlas does not submit federal grant applications, certify eligibility, sign legal statements, create accounts through MFA/CAPTCHA, or represent approval probability. Current blocking founder-only gates are SAM.gov/UEI, Grants.gov/AOR, NSF/Research.gov path verification, technical-claim approval, budget-rate confirmation, and final legal certification/submission.
+
+Regression coverage:
+
+- `scripts/validate-atlas-grants.mjs`
