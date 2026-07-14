@@ -2,12 +2,13 @@ import Link from 'next/link';
 import {
   atlasPath,
   atlasFounderApprovalKeys,
-  calculateAtlasForecast,
   calculateAtlasReadinessAssessment,
   calculateUseOfFundsTotal,
   generateAtlasBusinessReadinessReport,
   generateAtlasPackage,
+  getAtlasActiveFundingAmount,
   getLatestAtlasPackage,
+  reconcileAtlasDocuments,
   type AtlasData,
   type AtlasWorkflowStageStatus,
 } from '@/lib/atlas';
@@ -84,6 +85,7 @@ export function AtlasFounderHome({ data, token }: { data: AtlasData; token: stri
   const next = getNextBestAction(data, token);
   const insight = getAtlasInsight(data);
   const readiness = generateAtlasBusinessReadinessReport(data);
+  const reconciliation = reconcileAtlasDocuments(data, token);
   return (
     <>
       <AtlasFounderHero
@@ -94,7 +96,7 @@ export function AtlasFounderHome({ data, token }: { data: AtlasData; token: stri
         <div>
           <p className="eyebrow">Current status</p>
           <h2 id="atlas-current-status">Your application is {progress}% complete.</h2>
-          <p>About {estimateTimeRemaining(data)} minutes remaining before your application draft is ready for final review.</p>
+          <p>Atlas found {reconciliation.founderActions.length + reconciliation.autoResolved.length} issues, resolved {reconciliation.autoResolved.length}, and needs Tomas for {reconciliation.founderActions.length} precise item{reconciliation.founderActions.length === 1 ? '' : 's'}.</p>
         </div>
         <div className="founder-next-action">
           <span>Next best action</span>
@@ -130,6 +132,7 @@ export function AtlasFounderHome({ data, token }: { data: AtlasData; token: stri
         <p>{insight.detail}</p>
       </section>
       <BusinessReadinessPanel data={data} />
+      <AtlasActivityFeed data={data} />
       <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
   );
@@ -167,8 +170,8 @@ export function AtlasJourneyScreen({ data, token }: { data: AtlasData; token: st
 }
 
 export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token: string }) {
-  const missingDocs = data.documents.filter((document) => document.required && !document.completed);
   const readiness = generateAtlasBusinessReadinessReport(data);
+  const reconciliation = reconcileAtlasDocuments(data, token);
   return (
     <>
       <AtlasFounderHero
@@ -180,24 +183,26 @@ export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token:
         <div>
           <p className="eyebrow">Step 3</p>
           <h2>Review what Atlas found.</h2>
-          <p>Atlas has found {data.importState.sourceDocuments.length} source files, mapped {data.importState.importedFields.length} fields, and identified {data.importState.evidenceGaps.length} items that may still need attention.</p>
+          <p>Atlas searched {reconciliation.inventory.length} approved source records, classified {reconciliation.requirements.length} requirements, and auto-resolved {reconciliation.autoResolved.length} items. {reconciliation.documentsCompleteCount} requirements reconciled.</p>
         </div>
         <div className="founder-next-action">
           <span>Next best action</span>
           <strong>{data.importState.importedFields.length ? 'Review imported information' : 'Scan existing documents'}</strong>
-          <p>{missingDocs.length ? `${missingDocs.length} required documents still need evidence.` : 'Required documents are currently marked complete.'}</p>
+          <p>{reconciliation.founderActions.length ? `Tomas only needs to handle: ${reconciliation.founderActions[0]}` : 'Atlas found no duplicate upload request for an approved document.'}</p>
           <Link className="button-primary" href={atlasPath('/atlas/import-center', token)}>{data.importState.importedFields.length ? 'Review imported information' : 'Scan existing documents'}</Link>
         </div>
       </section>
       <section className="founder-simple-panel">
         <p className="eyebrow">What is still missing</p>
-        <h2>{missingDocs.length ? `${missingDocs.length} required items need attention` : 'Required documents look ready'}</h2>
+        <h2>{reconciliation.founderActions.length ? `${reconciliation.founderActions.length} precise item${reconciliation.founderActions.length === 1 ? '' : 's'} need attention` : 'Required documents look reconciled'}</h2>
+        <p>Tomas only needs to review unresolved, stale, conflicting, lender-confirmation, or founder-only items.</p>
         <div className="founder-status-list">
-          {data.documents.filter((document) => document.required).map((document) => (
-            <div className="founder-status-row" key={document.id}>
-              <span>{document.completed ? 'Ready' : 'Missing'}</span>
-              <strong>{document.name}</strong>
-              <p>{document.completed ? 'Available for the application package.' : 'Add or confirm this before lender submission.'}</p>
+          {reconciliation.requirements.map((requirement) => (
+            <div className="founder-status-row" key={requirement.id}>
+              <span>{requirement.status}</span>
+              <strong>{requirement.label}</strong>
+              <p>{requirement.source}</p>
+              {requirement.founderAction ? <small>{requirement.founderAction}</small> : null}
             </div>
           ))}
         </div>
@@ -214,6 +219,7 @@ export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token:
           </div>
         </details>
       </section>
+      <AtlasActivityFeed data={data} />
       <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
   );
@@ -221,9 +227,10 @@ export function AtlasFounderDocuments({ data, token }: { data: AtlasData; token:
 
 export function AtlasFounderIntake({ data, token }: { data: AtlasData; token: string }) {
   const readiness = generateAtlasBusinessReadinessReport(data);
+  const reconciliation = reconcileAtlasDocuments(data, token);
   const useOfFundsReady = calculateUseOfFundsTotal(data.useOfFundsPlan) === data.useOfFundsPlan.selectedAmount;
   const verifiedDocuments = data.documents.filter((document) => document.completed);
-  const missingDocuments = data.documents.filter((document) => document.required && !document.completed);
+  const unresolvedRequirements = reconciliation.requirements.filter((requirement) => requirement.founderAction && !requirement.autoResolved);
   const sections = [
     {
       title: 'Business identity',
@@ -265,7 +272,7 @@ export function AtlasFounderIntake({ data, token }: { data: AtlasData; token: st
     {
       title: 'Funding request',
       completed: [
-        valueLine('Requested amount', money(data.financialAssumptions.loanAmount)),
+        valueLine('Requested amount', money(getAtlasActiveFundingAmount(data))),
         valueLine('Preferred funding', data.companyProfile.preferredFundingTypes.join(' / ')),
       ],
       missing: useOfFundsReady ? [] : ['Use-of-funds line items must total the requested amount exactly.'],
@@ -304,7 +311,7 @@ export function AtlasFounderIntake({ data, token }: { data: AtlasData; token: st
     {
       title: 'Documents',
       completed: verifiedDocuments.map((document) => `${document.name}: verified or marked available`),
-      missing: missingDocuments.map((document) => `${document.name}: missing or awaiting founder upload`),
+      missing: unresolvedRequirements.map((requirement) => `${requirement.label}: ${requirement.founderAction}`),
     },
     {
       title: 'Authorization',
@@ -333,7 +340,7 @@ export function AtlasFounderIntake({ data, token }: { data: AtlasData; token: st
         <div className="founder-next-action">
           <span>Next best action</span>
           <strong>{readiness.founderActions[0] || 'Review lender package'}</strong>
-          <p>{missingDocuments.length ? `${missingDocuments.length} required document items still need attention.` : 'Required document checklist is currently clear.'}</p>
+          <p>{reconciliation.founderActions.length ? reconciliation.founderActions[0] : 'Atlas reconciled available documents and removed duplicate upload requests.'}</p>
           <Link className="button-primary" href={atlasPath('/atlas/documents', token)}>Review documents</Link>
         </div>
       </section>
@@ -356,6 +363,7 @@ export function AtlasFounderIntake({ data, token }: { data: AtlasData; token: st
         </div>
       </section>
       <BusinessReadinessPanel data={data} />
+      <AtlasActivityFeed data={data} />
       <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
   );
@@ -396,7 +404,8 @@ export function AtlasFounderOpportunities({ data, token }: { data: AtlasData; to
 export function AtlasFounderReview({ data, token }: { data: AtlasData; token: string }) {
   const latest = getLatestAtlasPackage(data);
   const generated = generateAtlasPackage(data);
-  const missingDocs = data.documents.filter((document) => document.required && !document.completed);
+  const reconciliation = reconcileAtlasDocuments(data, token);
+  const missingDocs = reconciliation.requirements.filter((requirement) => requirement.founderAction && !requirement.autoResolved);
   const approvalsMissing = latest ? atlasFounderApprovalKeys.filter((key) => !latest.founderApprovals[key]) : atlasFounderApprovalKeys;
   const readiness = generateAtlasBusinessReadinessReport(data);
   return (
@@ -407,7 +416,7 @@ export function AtlasFounderReview({ data, token }: { data: AtlasData; token: st
       />
       <AtlasFounderStepNav data={data} token={token} active="submit" />
       <section className="founder-review-summary">
-        <SummaryItem label="Funding amount" value={money(data.financialAssumptions.loanAmount)} status="Needs review" />
+        <SummaryItem label="Funding amount" value={money(getAtlasActiveFundingAmount(data))} status="Needs review" />
         <SummaryItem label="Use of funds" value={`${data.companyProfile.primaryUseOfFunds.length} categories`} status={calculateUseOfFundsTotal(data.useOfFundsPlan) === data.useOfFundsPlan.selectedAmount ? 'Ready' : 'Needs review'} />
         <SummaryItem label="Missing documents" value={String(missingDocs.length)} status={missingDocs.length ? 'Missing' : 'Ready'} />
         <SummaryItem label="Founder approvals" value={`${approvalsMissing.length} remaining`} status={approvalsMissing.length ? 'Needs review' : 'Ready'} />
@@ -447,6 +456,7 @@ export function AtlasFounderReview({ data, token }: { data: AtlasData; token: st
           ))}
         </div>
       </section>
+      <AtlasActivityFeed data={data} />
       <FounderActionList completed={readiness.completed} actions={readiness.founderActions} />
     </>
   );
@@ -482,6 +492,26 @@ function BusinessReadinessPanel({ data }: { data: AtlasData }) {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+function AtlasActivityFeed({ data }: { data: AtlasData }) {
+  const reconciliation = reconcileAtlasDocuments(data);
+  return (
+    <section className="founder-simple-panel">
+      <p className="eyebrow">Operator activity</p>
+      <h2>What Atlas resolved before asking Tomas</h2>
+      <div className="founder-status-list">
+        {reconciliation.activityFeed.slice(0, 10).map((activity) => (
+          <div className="founder-status-row" key={activity.id}>
+            <span>{activity.status}</span>
+            <strong>{activity.label}</strong>
+            <p>{activity.detail}</p>
+            <small>{new Date(activity.timestamp).toLocaleString('en-US')}</small>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -568,7 +598,7 @@ export function AtlasWorkingState({ data, token }: { data: AtlasData; token: str
       <div className="founder-progress-tasks">
         {[
           ['Reviewing company information', Boolean(data.companyProfile.companyName)],
-          ['Checking financial assumptions', data.financialAssumptions.loanAmount > 0],
+          ['Checking financial assumptions', getAtlasActiveFundingAmount(data) === 50000],
           ['Comparing lender requirements', data.fundingOpportunities.length > 0],
           ['Building your package', data.packageVersions.length > 0],
         ].map(([label, complete]) => (
@@ -585,8 +615,7 @@ export function AtlasWorkingState({ data, token }: { data: AtlasData; token: str
 
 export function buildFounderSteps(data: AtlasData, token: string): FounderStep[] {
   const applicationAssessment = calculateAtlasReadinessAssessment(data);
-  const requiredDocs = data.documents.filter((document) => document.required);
-  const missingDocs = requiredDocs.filter((document) => !document.completed);
+  const reconciliation = reconcileAtlasDocuments(data, token);
   const latestPackage = getLatestAtlasPackage(data);
   const approvalsMissing = latestPackage ? atlasFounderApprovalKeys.filter((key) => !latestPackage.founderApprovals[key]).length : atlasFounderApprovalKeys.length;
   return [
@@ -604,17 +633,17 @@ export function buildFounderSteps(data: AtlasData, token: string): FounderStep[]
       title: 'Your Funding Request',
       plainTitle: 'Funding',
       href: atlasPath('/atlas/journey#funding-request', token),
-      status: data.financialAssumptions.loanAmount > 0 && data.companyProfile.primaryUseOfFunds.length ? 'complete' : 'needs_attention',
-      shortStatus: data.financialAssumptions.loanAmount > 0 ? 'In progress' : 'Needs attention',
-      detail: `Review ${money(data.financialAssumptions.loanAmount)} request, use of funds, assumptions, and repayment plan.`,
+      status: getAtlasActiveFundingAmount(data) === 50000 && data.companyProfile.primaryUseOfFunds.length ? 'complete' : 'needs_attention',
+      shortStatus: getAtlasActiveFundingAmount(data) === 50000 ? '$50k ready' : 'Needs attention',
+      detail: `Review ${money(getAtlasActiveFundingAmount(data))} request, use of funds, assumptions, and repayment plan.`,
     },
     {
       id: 'documents',
       title: 'Your Documents',
       plainTitle: 'Documents',
       href: atlasPath('/atlas/documents', token),
-      status: missingDocs.length ? 'needs_attention' : 'complete',
-      shortStatus: missingDocs.length ? `${missingDocs.length} missing` : 'Complete',
+      status: reconciliation.founderActions.length ? 'needs_attention' : 'complete',
+      shortStatus: reconciliation.founderActions.length ? `${reconciliation.founderActions.length} items` : 'Complete',
       detail: 'Let Atlas scan, import, and show only missing or conflicting information.',
     },
     {
@@ -645,16 +674,16 @@ export function getFounderProgress(data: AtlasData) {
 }
 
 function getNextBestAction(data: AtlasData, token: string) {
-  const missingDocs = data.documents.filter((document) => document.required && !document.completed);
+  const reconciliation = reconcileAtlasDocuments(data, token);
   const latest = getLatestAtlasPackage(data);
   if (!data.companyProfile.businessSummary) {
     return { label: 'Confirm your business story', detail: 'Start by reviewing the company description lenders will see.', href: atlasPath('/atlas/journey', token) };
   }
-  if (data.financialAssumptions.loanAmount <= 0 || !data.companyProfile.primaryUseOfFunds.length) {
+  if (getAtlasActiveFundingAmount(data) !== 50000 || !data.companyProfile.primaryUseOfFunds.length) {
     return { label: 'Complete your funding request', detail: 'Confirm the amount, use of funds, and repayment assumptions.', href: atlasPath('/atlas/journey#funding-request', token) };
   }
-  if (missingDocs.length || data.importState.founderReviewQueue.some((item) => item.status === 'pending_review')) {
-    return { label: 'Review your documents', detail: 'Atlas found document items that need confirmation.', href: atlasPath('/atlas/documents', token) };
+  if (reconciliation.founderActions.length || data.importState.founderReviewQueue.some((item) => item.status === 'pending_review')) {
+    return reconciliation.nextBestAction;
   }
   if (!latest) {
     return { label: 'Prepare your application', detail: 'Atlas can generate an application draft for founder review.', href: atlasPath('/atlas/review', token) };
@@ -662,17 +691,13 @@ function getNextBestAction(data: AtlasData, token: string) {
   return { label: 'Review and submit manually', detail: 'Confirm approvals before submitting through a lender’s official process.', href: atlasPath('/atlas/review', token) };
 }
 
-function estimateTimeRemaining(data: AtlasData) {
-  const progress = getFounderProgress(data);
-  return Math.max(6, Math.round((100 - progress) * 0.42));
-}
-
 function getAtlasInsight(data: AtlasData) {
+  const reconciliation = reconcileAtlasDocuments(data);
   const conflicts = data.importState.fieldConflicts.length;
-  const gaps = data.importState.evidenceGaps.length;
+  const gaps = reconciliation.founderActions.length;
   if (conflicts) return { title: `Atlas found ${conflicts} value that needs your confirmation.`, detail: 'Resolve conflicting information before it appears in lender-facing material.' };
-  if (gaps) return { title: `Atlas found ${gaps} missing items.`, detail: 'Focus on the missing items first. The rest of the workflow can stay in the background.' };
-  return { title: 'Great progress. Atlas has the core application structure ready.', detail: 'Your next step is to review the draft and confirm the founder approval items.' };
+  if (gaps) return { title: `Atlas found ${gaps + reconciliation.autoResolved.length} issues and resolved ${reconciliation.autoResolved.length}.`, detail: `Tomas only needs to handle: ${reconciliation.founderActions[0]}` };
+  return { title: 'Great progress. Atlas reconciled the document package.', detail: 'No duplicate upload request remains for documents Atlas already has.' };
 }
 
 function GuidedChecklist({ title, items }: { title: string; items: Array<[string, boolean]> }) {

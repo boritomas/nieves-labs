@@ -1,4 +1,4 @@
-import { atlasPath, type AtlasData, type AtlasFundingOpportunity } from '@/lib/atlas';
+import { atlasPath, reconcileAtlasDocuments, type AtlasData, type AtlasFundingOpportunity } from '@/lib/atlas';
 
 export function AtlasLenderResearch({ data, token }: { data: AtlasData; token: string }) {
   return (
@@ -44,23 +44,25 @@ export function AtlasLenderComparison({ data }: { data: AtlasData }) {
 }
 
 export function AtlasRequirementMapping({ data }: { data: AtlasData }) {
-  const requiredDocuments = data.documents.filter((document) => document.required);
+  const reconciliation = reconcileAtlasDocuments(data);
   return (
     <section className="panel">
       <p className="eyebrow">Requirement mapping</p>
       <h2>Lender requirements to document vault</h2>
+      <p>{reconciliation.documentsCompleteCount} of {reconciliation.documentsTotalCount} requirements are reconciled from approved Atlas sources. Atlas only asks Tomas for unresolved or founder-only confirmation items.</p>
       <div className="atlas-application-grid">
         {data.fundingOpportunities.filter((opportunity) => opportunity.status !== 'declined').map((opportunity) => (
           <article className="atlas-application-card" key={opportunity.id}>
             <h2>{opportunity.lenderName || opportunity.fundingSource}</h2>
             <p>{opportunity.requirements}</p>
             <div className="atlas-checklist">
-              {requiredDocuments.map((document) => (
-                <div className={`atlas-check-row ${document.completed ? 'complete' : ''}`} key={`${opportunity.id}-${document.id}`}>
-                  <span>{document.completed ? '✓' : ''}</span>
+              {reconciliation.requirements.map((requirement) => (
+                <div className={`atlas-check-row ${requirement.sufficient ? 'complete' : ''}`} key={`${opportunity.id}-${requirement.id}`}>
+                  <span>{requirement.sufficient ? '✓' : ''}</span>
                   <div>
-                    <strong>{document.name}</strong>
-                    <p>{document.completed ? 'Available for lender package.' : 'Still missing before submission.'}</p>
+                    <strong>{requirement.label}</strong>
+                    <p>{requirement.status}. {requirement.bestMatch || requirement.source}</p>
+                    {requirement.founderAction && <p><strong>Next:</strong> {requirement.founderAction}</p>}
                   </div>
                 </div>
               ))}
@@ -74,7 +76,9 @@ export function AtlasRequirementMapping({ data }: { data: AtlasData }) {
 
 export function AtlasManualSubmission({ data }: { data: AtlasData }) {
   const latest = [...data.packageVersions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+  const reconciliation = reconcileAtlasDocuments(data);
   const ready = latest?.status === 'Ready' || latest?.status === 'Submitted';
+  const documentsReady = reconciliation.requirements.every((requirement) => requirement.sufficient || requirement.status === 'NOT APPLICABLE' || requirement.status === 'REQUIRES LENDER CONFIRMATION');
   return (
     <section className="panel">
       <p className="eyebrow">Manual submission only</p>
@@ -84,7 +88,7 @@ export function AtlasManualSubmission({ data }: { data: AtlasData }) {
         {[
           ['Package ready', ready],
           ['Founder approvals complete', latest ? Object.values(latest.founderApprovals).every(Boolean) : false],
-          ['Required documents complete', data.documents.filter((document) => document.required).every((document) => document.completed)],
+          ['Required documents reconciled', documentsReady],
           ['Lender selected', Boolean(latest?.targetLender)],
         ].map(([label, complete]) => (
           <div className={`atlas-check-row ${complete ? 'complete' : ''}`} key={String(label)}>

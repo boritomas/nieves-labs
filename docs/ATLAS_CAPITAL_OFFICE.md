@@ -557,6 +557,27 @@ The report checks:
 
 Unknown official facts remain marked as `REQUIRES FOUNDER OR STATE PORTAL VERIFICATION` or `REQUIRES LENDER CONFIRMATION`. Atlas never assumes entity good standing, lender acceptance, EIN validity, or final accounting/tax classifications without verified evidence.
 
+## Atlas Autonomy Remediation v1
+
+Atlas now reconciles document requirements before asking Tomas for action. The reconciliation layer inventories approved Atlas sources across the document vault, imports, extracted sections, generated packages, company profile, founder profile, financial model, campaign state, and source mappings.
+
+Requirement statuses are:
+
+- `VERIFIED COMPLETE`
+- `FOUND, NEEDS FOUNDER CONFIRMATION`
+- `FOUND, NEEDS CLASSIFICATION`
+- `FOUND, STALE`
+- `FOUND, CONFLICTING`
+- `NOT APPLICABLE`
+- `REQUIRES LENDER CONFIRMATION`
+- `TRULY MISSING`
+
+Low-risk evidence such as EIN confirmation metadata, generated package coverage, approved business-plan coverage, founder-background coverage, and startup-stage tax-return applicability is auto-resolved when the source evidence is already present. Atlas does not ask Tomas to re-upload documents it can already reconcile. Founder actions are deduplicated and limited to unresolved, stale, conflicting, lender-confirmation, or founder-only review items.
+
+The founder home, documents view, review view, advanced dashboard, lender requirement mapping, application builder, readiness scoring, workflow stages, and package generator all use the same reconciliation source of truth. The active funding amount is normalized to the current $50,000 campaign target.
+
+The operator activity feed records what Atlas searched, what it resolved, what drafts it generated, what conflicts remain, and the exact next best action. It is an audit trail for Atlas work; it is not a new dashboard.
+
 ## Atlas Funding OS v1 rollback
 
 Rollback path:

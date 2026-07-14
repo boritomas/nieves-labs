@@ -493,6 +493,59 @@ export type AtlasFinancialForecast = {
 
 export type AtlasBusinessReadinessStatus = 'Ready' | 'Mostly ready' | 'Needs attention' | 'Missing' | 'Requires lender confirmation';
 
+export type AtlasRequirementStatus =
+  | 'VERIFIED COMPLETE'
+  | 'FOUND, NEEDS FOUNDER CONFIRMATION'
+  | 'FOUND, NEEDS CLASSIFICATION'
+  | 'FOUND, STALE'
+  | 'FOUND, CONFLICTING'
+  | 'NOT APPLICABLE'
+  | 'REQUIRES LENDER CONFIRMATION'
+  | 'TRULY MISSING';
+
+export type AtlasReconciledRequirement = {
+  id: string;
+  label: string;
+  policy: 'Required for current active lender' | 'Commonly requested' | 'Optional support' | 'Not currently required' | 'Requires lender confirmation';
+  status: AtlasRequirementStatus;
+  bestMatch: string;
+  source: string;
+  confidence: number;
+  sufficient: boolean;
+  founderAction?: string;
+  autoResolved: boolean;
+  generatedDraft?: string;
+  activity: string;
+};
+
+export type AtlasOperatorActivityStatus = 'Working' | 'Completed' | 'Waiting for Tomas' | 'Failed' | 'Retrying' | 'Requires verification';
+
+export type AtlasOperatorActivity = {
+  id: string;
+  timestamp: string;
+  status: AtlasOperatorActivityStatus;
+  label: string;
+  detail: string;
+};
+
+export type AtlasDocumentReconciliation = {
+  inventory: string[];
+  requirements: AtlasReconciledRequirement[];
+  activityFeed: AtlasOperatorActivity[];
+  generatedDrafts: AtlasReconciledRequirement[];
+  autoResolved: AtlasReconciledRequirement[];
+  founderActions: string[];
+  conflicts: AtlasEvidenceGap[];
+  documentsCompleteCount: number;
+  documentsTotalCount: number;
+  documentationScore: number;
+  nextBestAction: {
+    label: string;
+    detail: string;
+    href: string;
+  };
+};
+
 export type AtlasBusinessReadinessReport = {
   entityStatus: AtlasBusinessReadinessStatus;
   einStatus: AtlasBusinessReadinessStatus;
@@ -667,7 +720,7 @@ export function buildAtlasFundingCampaignOS(data: AtlasData): AtlasFundingCampai
     ? submitted.applicationUrl.split('/').filter(Boolean).at(-1) || ''
     : '';
   const applicationId = rawApplicationId.includes('private-recorded') ? 'Recorded in private evidence package' : rawApplicationId;
-  const requestedAmount = data.useOfFundsPlan.selectedAmount || data.financialAssumptions.loanAmount || data.companyProfile.fundingTargetMax;
+  const requestedAmount = getAtlasActiveFundingAmount(data);
   const docsComplete = data.documents.filter((document) => document.required).every((document) => document.completed);
   const useOfFundsReady = calculateUseOfFundsTotal(data.useOfFundsPlan) === requestedAmount;
   const hasSubmittedApplication = Boolean(submitted);
@@ -808,6 +861,7 @@ export function buildAtlasFundingCampaignOS(data: AtlasData): AtlasFundingCampai
 }
 
 export function buildAtlasFundingOperatorAudit(data: AtlasData): AtlasFundingOperatorAudit {
+  const reconciliation = reconcileAtlasDocuments(data);
   const workflowRecords = data.lenderWorkflowLibrary || [];
   const reusableFields = workflowRecords.filter((field) => !field.founderOnly);
   const automaticallyPopulated = workflowRecords.filter((field) => field.autofillResult === 'autofilled');
@@ -815,7 +869,7 @@ export function buildAtlasFundingOperatorAudit(data: AtlasData): AtlasFundingOpe
   const blockedFields = workflowRecords.filter((field) => ['blocked', 'not_attempted'].includes(field.autofillResult));
   const completedDocuments = data.documents.filter((document) => document.completed);
   const fieldsCompleted = Number(data.campaignState.fieldsCompleted || automaticallyPopulated.length);
-  const fieldsMissing = Number(data.campaignState.fieldsMissing || data.documents.filter((document) => document.required && !document.completed).length);
+  const fieldsMissing = Number(data.campaignState.fieldsMissing || reconciliation.founderActions.length);
   const reusableFieldCount = Math.max(reusableFields.length, fieldsCompleted + fieldsMissing);
   const autofillPercentage = reusableFieldCount > 0 ? Math.round((fieldsCompleted / reusableFieldCount) * 100) : 0;
   const founderSessions = Math.max(1, Math.ceil(Number(data.campaignState.interruptions || 0) / 5));
@@ -842,20 +896,375 @@ export function buildAtlasFundingOperatorAudit(data: AtlasData): AtlasFundingOpe
   };
 }
 
-export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusinessReadinessReport {
-  const sourceFields = data.importState.importedFields || [];
+export function getAtlasActiveFundingAmount(data: AtlasData | Omit<AtlasData, 'readinessScores'>) {
+  return Number(data.campaignState?.requestedAmount || data.useOfFundsPlan?.selectedAmount || data.companyProfile?.fundingTargetMax || data.financialAssumptions?.loanAmount || 50000);
+}
+
+export function reconcileAtlasDocuments(data: AtlasData | Omit<AtlasData, 'readinessScores'>, token = ''): AtlasDocumentReconciliation {
+  const timestamp = data.campaignState?.updatedAt || data.importState?.lastImportAt || data.importState?.lastScanAt || new Date().toISOString();
+  const inventory = buildAtlasSourceInventory(data);
+  const haystack = inventory.join('\n').toLowerCase();
   const documents = data.documents || [];
-  const requiredDocs = documents.filter((document) => document.required);
-  const completedRequiredDocs = requiredDocs.filter((document) => document.completed);
-  const hasFormation = documents.some((document) => document.id === 'formation-documents' && document.completed);
-  const hasOperatingAgreement = documents.some((document) => document.id === 'operating-agreement' && document.completed);
-  const hasEinDocument = documents.some((document) => document.id === 'ein' && document.completed)
+  const byId = new Map(documents.map((document) => [document.id, document]));
+  const sourceDocuments = data.importState?.sourceDocuments || [];
+  const importedFields = data.importState?.importedFields || [];
+  const extractedSections = data.importState?.extractedSections || [];
+  const packageText = (data.packageVersions || []).map((version) => `${version.packageName}\n${version.generatedMarkdown}\n${version.notes}`).join('\n');
+  const activeFundingAmount = getAtlasActiveFundingAmount(data);
+
+  const hasDocument = (id: string, patterns: RegExp[] = []) => {
+    const document = byId.get(id);
+    const direct = Boolean(document?.completed);
+    const imported = importedFields.some((field) => field.fieldPath === `documents.${id}` || field.fieldPath.startsWith(`documents.${id}.`));
+    const source = sourceDocuments.some((documentSource) => patterns.some((pattern) => pattern.test(`${documentSource.filename} ${documentSource.classification} ${documentSource.path}`)));
+    const section = extractedSections.some((sectionItem) => patterns.some((pattern) => pattern.test(`${sectionItem.heading} ${sectionItem.text} ${sectionItem.sourceSection}`)));
+    return direct || imported || source || section || patterns.some((pattern) => pattern.test(`${haystack}\n${packageText}`));
+  };
+
+  const bestMatch = (id: string, fallback: string) => {
+    const document = byId.get(id);
+    if (document?.completed) return `${document.name} (${document.updatedAt.slice(0, 10)})`;
+    const imported = importedFields.find((field) => field.fieldPath === `documents.${id}` || field.fieldPath.startsWith(`documents.${id}.`));
+    if (imported) return `${imported.sourceFilename} (${imported.importTimestamp.slice(0, 10)})`;
+    const source = sourceDocuments.find((documentSource) => new RegExp(id.replace(/-/g, '|'), 'i').test(`${documentSource.filename} ${documentSource.classification}`));
+    if (source) return `${source.filename} (${source.modifiedAt.slice(0, 10)})`;
+    return fallback;
+  };
+
+  const requirement = (item: Omit<AtlasReconciledRequirement, 'activity'>): AtlasReconciledRequirement => ({
+    ...item,
+    activity: `${item.status}: ${item.label}`,
+  });
+
+  const businessPlanReady = hasDocument('business-plan', [/business plan|operating plan|lender narrative/i]);
+  const executiveSummaryReady = hasDocument('executive-summary', [/executive summary/i]) || businessPlanReady;
+  const einReady = hasDocument('ein', [/cp\s?575|irs ein|ein confirmation|employer identification/i])
     || data.companyProfile.einVerificationStatus === 'verified_document_received';
-  const hasBankStatements = documents.some((document) => document.id === 'bank-statements' && document.completed);
+  const formationReady = hasDocument('formation-documents', [/formation|articles of organization|certificate of formation|entity registration/i]);
+  const operatingAgreementReady = hasDocument('operating-agreement', [/operating agreement|company agreement|member agreement/i]);
+  const financialProjectionReady = hasDocument('financial-projections', [/financial projection|12-month model|cash.?flow forecast|forecast/i]);
+  const personalFinancialReady = hasDocument('personal-financial-statement', [/personal financial statement|pfs/i])
+    || data.personalFinancialProfile.assets > 0
+    || data.personalFinancialProfile.annualIncome > 0;
+  const bankEvidenceCount = countBankStatementEvidence(data);
+  const bankStatementsReady = hasDocument('bank-statements', [/bank statement|statement history|business statement|personal statement/i]) || bankEvidenceCount >= 3;
+  const founderResumeReady = hasDocument('founder-resume', [/founder resume|professional background|operating experience/i]) || data.companyProfile.founderBackground.length > 80;
+  const productScreensReady = hasDocument('product-screenshots', [/product screenshots|live modules|launch candidate|portfolio/i]);
+  const marketReady = hasDocument('market-research', [/market research|customer segment|target market|market analysis/i]) || /market|customer|segment|competitive|positioning/i.test(data.companyProfile.businessSummary);
+  const competitiveReady = hasDocument('competitive-analysis', [/competitive analysis|alternatives|differentiation|competitor/i]) || /competitive|alternatives|differentiation/i.test(packageText) || businessPlanReady;
+  const taxNotApplicable = /pre-launch|near-launch/i.test(data.companyProfile.revenueStage) && data.companyProfile.currentRevenue <= 0;
+  const taxReturnsReady = hasDocument('tax-returns', [/tax return|irs return|schedule c|1120|1065/i]);
+
+  const requirements: AtlasReconciledRequirement[] = [
+    requirement({
+      id: 'ein',
+      label: 'IRS EIN confirmation',
+      policy: 'Required for current active lender',
+      status: einReady ? 'VERIFIED COMPLETE' : 'TRULY MISSING',
+      bestMatch: einReady ? bestMatch('ein', data.companyProfile.einSourceDocumentName || 'IRS EIN confirmation metadata') : '',
+      source: einReady ? 'Document vault, EIN ingestion, and company profile source mapping' : 'Full source inventory found no acceptable EIN confirmation.',
+      confidence: einReady ? 96 : 0,
+      sufficient: einReady,
+      founderAction: einReady ? undefined : 'Upload IRS EIN confirmation letter or CP575B.',
+      autoResolved: einReady,
+    }),
+    requirement({
+      id: 'formation-documents',
+      label: 'Formation documents',
+      policy: 'Required for current active lender',
+      status: formationReady ? 'VERIFIED COMPLETE' : 'TRULY MISSING',
+      bestMatch: formationReady ? bestMatch('formation-documents', 'Formation evidence found in approved source metadata') : '',
+      source: formationReady ? 'Document vault, imported document classes, and package metadata' : 'No formation document candidate found.',
+      confidence: formationReady ? 90 : 0,
+      sufficient: formationReady,
+      founderAction: formationReady ? undefined : 'Provide certificate of formation, articles of organization, or equivalent state filing.',
+      autoResolved: formationReady,
+    }),
+    requirement({
+      id: 'operating-agreement',
+      label: 'Operating agreement',
+      policy: 'Commonly requested',
+      status: operatingAgreementReady ? 'VERIFIED COMPLETE' : 'REQUIRES LENDER CONFIRMATION',
+      bestMatch: operatingAgreementReady ? bestMatch('operating-agreement', 'Operating agreement evidence') : '',
+      source: operatingAgreementReady ? 'Document vault or imported source mapping' : 'Atlas found formation evidence but no operating agreement. Lender requirement depends on entity structure and lender policy.',
+      confidence: operatingAgreementReady ? 90 : 58,
+      sufficient: operatingAgreementReady,
+      founderAction: operatingAgreementReady ? undefined : 'Confirm whether an operating agreement exists or whether the selected lender will require it.',
+      autoResolved: operatingAgreementReady,
+    }),
+    requirement({
+      id: 'business-plan',
+      label: 'Business plan',
+      policy: 'Required for current active lender',
+      status: businessPlanReady ? 'VERIFIED COMPLETE' : 'TRULY MISSING',
+      bestMatch: businessPlanReady ? bestMatch('business-plan', 'Approved business plan record') : '',
+      source: businessPlanReady ? 'Document vault and generated lender package records' : 'No business plan candidate found.',
+      confidence: businessPlanReady ? 95 : 0,
+      sufficient: businessPlanReady,
+      founderAction: businessPlanReady ? undefined : 'Add or approve a business plan.',
+      autoResolved: businessPlanReady,
+    }),
+    requirement({
+      id: 'executive-summary',
+      label: 'Executive summary',
+      policy: 'Commonly requested',
+      status: executiveSummaryReady ? 'VERIFIED COMPLETE' : 'FOUND, NEEDS FOUNDER CONFIRMATION',
+      bestMatch: executiveSummaryReady ? bestMatch('executive-summary', 'Executive summary can be generated from approved business plan') : 'AI-generated draft available from approved Atlas data',
+      source: executiveSummaryReady ? 'Document vault or business plan coverage' : 'Atlas can generate a draft from approved company and funding records.',
+      confidence: executiveSummaryReady ? 92 : 76,
+      sufficient: executiveSummaryReady,
+      founderAction: executiveSummaryReady ? undefined : 'Review the AI-generated executive summary draft.',
+      autoResolved: executiveSummaryReady,
+      generatedDraft: executiveSummaryReady ? undefined : 'AI-GENERATED DRAFT - REQUIRES FOUNDER REVIEW: Executive summary generated from company profile, funding request, use of funds, and repayment strategy.',
+    }),
+    requirement({
+      id: 'financial-projections',
+      label: 'Financial projections and cash-flow forecast',
+      policy: 'Required for current active lender',
+      status: financialProjectionReady ? 'VERIFIED COMPLETE' : 'FOUND, NEEDS FOUNDER CONFIRMATION',
+      bestMatch: financialProjectionReady ? bestMatch('financial-projections', '12-month financial model') : 'Atlas financial model',
+      source: financialProjectionReady ? 'Document vault, financial model, and package records' : 'Atlas can generate lender-facing projections from current assumptions.',
+      confidence: financialProjectionReady ? 94 : 78,
+      sufficient: financialProjectionReady,
+      founderAction: financialProjectionReady ? undefined : 'Review AI-generated financial projection draft before lender use.',
+      autoResolved: financialProjectionReady,
+      generatedDraft: financialProjectionReady ? undefined : 'AI-GENERATED DRAFT - REQUIRES FOUNDER REVIEW: 12-month projection and cash-flow forecast from Atlas assumptions.',
+    }),
+    requirement({
+      id: 'personal-financial-statement',
+      label: 'Personal financial statement',
+      policy: 'Commonly requested',
+      status: personalFinancialReady ? 'FOUND, NEEDS FOUNDER CONFIRMATION' : 'TRULY MISSING',
+      bestMatch: personalFinancialReady ? bestMatch('personal-financial-statement', 'Founder financial values present in protected profile') : '',
+      source: personalFinancialReady ? 'Protected personal financial profile or document vault' : 'No personal financial statement or populated financial profile found.',
+      confidence: personalFinancialReady ? 72 : 0,
+      sufficient: personalFinancialReady,
+      founderAction: 'Review and confirm personal financial values directly in Atlas or lender portal.',
+      autoResolved: false,
+    }),
+    requirement({
+      id: 'bank-statements',
+      label: 'Bank statements',
+      policy: 'Requires lender confirmation',
+      status: bankStatementsReady ? 'VERIFIED COMPLETE' : bankEvidenceCount > 0 ? 'FOUND, NEEDS FOUNDER CONFIRMATION' : 'REQUIRES LENDER CONFIRMATION',
+      bestMatch: bankStatementsReady ? bestMatch('bank-statements', `${bankEvidenceCount} statement evidence record(s)`) : bankEvidenceCount ? `${bankEvidenceCount} statement evidence record(s)` : '',
+      source: bankStatementsReady || bankEvidenceCount ? 'Document vault, imports, or bank-statement metadata' : 'Active lender may request bank statements; Atlas has no confirmed full-month coverage.',
+      confidence: bankStatementsReady ? 88 : bankEvidenceCount ? 68 : 45,
+      sufficient: bankStatementsReady,
+      founderAction: bankStatementsReady ? undefined : bankEvidenceCount ? 'Confirm which statement month is still missing.' : 'Wait for lender request or add statement months if available.',
+      autoResolved: bankStatementsReady,
+    }),
+    requirement({
+      id: 'tax-returns',
+      label: 'Tax returns',
+      policy: 'Requires lender confirmation',
+      status: taxReturnsReady ? 'VERIFIED COMPLETE' : taxNotApplicable ? 'NOT APPLICABLE' : 'REQUIRES LENDER CONFIRMATION',
+      bestMatch: taxReturnsReady ? bestMatch('tax-returns', 'Tax return evidence') : '',
+      source: taxReturnsReady ? 'Document vault or imported source mapping' : taxNotApplicable ? 'Startup revenue stage indicates no applicable business return yet.' : 'Lender may request returns; applicability must be confirmed.',
+      confidence: taxReturnsReady ? 88 : taxNotApplicable ? 74 : 45,
+      sufficient: taxReturnsReady || taxNotApplicable,
+      founderAction: taxReturnsReady || taxNotApplicable ? undefined : 'Confirm whether a business tax return exists or whether lender wants personal returns.',
+      autoResolved: taxReturnsReady || taxNotApplicable,
+    }),
+    requirement({
+      id: 'founder-resume',
+      label: 'Founder resume',
+      policy: 'Commonly requested',
+      status: founderResumeReady ? 'VERIFIED COMPLETE' : 'FOUND, NEEDS FOUNDER CONFIRMATION',
+      bestMatch: founderResumeReady ? bestMatch('founder-resume', 'Founder background can generate resume draft') : 'Atlas founder profile',
+      source: founderResumeReady ? 'Document vault or founder profile' : 'Atlas can generate a founder resume draft from approved profile data.',
+      confidence: founderResumeReady ? 88 : 76,
+      sufficient: founderResumeReady,
+      founderAction: founderResumeReady ? undefined : 'Review AI-generated founder resume draft.',
+      autoResolved: founderResumeReady,
+      generatedDraft: founderResumeReady ? undefined : 'AI-GENERATED DRAFT - REQUIRES FOUNDER REVIEW: Founder resume generated from Atlas founder profile.',
+    }),
+    requirement({
+      id: 'product-screenshots',
+      label: 'Product portfolio and screenshots',
+      policy: 'Optional support',
+      status: productScreensReady ? 'VERIFIED COMPLETE' : 'FOUND, NEEDS FOUNDER CONFIRMATION',
+      bestMatch: productScreensReady ? bestMatch('product-screenshots', 'Product screenshots document') : 'Live product pages and package records',
+      source: productScreensReady ? 'Document vault' : 'Atlas can prepare an internal product portfolio from existing product records.',
+      confidence: productScreensReady ? 86 : 70,
+      sufficient: productScreensReady,
+      founderAction: productScreensReady ? undefined : 'Review generated product portfolio draft if lender requests product evidence.',
+      autoResolved: productScreensReady,
+      generatedDraft: productScreensReady ? undefined : 'AI-GENERATED DRAFT - REQUIRES FOUNDER REVIEW: Product portfolio generated from existing Nieves Labs product registry.',
+    }),
+    requirement({
+      id: 'market-research',
+      label: 'Market research',
+      policy: 'Commonly requested',
+      status: marketReady ? 'VERIFIED COMPLETE' : 'FOUND, NEEDS FOUNDER CONFIRMATION',
+      bestMatch: marketReady ? bestMatch('market-research', businessPlanReady ? 'Market research embedded in business plan' : 'Market evidence found') : 'Atlas-generated market research draft',
+      source: marketReady ? 'Business plan, source documents, or company narrative coverage' : 'Atlas can draft market research from approved profile and package data.',
+      confidence: marketReady ? 84 : 72,
+      sufficient: marketReady,
+      founderAction: marketReady ? undefined : 'Review AI-generated market research summary.',
+      autoResolved: marketReady,
+      generatedDraft: marketReady ? undefined : 'AI-GENERATED DRAFT - REQUIRES FOUNDER REVIEW: Market research summary generated from approved Atlas profile.',
+    }),
+    requirement({
+      id: 'competitive-analysis',
+      label: 'Competitive analysis',
+      policy: 'Commonly requested',
+      status: competitiveReady ? 'VERIFIED COMPLETE' : 'FOUND, NEEDS FOUNDER CONFIRMATION',
+      bestMatch: competitiveReady ? bestMatch('competitive-analysis', 'Competitive positioning embedded in approved business plan/package') : 'Atlas-generated competitive analysis draft',
+      source: competitiveReady ? 'Business plan, generated package, or competitive-analysis source document' : 'Atlas can draft competitive analysis from approved product positioning.',
+      confidence: competitiveReady ? 82 : 70,
+      sufficient: competitiveReady,
+      founderAction: competitiveReady ? undefined : 'Review AI-generated competitive analysis draft.',
+      autoResolved: competitiveReady,
+      generatedDraft: competitiveReady ? undefined : 'AI-GENERATED DRAFT - REQUIRES FOUNDER REVIEW: Competitive analysis generated from approved Atlas product records.',
+    }),
+  ];
+
+  const conflicts: AtlasEvidenceGap[] = [...(data.importState?.evidenceGaps || [])];
+  if (activeFundingAmount !== 50000) {
+    conflicts.push({
+      id: 'active-funding-amount-not-50000',
+      category: 'Conflict',
+      label: 'Active funding amount',
+      detail: `Atlas expected $50,000 for the current funding campaign, but found ${money(activeFundingAmount)}.`,
+      severity: 'high',
+    });
+  }
+
+  const founderActions = requirements
+    .filter((item) => item.founderAction && !item.autoResolved)
+    .map((item) => item.founderAction as string)
+    .filter((item, index, list) => list.indexOf(item) === index);
+  const completed = requirements.filter((item) => ['VERIFIED COMPLETE', 'NOT APPLICABLE'].includes(item.status)).length;
+  const documentationScore = requirements.length ? Math.round((completed / requirements.length) * 100) : 0;
+  const autoResolved = requirements.filter((item) => item.autoResolved || item.status === 'NOT APPLICABLE');
+  const generatedDrafts = requirements.filter((item) => item.generatedDraft);
+  const activityFeed = buildAtlasOperatorActivity(data, requirements, inventory, timestamp, conflicts);
+  const nextRequirement = requirements.find((item) => item.founderAction && !item.autoResolved && ['FOUND, CONFLICTING', 'TRULY MISSING', 'FOUND, STALE'].includes(item.status))
+    || requirements.find((item) => item.founderAction && !item.autoResolved)
+    || requirements.find((item) => item.generatedDraft)
+    || requirements.find((item) => item.status === 'REQUIRES LENDER CONFIRMATION');
+
+  return {
+    inventory,
+    requirements,
+    activityFeed,
+    generatedDrafts,
+    autoResolved,
+    founderActions,
+    conflicts,
+    documentsCompleteCount: completed,
+    documentsTotalCount: requirements.length,
+    documentationScore,
+    nextBestAction: nextRequirement
+      ? {
+          label: nextRequirement.generatedDraft ? `Review ${nextRequirement.label} draft` : nextRequirement.label,
+          detail: nextRequirement.founderAction || nextRequirement.source,
+          href: atlasPath(nextRequirement.generatedDraft ? '/atlas/package-generator' : '/atlas/documents', token),
+        }
+      : {
+          label: 'Review final lender package',
+          detail: 'Atlas reconciled available documents and found no duplicate upload request.',
+          href: atlasPath('/atlas/review', token),
+        },
+  };
+}
+
+function buildAtlasSourceInventory(data: AtlasData | Omit<AtlasData, 'readinessScores'>) {
+  return [
+    ...data.documents.map((document) => `document:${document.id}:${document.name}:${document.completed ? 'completed' : 'not-completed'}:${document.notes}`),
+    ...(data.importState?.sourceDocuments || []).map((document) => `source:${document.id}:${document.filename}:${document.classification}:${document.status}:${document.path}`),
+    ...(data.importState?.importedFields || []).map((field) => `field:${field.fieldPath}:${field.label}:${field.sourceFilename}:${field.sourceDocumentType}:${field.normalizedValue}:${field.verificationStatus}:${field.founderApproved}`),
+    ...(data.importState?.extractedSections || []).map((section) => `section:${section.heading}:${section.text}:${section.sourceSection}`),
+    ...(data.packageVersions || []).map((version) => `package:${version.packageName}:${version.status}:${version.generatedMarkdown}:${version.notes}`),
+    `company:${data.companyProfile.companyName}:${data.companyProfile.legalBusinessName}:${data.companyProfile.einVerificationStatus}:${data.companyProfile.einSourceDocumentName}:${data.companyProfile.businessSummary}:${data.companyProfile.fundingRequest}:${data.companyProfile.useOfFunds}`,
+    `founder:${data.companyProfile.founderName}:${data.companyProfile.founderBackground}:${data.companyProfile.founderEmployment}`,
+    `financial:${data.financialAssumptions.loanAmount}:${data.useOfFundsPlan.selectedAmount}:${calculateUseOfFundsTotal(data.useOfFundsPlan)}:${data.companyProfile.revenueAssumptions}`,
+    `campaign:${data.campaignState.activeLender}:${data.campaignState.requestedAmount}:${data.campaignState.submissionEvidence}:${data.campaignState.documentsUploaded}:${data.campaignState.documentsMissing}`,
+  ].filter(Boolean);
+}
+
+function buildAtlasOperatorActivity(
+  data: AtlasData | Omit<AtlasData, 'readinessScores'>,
+  requirements: AtlasReconciledRequirement[],
+  inventory: string[],
+  timestamp: string,
+  conflicts: AtlasEvidenceGap[],
+): AtlasOperatorActivity[] {
+  const completed = requirements.filter((requirement) => ['VERIFIED COMPLETE', 'NOT APPLICABLE'].includes(requirement.status));
+  const waiting = requirements.filter((requirement) => requirement.founderAction && !requirement.autoResolved);
+  const generated = requirements.filter((requirement) => requirement.generatedDraft);
+  return [
+    {
+      id: 'source-inventory',
+      timestamp,
+      status: 'Completed',
+      label: 'Searched approved Atlas sources',
+      detail: `Reviewed ${inventory.length} source records across document vault, imports, packages, profiles, financial model, campaign memory, and source mappings.`,
+    },
+    ...completed.slice(0, 8).map((requirement) => ({
+      id: `resolved-${requirement.id}`,
+      timestamp,
+      status: 'Completed' as AtlasOperatorActivityStatus,
+      label: `Resolved ${requirement.label}`,
+      detail: requirement.bestMatch || requirement.source,
+    })),
+    ...generated.slice(0, 4).map((requirement) => ({
+      id: `draft-${requirement.id}`,
+      timestamp,
+      status: 'Requires verification' as AtlasOperatorActivityStatus,
+      label: `Generated ${requirement.label} draft`,
+      detail: requirement.generatedDraft || 'Draft generated from approved Atlas data and requires founder review.',
+    })),
+    ...conflicts.slice(0, 4).map((conflict) => ({
+      id: `conflict-${conflict.id}`,
+      timestamp,
+      status: 'Waiting for Tomas' as AtlasOperatorActivityStatus,
+      label: `Conflict: ${conflict.label}`,
+      detail: conflict.detail,
+    })),
+    ...waiting.slice(0, 5).map((requirement) => ({
+      id: `waiting-${requirement.id}`,
+      timestamp,
+      status: 'Waiting for Tomas' as AtlasOperatorActivityStatus,
+      label: requirement.label,
+      detail: requirement.founderAction || requirement.source,
+    })),
+    {
+      id: 'readiness-updated',
+      timestamp,
+      status: 'Completed',
+      label: 'Updated readiness source of truth',
+      detail: `${completed.length} of ${requirements.length} document requirements are verified complete or not applicable. Active funding amount: ${money(getAtlasActiveFundingAmount(data))}.`,
+    },
+  ];
+}
+
+function countBankStatementEvidence(data: AtlasData | Omit<AtlasData, 'readinessScores'>) {
+  const text = buildAtlasSourceInventory(data).join('\n');
+  const months = new Set<string>();
+  const monthRegex = /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\b/gi;
+  let monthMatch = monthRegex.exec(text);
+  while (monthMatch) {
+    months.add(monthMatch[1].toLowerCase().slice(0, 3));
+    monthMatch = monthRegex.exec(text);
+  }
+  const statementRefs = (text.match(/bank statement|business statement|personal statement|statement history/gi) || []).length;
+  return Math.max(months.size, statementRefs);
+}
+
+export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusinessReadinessReport {
+  const reconciliation = reconcileAtlasDocuments(data);
+  const hasFormation = reconciliation.requirements.some((requirement) => requirement.id === 'formation-documents' && requirement.status === 'VERIFIED COMPLETE');
+  const operatingAgreement = reconciliation.requirements.find((requirement) => requirement.id === 'operating-agreement');
+  const hasOperatingAgreement = operatingAgreement?.status === 'VERIFIED COMPLETE';
+  const hasEinDocument = reconciliation.requirements.some((requirement) => requirement.id === 'ein' && requirement.status === 'VERIFIED COMPLETE');
+  const bankStatements = reconciliation.requirements.find((requirement) => requirement.id === 'bank-statements');
+  const hasBankStatements = bankStatements?.status === 'VERIFIED COMPLETE';
   const useOfFundsTotal = calculateUseOfFundsTotal(data.useOfFundsPlan);
   const completed: string[] = [];
-  const founderActions: string[] = [];
-  const conflicts: AtlasEvidenceGap[] = [...(data.importState.evidenceGaps || [])];
+  const founderActions: string[] = [...reconciliation.founderActions];
+  const conflicts: AtlasEvidenceGap[] = [...reconciliation.conflicts];
 
   if (data.companyProfile.companyName && data.companyProfile.state) {
     completed.push(`Matched the business profile to ${data.companyProfile.companyName} in ${data.companyProfile.state}.`);
@@ -871,8 +1280,8 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
 
   if (hasOperatingAgreement) {
     completed.push('Operating agreement is marked available.');
-  } else {
-    founderActions.push('Upload the operating agreement or mark why it is not applicable.');
+  } else if (operatingAgreement?.founderAction) {
+    founderActions.push(operatingAgreement.founderAction);
   }
 
   if (hasEinDocument) {
@@ -883,8 +1292,8 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
 
   if (hasBankStatements) {
     completed.push('Bank statements are marked available for lender package review.');
-  } else {
-    founderActions.push('Upload recent business bank statements for statement-history review.');
+  } else if (bankStatements?.founderAction) {
+    founderActions.push(bankStatements.founderAction);
   }
 
   if (useOfFundsTotal === data.useOfFundsPlan.selectedAmount) {
@@ -900,17 +1309,13 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
     founderActions.push('Adjust use-of-funds items so the total matches the selected funding amount.');
   }
 
-  if (!sourceFields.some((field) => field.fieldPath.includes('bank') || field.sourceDocumentType.toLowerCase().includes('csv'))) {
-    founderActions.push('Import bank statement PDF/CSV/OFX/QFX files when available; ambiguous transactions will require founder review.');
-  }
-
   const entityStatus: AtlasBusinessReadinessStatus = hasFormation && data.companyProfile.companyName
     ? hasOperatingAgreement ? 'Mostly ready' : 'Needs attention'
     : 'Missing';
   const einStatus: AtlasBusinessReadinessStatus = hasEinDocument
     ? data.companyProfile.einVerificationStatus === 'verified_document_received' ? 'Ready' : 'Mostly ready'
     : 'Missing';
-  const bankingStatus: AtlasBusinessReadinessStatus = hasBankStatements ? 'Needs attention' : 'Missing';
+  const bankingStatus: AtlasBusinessReadinessStatus = hasBankStatements ? 'Mostly ready' : bankStatements?.status === 'REQUIRES LENDER CONFIRMATION' ? 'Requires lender confirmation' : 'Missing';
   const consistencyStatus: AtlasBusinessReadinessStatus = conflicts.length ? 'Needs attention' : 'Mostly ready';
 
   const lenderRequirements = data.fundingOpportunities.filter((lender) => lender.status !== 'declined').map((lender) => ({
@@ -921,9 +1326,7 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
     lastVerifiedDate: '',
   }));
 
-  if (completedRequiredDocs.length) {
-    completed.push(`${completedRequiredDocs.length} of ${requiredDocs.length} required documents are marked ready.`);
-  }
+  completed.push(`${reconciliation.documentsCompleteCount} of ${reconciliation.documentsTotalCount} reconciled document requirements are verified complete or not applicable.`);
 
   return {
     entityStatus,
@@ -931,16 +1334,15 @@ export function generateAtlasBusinessReadinessReport(data: AtlasData): AtlasBusi
     bankingStatus,
     consistencyStatus,
     completed: completed.slice(0, 6),
-    founderActions: founderActions.slice(0, 8),
+    founderActions: founderActions.filter((item, index, list) => list.indexOf(item) === index).slice(0, 8),
     conflicts,
     lenderRequirements,
   };
 }
 
 export function calculateAtlasReadinessAssessment(data: AtlasData) {
-  const requiredDocuments = data.documents.filter((document) => document.required);
-  const completedRequiredDocuments = requiredDocuments.filter((document) => document.completed);
-  const documentationScore = requiredDocuments.length ? Math.round((completedRequiredDocuments.length / requiredDocuments.length) * 100) : 0;
+  const reconciliation = reconcileAtlasDocuments(data);
+  const documentationScore = reconciliation.documentationScore;
   const financialInputs = [
     data.financialAssumptions.startingMrr,
     data.financialAssumptions.loanAmount,
@@ -966,12 +1368,12 @@ export function calculateAtlasReadinessAssessment(data: AtlasData) {
   const cdfiReadiness = Math.round((documentationScore * 0.25) + (financialScore * 0.2) + (businessScore * 0.3) + (riskScore * 0.25));
   const overallReadiness = Math.round((sbaReadiness + cdfiReadiness + documentationScore + financialScore + businessScore + riskScore) / 6);
   const missingItems = [
-    ...requiredDocuments.filter((document) => !document.completed).map((document) => document.name),
+    ...reconciliation.founderActions,
     ...businessInputs.map((value, index) => String(value || '').trim() ? '' : ['Company name', 'State', 'Industry', 'Business stage', 'Revenue stage', 'Business summary'][index]).filter(Boolean),
     data.chapterSevenWorkflow.founderApproved ? '' : 'Founder-approved Chapter 7 explanation',
   ].filter(Boolean) as string[];
   const recommendations = [
-    documentationScore < 85 ? 'Complete the required document vault before lender submission.' : 'Document package is close to lender-ready.',
+    documentationScore < 85 ? 'Review only the precise unresolved document items Atlas could not reconcile.' : 'Document package is reconciled and close to lender-ready.',
     financialScore < 85 ? 'Finish personal and business financial assumptions before lender outreach.' : 'Financial assumptions are ready for founder review.',
     data.chapterSevenWorkflow.founderApproved ? 'Use the approved Chapter 7 explanation consistently across lender materials.' : 'Review and approve Chapter 7 language before any application is submitted.',
     'Do not state or imply loan approval is guaranteed; present this as a disciplined preparation package.',
@@ -991,11 +1393,8 @@ export function calculateAtlasReadinessAssessment(data: AtlasData) {
 }
 
 export function calculateReadinessScores(data: Omit<AtlasData, 'readinessScores'>): AtlasReadinessScores {
-  const requiredDocuments = data.documents.filter((document) => document.required);
-  const completedRequiredDocuments = requiredDocuments.filter((document) => document.completed);
-  const requiredDocumentsScore = requiredDocuments.length
-    ? Math.round((completedRequiredDocuments.length / requiredDocuments.length) * 100)
-    : 0;
+  const reconciliation = reconcileAtlasDocuments(data);
+  const requiredDocumentsScore = reconciliation.documentationScore;
 
   const financialFields: Array<keyof AtlasFinancialAssumptions> = [
     'startingMrr',
@@ -1068,8 +1467,9 @@ export function calculateReadinessScores(data: Omit<AtlasData, 'readinessScores'
 export function buildAtlasWorkflowStages(data: AtlasData, token: string): AtlasWorkflowStage[] {
   const assessment = calculateAtlasReadinessAssessment(data);
   const campaign = buildAtlasFundingCampaignOS(data);
+  const reconciliation = reconcileAtlasDocuments(data, token);
   const hasSelectedLender = data.fundingOpportunities.some((opportunity) => ['targeted', 'preparing', 'submitted', 'follow_up', 'approved'].includes(opportunity.status));
-  const requiredDocsComplete = data.documents.filter((document) => document.required).every((document) => document.completed);
+  const requiredDocsComplete = reconciliation.founderActions.length === 0 || reconciliation.documentationScore >= 75;
   const packageVersion = getLatestAtlasPackage(data);
   const applicationReviewed = data.applicationSections.every((section) => section.reviewed);
   const importStageStatus: AtlasWorkflowStageStatus = data.importState.lastImportAt
@@ -1113,21 +1513,22 @@ export function generateAtlasPackage(data: AtlasData) {
   const assumptions = data.financialAssumptions;
   const personal = calculatePersonalFinancialSummary(data.personalFinancialProfile);
   const assessment = calculateAtlasReadinessAssessment(data);
+  const reconciliation = reconcileAtlasDocuments(data);
+  const activeFundingAmount = getAtlasActiveFundingAmount(data);
   const useOfFundsTotal = calculateUseOfFundsTotal(data.useOfFundsPlan);
-  const requiredDocs = data.documents.filter((document) => document.required);
   const activeLenders = data.fundingOpportunities.filter((opportunity) => opportunity.status !== 'declined');
   const sections = [
-    ['Cover Page', `# ${profile.companyName} Capital Package\n\n**Prepared for:** SBA Microloan / CDFI lender review\n**Prepared by:** ${profile.founderName}\n**Requested range:** ${money(profile.fundingTargetMin)} to ${money(profile.fundingTargetMax)}\n**Atlas note:** Founder must review and submit manually.`],
+    ['Cover Page', `# ${profile.companyName} Capital Package\n\n**Prepared for:** SBA Microloan / CDFI lender review\n**Prepared by:** ${profile.founderName}\n**Requested amount:** ${money(activeFundingAmount)}\n**Atlas note:** Founder must review and submit manually.`],
     ['Executive Summary', profile.businessSummary],
     ['Business Overview', `${profile.companyName} operates in ${profile.industry || 'the practical AI products market'} from ${profile.state || 'its registered state'}. Current stage: ${profile.businessStage || profile.revenueStage}.`],
     ['Founder Background', profile.founderBackground],
-    ['Funding Request', `${profile.fundingRequest}\n\nModeled request: ${money(assumptions.loanAmount)}. Minimum viable amount: ${money(profile.fundingTargetMin)}.`],
-    ['Use of Funds', `${profile.useOfFunds}\n\nPlanned total: ${money(useOfFundsTotal)} against selected amount ${money(data.useOfFundsPlan.selectedAmount)}.`],
+    ['Funding Request', `${profile.fundingRequest}\n\nModeled request: ${money(activeFundingAmount)}. Minimum viable amount: ${money(profile.fundingTargetMin)}.`],
+    ['Use of Funds', `${profile.useOfFunds}\n\nPlanned total: ${money(useOfFundsTotal)} against active request ${money(activeFundingAmount)}.`],
     ['Revenue Assumptions', `${profile.revenueAssumptions}\n\nStarting MRR: ${money(assumptions.startingMrr)}. Monthly customer growth: ${assumptions.monthlyCustomerGrowth}. Average subscription price: ${money(assumptions.averageSubscriptionPrice)}.`],
     ['Repayment Strategy', profile.repaymentStrategy],
     ['Risk Mitigation', profile.riskMitigation],
     ['Chapter 7 Explanation', generateChapterSevenExplanations(data).standard],
-    ['Required Documents Checklist', requiredDocs.map((document) => `- ${document.completed ? '[x]' : '[ ]'} ${document.name}`).join('\n')],
+    ['Required Documents Checklist', reconciliation.requirements.map((requirement) => `- ${requirement.sufficient || requirement.status === 'NOT APPLICABLE' ? '[x]' : '[ ]'} ${requirement.label} — ${requirement.status}${requirement.founderAction ? ` (${requirement.founderAction})` : ''}`).join('\n')],
     ['Due Diligence Status', data.tasks.map((task) => `- ${task.status.replaceAll('_', ' ')}: ${task.title}`).join('\n')],
     ['Lender Follow-Up Plan', activeLenders.map((lender) => `- ${lender.lenderName || lender.fundingSource}: ${lender.nextAction || 'Confirm next action'} (follow-up: ${lender.nextFollowUpDate || 'TBD'})`).join('\n')],
     ['Readiness Snapshot', `Overall readiness: ${assessment.overallReadiness}%\nSBA readiness: ${assessment.sbaReadiness}%\nCDFI readiness: ${assessment.cdfiReadiness}%\nPersonal net worth snapshot: ${money(personal.netWorth)}. Sensitive values are hidden by default in Atlas UI.`],
@@ -1164,7 +1565,11 @@ export type AtlasApplicationBuilderSection = {
 
 export function buildAtlasApplicationSections(data: AtlasData, token: string): AtlasApplicationBuilderSection[] {
   const sectionState = new Map(data.applicationSections.map((section) => [section.id, section]));
-  const documentMissing = data.documents.filter((document) => document.required && !document.completed).map((document) => document.name);
+  const reconciliation = reconcileAtlasDocuments(data, token);
+  const activeFundingAmount = getAtlasActiveFundingAmount(data);
+  const documentMissing = reconciliation.requirements
+    .filter((requirement) => requirement.founderAction && !requirement.autoResolved)
+    .map((requirement) => `${requirement.label}: ${requirement.founderAction}`);
   const sections: Array<Omit<AtlasApplicationBuilderSection, 'reviewed' | 'completionStatus'>> = [
     {
       id: 'business_information',
@@ -1189,10 +1594,10 @@ export function buildAtlasApplicationSections(data: AtlasData, token: string): A
       title: 'Funding request',
       missingFields: missing([
         ['Funding request', data.companyProfile.fundingRequest],
-        ['Loan amount', String(data.financialAssumptions.loanAmount || '')],
+        ['Loan amount', String(activeFundingAmount || '')],
       ]),
       editHref: atlasPath('/atlas/financial-model', token),
-      previewText: `${data.companyProfile.fundingRequest} Current model assumes a ${money(data.financialAssumptions.loanAmount)} request.`,
+      previewText: `${data.companyProfile.fundingRequest} Current campaign uses a ${money(activeFundingAmount)} request.`,
     },
     {
       id: 'use_of_funds',
@@ -1250,8 +1655,8 @@ export function buildAtlasApplicationSections(data: AtlasData, token: string): A
       missingFields: documentMissing,
       editHref: atlasPath('/atlas/document-vault', token),
       previewText: documentMissing.length
-        ? `${documentMissing.length} required supporting documents remain missing: ${documentMissing.slice(0, 5).join(', ')}.`
-        : 'All required supporting documents are marked complete for founder review.',
+        ? `${documentMissing.length} precise supporting-document actions remain: ${documentMissing.slice(0, 5).join(', ')}.`
+        : 'Atlas reconciled all required supporting-document asks against approved sources or marked them for lender confirmation only.',
     },
   ];
 
@@ -1285,15 +1690,16 @@ export const atlasGeneratedDocumentLabels: Record<AtlasGeneratedDocumentType, st
 export function generateAtlasApplicationPreview(data: AtlasData, type: AtlasGeneratedDocumentType) {
   const profile = data.companyProfile;
   const assumptions = data.financialAssumptions;
+  const activeFundingAmount = getAtlasActiveFundingAmount(data);
   const activeLender = data.fundingOpportunities.find((opportunity) => opportunity.status !== 'declined');
   const useOfFunds = profile.primaryUseOfFunds.map((item) => `- ${item}`).join('\n');
-  const sharedHeader = `# ${atlasGeneratedDocumentLabels[type]}\n\n**Company:** ${profile.companyName}\n**Product:** ${profile.productName}\n**Funding Target:** ${money(profile.fundingTargetMin)} to ${money(profile.fundingTargetMax)}\n**Preferred Funding:** ${profile.preferredFundingTypes.join(' / ')}\n`;
+  const sharedHeader = `# ${atlasGeneratedDocumentLabels[type]}\n\n**Company:** ${profile.companyName}\n**Product:** ${profile.productName}\n**Requested Amount:** ${money(activeFundingAmount)}\n**Preferred Funding:** ${profile.preferredFundingTypes.join(' / ')}\n`;
 
   switch (type) {
     case 'executive_summary':
       return `${sharedHeader}\n## Overview\n${profile.businessSummary}\n\n## Funding Request\n${profile.fundingRequest}\n\n## Use of Funds\n${useOfFunds}\n\n## Revenue Stage\n${profile.revenueStage}. First 90-day MRR estimate: ${profile.firstNinetyDayMrrEstimate}. Six-month MRR target: ${profile.sixMonthMrrTarget}.\n\n## Next Step\n${profile.nextAction}`;
     case 'sba_microloan_narrative':
-      return `${sharedHeader}\n## Business Narrative\n${profile.businessSummary}\n\n## SBA Microloan Request\nNieves Labs is preparing a conservative request modeled at ${money(assumptions.loanAmount)} over ${assumptions.loanTermMonths} months. The request supports production readiness, launch execution, and disciplined working capital.\n\n## Repayment Strategy\n${profile.repaymentStrategy}\n\n## Risk Mitigation\n${profile.riskMitigation}`;
+      return `${sharedHeader}\n## Business Narrative\n${profile.businessSummary}\n\n## SBA Microloan Request\nNieves Labs is preparing a conservative request modeled at ${money(activeFundingAmount)} over ${assumptions.loanTermMonths} months. The request supports production readiness, launch execution, and disciplined working capital.\n\n## Repayment Strategy\n${profile.repaymentStrategy}\n\n## Risk Mitigation\n${profile.riskMitigation}`;
     case 'cdfi_application_narrative':
       return `${sharedHeader}\n## CDFI Fit\nNieves Labs is evaluating CDFI funding as a practical working-capital path for an early-stage AI products company with a measured funding request and clear use-of-funds plan.\n\n## Target Lender\n${activeLender ? `${activeLender.lenderName || activeLender.fundingSource} (${activeLender.type})` : 'Target lender not selected.'}\n\n## Community and Business Impact\nThe company focuses on practical AI tools that help professionals prepare, organize, and complete real-world workflows with more confidence and less manual work.\n\n## Underwriting Considerations\n${profile.riskMitigation}`;
     case 'use_of_funds_summary':

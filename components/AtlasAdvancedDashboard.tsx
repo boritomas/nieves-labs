@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import AtlasReadinessBreakdown from '@/components/AtlasReadinessBreakdown';
 import AtlasWorkflowProgress from '@/components/AtlasWorkflowProgress';
-import { atlasFounderApprovalKeys, atlasPath, buildAtlasWorkflowStages, getLatestAtlasPackage, type AtlasData } from '@/lib/atlas';
+import { atlasFounderApprovalKeys, atlasPath, buildAtlasWorkflowStages, getLatestAtlasPackage, reconcileAtlasDocuments, type AtlasData } from '@/lib/atlas';
 
 export default function AtlasAdvancedDashboard({ data, token }: { data: AtlasData; token: string }) {
   const latestPackage = getLatestAtlasPackage(data);
+  const reconciliation = reconcileAtlasDocuments(data, token);
 
   return (
     <>
@@ -70,12 +71,28 @@ export default function AtlasAdvancedDashboard({ data, token }: { data: AtlasDat
         </div>
         <div className="panel">
           <p className="eyebrow">Required documents</p>
-          <h2>{data.documents.filter((item) => item.completed).length} completed / {data.documents.length} total</h2>
+          <h2>{reconciliation.documentsCompleteCount} reconciled / {reconciliation.documentsTotalCount} total</h2>
           <div className="status-list">
-            {data.documents.filter((item) => !item.completed).slice(0, 6).map((item) => (
-              <span className="status-pill missing" key={item.id}>{item.name}</span>
+            {reconciliation.requirements.slice(0, 8).map((item) => (
+              <span className={`status-pill ${item.sufficient || item.status === 'NOT APPLICABLE' ? 'ready' : 'missing'}`} key={item.id}>{item.label}: {item.status}</span>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">Operator activity log</p>
+        <h2>Atlas source search and auto-resolution log</h2>
+        <div className="atlas-stack">
+          {reconciliation.activityFeed.slice(0, 12).map((activity) => (
+            <div className="capability-row" key={activity.id}>
+              <span className="atlas-mini-dot" />
+              <div>
+                <strong>{activity.status}: {activity.label}</strong>
+                <span>{activity.detail}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
