@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Nieves Labs CFPB Autofill Companion",
+  "version": "0.1.0",
+  "description": "Transfers a founder-approved complaint from Nieves Labs into the official CFPB complaint form.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "https://nieves-labs.com/*",
+    "https://www.nieves-labs.com/*",
+    "https://www.consumerfinance.gov/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://nieves-labs.com/*", "https://www.nieves-labs.com/*", "https://www.consumerfinance.gov/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "CFPB Autofill Companion"
+  }
+}
