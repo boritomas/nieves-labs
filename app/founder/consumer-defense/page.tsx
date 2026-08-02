@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
+import CFPBOnlineAutofill from '@/components/CFPBOnlineAutofill';
 import ConsumerDefenseLab from '@/components/ConsumerDefenseLab';
 import { env } from '@/lib/env';
 
@@ -39,6 +40,7 @@ export default async function ConsumerDefensePage({
               analyze Citibank collection claims, and research current case law.
             </p>
           </section>
+          <CFPBOnlineAutofill />
           <ConsumerDefenseLab />
         </>
       )}
