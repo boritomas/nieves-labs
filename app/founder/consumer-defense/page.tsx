@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
+import CFPBOperationsCompliance from '@/components/CFPBOperationsCompliance';
 import ConsumerDefenseSourceFolders from '@/components/ConsumerDefenseSourceFolders';
 import ConsumerDefenseWizard from '@/components/ConsumerDefenseWizard';
 import { env } from '@/lib/env';
@@ -40,6 +41,7 @@ export default async function ConsumerDefensePage({
       ) : (
         <>
           <ConsumerDefenseSourceFolders />
+          <CFPBOperationsCompliance />
           <ConsumerDefenseWizard />
         </>
       )}
