@@ -5,6 +5,7 @@ import AdminAccessForm from '@/components/AdminAccessForm';
 import CFPBOperationsCompliance from '@/components/CFPBOperationsCompliance';
 import ConsumerDefenseSourceFolders from '@/components/ConsumerDefenseSourceFolders';
 import ConsumerDefenseWizard from '@/components/ConsumerDefenseWizard';
+import Rule9037PrivacyAudit from '@/components/Rule9037PrivacyAudit';
 import { env } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,7 @@ export default async function ConsumerDefensePage({
         <>
           <ConsumerDefenseSourceFolders />
           <CFPBOperationsCompliance />
+          <Rule9037PrivacyAudit />
           <ConsumerDefenseWizard />
         </>
       )}
