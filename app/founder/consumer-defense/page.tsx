@@ -2,11 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
-import BankruptcyCaseStrategy from '@/components/BankruptcyCaseStrategy';
-import BankruptcyRemovalWorkflow from '@/components/BankruptcyRemovalWorkflow';
-import BankruptcyTradelineMatrix from '@/components/BankruptcyTradelineMatrix';
-import CFPBOnlineAutofill from '@/components/CFPBOnlineAutofill';
-import ConsumerDefenseLab from '@/components/ConsumerDefenseLab';
+import ConsumerDefenseWizard from '@/components/ConsumerDefenseWizard';
 import { env } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -41,22 +37,7 @@ export default async function ConsumerDefensePage({
       {!authorized ? (
         <AdminAccessForm title="Founder Access" invalid={invalid} />
       ) : (
-        <>
-          <section className="product-hero">
-            <p className="eyebrow">Founder-only prototype</p>
-            <h1>Consumer Defense Lab</h1>
-            <p>
-              Build documented credit-report disputes, enforce CFPB escalation gates,
-              analyze Citibank collection claims, research current case law, and audit
-              bankruptcy reporting against court records.
-            </p>
-          </section>
-          <CFPBOnlineAutofill />
-          <ConsumerDefenseLab />
-          <BankruptcyCaseStrategy />
-          <BankruptcyTradelineMatrix />
-          <BankruptcyRemovalWorkflow />
-        </>
+        <ConsumerDefenseWizard />
       )}
     </main>
   );
