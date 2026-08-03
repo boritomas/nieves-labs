@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
+import BankruptcyRemovalWorkflow from '@/components/BankruptcyRemovalWorkflow';
 import CFPBOnlineAutofill from '@/components/CFPBOnlineAutofill';
 import ConsumerDefenseLab from '@/components/ConsumerDefenseLab';
 import { env } from '@/lib/env';
@@ -44,11 +45,13 @@ export default async function ConsumerDefensePage({
             <h1>Consumer Defense Lab</h1>
             <p>
               Build documented credit-report disputes, enforce CFPB escalation gates,
-              analyze Citibank collection claims, and research current case law.
+              analyze Citibank collection claims, research current case law, and audit
+              bankruptcy reporting against court records.
             </p>
           </section>
           <CFPBOnlineAutofill />
           <ConsumerDefenseLab />
+          <BankruptcyRemovalWorkflow />
         </>
       )}
     </main>
