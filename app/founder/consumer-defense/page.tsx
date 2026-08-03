@@ -5,6 +5,8 @@ import CFPBOnlineAutofill from '@/components/CFPBOnlineAutofill';
 import ConsumerDefenseLab from '@/components/ConsumerDefenseLab';
 import { env } from '@/lib/env';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Consumer Defense Lab | Nieves Labs',
 };
@@ -16,6 +18,7 @@ export default async function ConsumerDefensePage({
 }) {
   const { token = '' } = await searchParams;
   const authorized = Boolean(env.adminToken && token === env.adminToken);
+  const invalid = Boolean(token && !authorized);
 
   return (
     <main className="site-shell">
@@ -29,7 +32,7 @@ export default async function ConsumerDefensePage({
       </header>
 
       {!authorized ? (
-        <AdminAccessForm title="Founder Access" />
+        <AdminAccessForm title="Founder Access" invalid={invalid} />
       ) : (
         <>
           <section className="product-hero">
