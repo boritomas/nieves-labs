@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
 import CFPBOnlineAutofill from '@/components/CFPBOnlineAutofill';
@@ -14,11 +15,14 @@ export const metadata = {
 export default async function ConsumerDefensePage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; access?: string }>;
 }) {
-  const { token = '' } = await searchParams;
-  const authorized = Boolean(env.adminToken && token === env.adminToken);
-  const invalid = Boolean(token && !authorized);
+  const { token = '', access = '' } = await searchParams;
+  const cookieStore = await cookies();
+  const remembered = cookieStore.get('nieves_founder_access')?.value === 'consumer-defense-v1';
+  const tokenAuthorized = Boolean(env.adminToken && token === env.adminToken);
+  const authorized = remembered || tokenAuthorized;
+  const invalid = Boolean((token && !tokenAuthorized) || access === 'invalid');
 
   return (
     <main className="site-shell">
@@ -27,7 +31,7 @@ export default async function ConsumerDefensePage({
           <BrandLogo size="sm" />
         </Link>
         <nav className="nav-links">
-          <Link href={`/admin?token=${encodeURIComponent(token)}`}>Admin</Link>
+          <Link href={authorized ? '/admin' : '/'}>{authorized ? 'Admin' : 'Home'}</Link>
         </nav>
       </header>
 
