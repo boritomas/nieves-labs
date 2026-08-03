@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
+import BankruptcyCaseStrategy from '@/components/BankruptcyCaseStrategy';
 import BankruptcyRemovalWorkflow from '@/components/BankruptcyRemovalWorkflow';
 import CFPBOnlineAutofill from '@/components/CFPBOnlineAutofill';
 import ConsumerDefenseLab from '@/components/ConsumerDefenseLab';
@@ -51,6 +52,7 @@ export default async function ConsumerDefensePage({
           </section>
           <CFPBOnlineAutofill />
           <ConsumerDefenseLab />
+          <BankruptcyCaseStrategy />
           <BankruptcyRemovalWorkflow />
         </>
       )}
