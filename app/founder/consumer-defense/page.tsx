@@ -4,6 +4,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import AdminAccessForm from '@/components/AdminAccessForm';
 import BankruptcyCaseStrategy from '@/components/BankruptcyCaseStrategy';
 import BankruptcyRemovalWorkflow from '@/components/BankruptcyRemovalWorkflow';
+import BankruptcyTradelineMatrix from '@/components/BankruptcyTradelineMatrix';
 import CFPBOnlineAutofill from '@/components/CFPBOnlineAutofill';
 import ConsumerDefenseLab from '@/components/ConsumerDefenseLab';
 import { env } from '@/lib/env';
@@ -53,6 +54,7 @@ export default async function ConsumerDefensePage({
           <CFPBOnlineAutofill />
           <ConsumerDefenseLab />
           <BankruptcyCaseStrategy />
+          <BankruptcyTradelineMatrix />
           <BankruptcyRemovalWorkflow />
         </>
       )}
